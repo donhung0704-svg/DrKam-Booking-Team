@@ -33,6 +33,7 @@ const tierOptions = [
 const statusOptions = [
   "Chờ phản hồi",
   "Đã phản hồi",
+  "Cân nhắc",
   "Đã chốt",
   "Từ chối",
 ];
@@ -159,8 +160,15 @@ const defaultColumns: ColumnConfig[] = [
   },
   {
     key: "gmv",
-    label: "GMV",
+    label: "GMV ngày",
     field: "gmv",
+    type: "number",
+    width: 115,
+  },
+  {
+    key: "gmv_thang",
+    label: "GMV tháng",
+    field: "gmv_thang",
     type: "number",
     width: 115,
   },
@@ -1211,6 +1219,7 @@ function getSelectColorStyle(columnKey: string, value: unknown) {
 
     "Chờ phản hồi": { bg: "#fef9c3", text: "#854d0e", border: "#fde68a" },
     "Đã phản hồi": { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
+    "Cân nhắc": { bg: "#ffedd5", text: "#9a3412", border: "#fed7aa" },
     "Đã chốt": { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },
     "Từ chối": { bg: "#fee2e2", text: "#b91c1c", border: "#fecaca" },
 

@@ -18,7 +18,7 @@ const tierOptions = [
   "Trùng KOC",
   "Dừng CS",
 ];
-const statusOptions = ["Chờ phản hồi", "Đã phản hồi", "Đã chốt", "Từ chối"];
+const statusOptions = ["Chờ phản hồi", "Đã phản hồi", "Cân nhắc", "Đã chốt", "Từ chối"];
 const channelTypeOptions = ["Người thật", "AI", "Pov-Unbox"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 
