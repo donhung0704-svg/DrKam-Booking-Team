@@ -73,6 +73,7 @@ export default function BookingListPage() {
 
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(100);
+  const [resetColumnSignal, setResetColumnSignal] = useState(0);
 
   const [filters, setFilters] = useState<FilterCondition[]>([
     {
@@ -356,6 +357,14 @@ export default function BookingListPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
+              onClick={() => setResetColumnSignal((current) => current + 1)}
+              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              Reset cột
+            </button>
+
+            <button
+              type="button"
               onClick={exportBookingExcel}
               className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
             >
@@ -536,7 +545,28 @@ export default function BookingListPage() {
         </div>
       </section>
 
-      <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <BookingAdvancedTable
+        bookings={currentPageBookings}
+        kocs={kocs}
+        employees={employees}
+        loading={loading}
+        resetLayoutSignal={resetColumnSignal}
+        onBookingUpdated={(id, patch) => {
+          setBookings((prev) =>
+            prev.map((item) =>
+              String(item.id) === String(id) ? { ...item, ...patch } : item
+            )
+          );
+        }}
+        onBookingDeleted={(ids) => {
+          const deleteSet = new Set(ids.map(String));
+          setBookings((prev) =>
+            prev.filter((booking) => !deleteSet.has(String(booking.id)))
+          );
+        }}
+      />
+
+      <section className="sticky bottom-0 z-[200] mt-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12)]">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="text-[13px] font-bold text-slate-700">
             Đang xem:{" "}
@@ -583,28 +613,6 @@ export default function BookingListPage() {
           </div>
         </div>
       </section>
-
-      <BookingAdvancedTable
-        bookings={currentPageBookings}
-        totalBookings={totalBookingCount}
-        kocs={kocs}
-        employees={employees}
-        loading={loading}
-        onExport={exportBookingExcel}
-        onBookingUpdated={(id, patch) => {
-          setBookings((prev) =>
-            prev.map((item) =>
-              String(item.id) === String(id) ? { ...item, ...patch } : item
-            )
-          );
-        }}
-        onBookingDeleted={(ids) => {
-          const deleteSet = new Set(ids.map(String));
-          setBookings((prev) =>
-            prev.filter((booking) => !deleteSet.has(String(booking.id)))
-          );
-        }}
-      />
     </section>
   );
 }
