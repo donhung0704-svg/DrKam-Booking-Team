@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
-import type { ReactNode } from "react";
 
 type NavItem = {
   label: string;
@@ -11,79 +10,14 @@ type NavItem = {
   icon: string;
 };
 
-const kocItems: NavItem[] = [
-  {
-    label: "Danh sách KOC",
-    href: "/koc",
-    icon: "👥",
-  },
-  {
-    label: "Thêm KOC",
-    href: "/koc/new",
-    icon: "➕",
-  },
-  {
-    label: "Danh sách Booking",
-    href: "/bookings",
-    icon: "📦",
-  },
-  {
-    label: "Tạo Booking",
-    href: "/bookings/new",
-    icon: "📝",
-  },
-];
-
-const campaignItems: NavItem[] = [
-  {
-    label: "Danh sách Campaign",
-    href: "/campaigns",
-    icon: "🚀",
-  },
-  {
-    label: "Tạo Campaign",
-    href: "/campaigns/new",
-    icon: "➕",
-  },
-];
-
-const employeeItems: NavItem[] = [
-  {
-    label: "Danh sách PIC",
-    href: "/employees",
-    icon: "👤",
-  },
-  {
-    label: "Thêm PIC",
-    href: "/employees/new",
-    icon: "➕",
-  },
-];
-
-const importItems: NavItem[] = [
-  {
-    label: "Import KOC",
-    href: "/import/koc",
-    icon: "📥",
-  },
-  {
-    label: "Import Booking",
-    href: "/import/bookings",
-    icon: "📥",
-  },
-];
-
-const reportItems: NavItem[] = [
-  {
-    label: "Báo cáo ngày",
-    href: "/reports/daily",
-    icon: "📊",
-  },
-  {
-    label: "Báo cáo PIC",
-    href: "/reports/pic",
-    icon: "📈",
-  },
+const navItems: NavItem[] = [
+  { label: "Tổng quan", href: "/", icon: "▣" },
+  { label: "Danh sách KOC", href: "/koc", icon: "👥" },
+  { label: "Danh sách Booking", href: "/bookings", icon: "📦" },
+  { label: "Danh sách Campaign", href: "/campaigns", icon: "🚀" },
+  { label: "Nhân sự", href: "/employees", icon: "👤" },
+  { label: "Import", href: "/import/koc", icon: "📥" },
+  { label: "Báo cáo", href: "/reports/daily", icon: "📊" },
 ];
 
 export default function AppNav() {
@@ -113,106 +47,17 @@ export default function AppNav() {
           </div>
         </div>
 
-        <div className="portal-sidebar-scroll h-[calc(100vh-92px)] overflow-y-auto px-5 py-6">
-          <nav className="space-y-3">
-            <MainNavLink
-              href="/"
-              icon="▣"
-              label="Tổng quan"
-              active={pathname === "/"}
-            />
-
-            <NavGroup
-              title="KOC & Booking"
-              icon="♪"
-              active={
-                pathname.startsWith("/koc") ||
-                pathname.startsWith("/bookings")
-              }
-            >
-              {kocItems.map((item) => (
-                <SubNavLink
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  active={isActive(pathname, item.href)}
-                />
-              ))}
-            </NavGroup>
-
-            <NavGroup
-              title="Campaign"
-              icon="✦"
-              active={pathname.startsWith("/campaigns")}
-            >
-              {campaignItems.map((item) => (
-                <SubNavLink
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  active={isActive(pathname, item.href)}
-                />
-              ))}
-            </NavGroup>
-
-            <NavGroup
-              title="Nhân sự / PIC"
-              icon="👤"
-              active={pathname.startsWith("/employees")}
-            >
-              {employeeItems.map((item) => (
-                <SubNavLink
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  active={isActive(pathname, item.href)}
-                />
-              ))}
-            </NavGroup>
-
-            <NavGroup
-              title="Import Excel"
-              icon="⇩"
-              active={pathname.startsWith("/import")}
-            >
-              {importItems.map((item) => (
-                <SubNavLink
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  active={isActive(pathname, item.href)}
-                />
-              ))}
-            </NavGroup>
-
-            <NavGroup
-              title="Báo cáo"
-              icon="⌁"
-              active={pathname.startsWith("/reports")}
-            >
-              {reportItems.map((item) => (
-                <SubNavLink
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  active={isActive(pathname, item.href)}
-                />
-              ))}
-            </NavGroup>
-
-            <div className="my-6 border-t border-slate-100" />
-
-            <p className="px-4 text-[12px] font-black uppercase tracking-[0.22em] text-slate-400">
-              Nhóm & quản trị
-            </p>
-
-            <LockedNavItem icon="🔐" label="Phân quyền" />
-            <LockedNavItem icon="⚙️" label="Cài đặt hệ thống" />
+        <div className="portal-sidebar-scroll h-[calc(100vh-92px)] overflow-y-auto px-4 py-4">
+          <nav className="space-y-1">
+            {navItems.map((item) => (
+              <MainNavLink
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={isActive(pathname, item.href)}
+              />
+            ))}
           </nav>
         </div>
       </aside>
@@ -291,109 +136,27 @@ function MainNavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center justify-between rounded-2xl px-4 py-4 text-sm font-black transition ${
+      className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-black transition ${
         active
           ? "bg-red-50 text-red-600"
           : "text-slate-500 hover:bg-slate-50 hover:text-slate-950"
       }`}
     >
-      <span className="flex items-center gap-4">
-        <span
-          className={`flex h-10 w-10 items-center justify-center rounded-2xl text-lg ${
-            active ? "bg-white text-red-600" : "bg-slate-50 text-slate-400"
-          }`}
-        >
-          {icon}
-        </span>
-        {label}
-      </span>
-    </Link>
-  );
-}
-
-function NavGroup({
-  title,
-  icon,
-  active,
-  children,
-}: {
-  title: string;
-  icon: string;
-  active: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className={`rounded-3xl px-4 py-4 ${
-        active ? "bg-red-50" : "bg-transparent"
-      }`}
-    >
-      <div
-        className={`mb-3 flex items-center justify-between text-sm font-black ${
-          active ? "text-red-600" : "text-slate-600"
+      <span
+        className={`flex h-8 w-8 items-center justify-center rounded-xl text-base ${
+          active ? "bg-white text-red-600" : "bg-slate-50 text-slate-400"
         }`}
       >
-        <span className="flex items-center gap-4">
-          <span
-            className={`flex h-10 w-10 items-center justify-center rounded-2xl text-lg ${
-              active ? "bg-white text-red-600" : "bg-slate-50 text-slate-400"
-            }`}
-          >
-            {icon}
-          </span>
-          {title}
-        </span>
-
-        <span className="text-lg">{active ? "⌃" : "⌄"}</span>
-      </div>
-
-      <div className="ml-5 border-l border-slate-200 pl-4">{children}</div>
-    </div>
-  );
-}
-
-function SubNavLink({
-  href,
-  icon,
-  label,
-  active,
-}: {
-  href: string;
-  icon: string;
-  label: string;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`mb-2 flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-black transition ${
-        active
-          ? "bg-white text-red-600 shadow-sm"
-          : "text-slate-500 hover:bg-white hover:text-slate-950"
-      }`}
-    >
-      <span className="text-base">{icon}</span>
-      <span>{label}</span>
-    </Link>
-  );
-}
-
-function LockedNavItem({ icon, label }: { icon: string; label: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-2xl px-4 py-4 text-sm font-black text-slate-400">
-      <span className="flex items-center gap-4">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-lg">
-          {icon}
-        </span>
-        {label}
+        {icon}
       </span>
-
-      <span>🔒</span>
-    </div>
+      {label}
+    </Link>
   );
 }
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
-  return pathname === href;
+
+  const base = `/${href.split("/")[1]}`;
+  return pathname === base || pathname.startsWith(`${base}/`);
 }

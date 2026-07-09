@@ -398,10 +398,10 @@ export default function KocListPage() {
 
   return (
     <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-5 py-6 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
-      <header className="mb-4 rounded-[22px] border border-slate-200 bg-white px-5 py-4 shadow-sm">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-lg">
+      <header className="mb-3 rounded-[18px] border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
+        <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-base">
               👥
             </div>
 
@@ -410,14 +410,9 @@ export default function KocListPage() {
                 DRKAM CRM PORTAL
               </p>
 
-              <h1 className="text-[26px] font-bold leading-tight tracking-normal text-slate-950 md:text-[28px]">
+              <h1 className="text-[20px] font-bold leading-tight tracking-normal text-slate-950 md:text-[22px]">
                 Danh sách KOC
               </h1>
-
-              <p className="mt-2 max-w-3xl text-[13px] leading-5 text-slate-500">
-                Tải phân trang để app chạy nhanh. Bộ lọc nâng cao hỗ trợ lọc tất cả trường,
-                một trường có thể lọc nhiều điều kiện cùng lúc.
-              </p>
             </div>
           </div>
 
@@ -445,12 +440,13 @@ export default function KocListPage() {
               + Thêm KOC mới
             </Link>
 
-            <Link
-              href="/"
+            <button
+              type="button"
+              onClick={() => setShowColumnPanel((current) => !current)}
               className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
             >
-              ← Dashboard
-            </Link>
+              Ẩn/hiện cột
+            </button>
           </div>
         </div>
       </header>
@@ -500,36 +496,7 @@ export default function KocListPage() {
         </div>
       </section>
 
-      <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
-        <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
-              Bộ lọc nâng cao
-            </p>
-            <h2 className="mt-1 text-[18px] font-bold leading-tight text-slate-950">
-              Lọc tất cả trường
-            </h2>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setShowColumnPanel((current) => !current)}
-              className="h-9 rounded-xl border border-slate-200 bg-white px-4 text-[12.5px] font-bold text-slate-700 hover:bg-slate-50"
-            >
-              Ẩn/hiện cột
-            </button>
-
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[12.5px] font-bold text-slate-700 hover:bg-slate-100"
-            >
-              Xóa tất cả bộ lọc
-            </button>
-          </div>
-        </div>
-
+      <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_0.9fr_1.2fr_1.2fr_auto] xl:items-end">
           <div>
             <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Trường cần lọc</label>
@@ -578,13 +545,23 @@ export default function KocListPage() {
             onChange={setFilterValue2}
           />
 
-          <button
-            type="button"
-            onClick={addFilter}
-            className="h-10 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-          >
-            + Thêm điều kiện
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={addFilter}
+              className="h-10 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
+            >
+              + Thêm điều kiện
+            </button>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Xóa tất cả bộ lọc
+            </button>
+          </div>
         </div>
 
         {activeFilters.length > 0 && (
