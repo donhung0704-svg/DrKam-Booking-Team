@@ -440,12 +440,13 @@ export default function KocListPage() {
               + Thêm KOC mới
             </Link>
 
-            <Link
-              href="/"
+            <button
+              type="button"
+              onClick={() => setShowColumnPanel((current) => !current)}
               className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
             >
-              ← Dashboard
-            </Link>
+              Ẩn/hiện cột
+            </button>
           </div>
         </div>
       </header>
@@ -496,24 +497,6 @@ export default function KocListPage() {
       </section>
 
       <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => setShowColumnPanel((current) => !current)}
-            className="h-9 rounded-xl border border-slate-200 bg-white px-4 text-[12.5px] font-bold text-slate-700 hover:bg-slate-50"
-          >
-            Ẩn/hiện cột
-          </button>
-
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[12.5px] font-bold text-slate-700 hover:bg-slate-100"
-          >
-            Xóa tất cả bộ lọc
-          </button>
-        </div>
-
         <div className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_0.9fr_1.2fr_1.2fr_auto] xl:items-end">
           <div>
             <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Trường cần lọc</label>
@@ -562,13 +545,23 @@ export default function KocListPage() {
             onChange={setFilterValue2}
           />
 
-          <button
-            type="button"
-            onClick={addFilter}
-            className="h-10 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-          >
-            + Thêm điều kiện
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={addFilter}
+              className="h-10 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
+            >
+              + Thêm điều kiện
+            </button>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Xóa tất cả bộ lọc
+            </button>
+          </div>
         </div>
 
         {activeFilters.length > 0 && (

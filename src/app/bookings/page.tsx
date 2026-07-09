@@ -429,24 +429,6 @@ export default function BookingListPage() {
       </section>
 
       <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[12.5px] font-bold text-slate-700 hover:bg-slate-100"
-          >
-            Xóa tất cả bộ lọc
-          </button>
-
-          <button
-            type="button"
-            onClick={addFilter}
-            className="h-9 rounded-xl bg-[#3964ff] px-4 text-[12.5px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-          >
-            + Thêm điều kiện
-          </button>
-        </div>
-
         <div className="space-y-3">
           {filters.map((condition, index) => {
             const showValueInput = !["empty", "not_empty"].includes(
@@ -538,6 +520,24 @@ export default function BookingListPage() {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={addFilter}
+            className="h-10 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
+          >
+            + Thêm điều kiện
+          </button>
+
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+          >
+            Xóa tất cả bộ lọc
+          </button>
         </div>
       </section>
 
