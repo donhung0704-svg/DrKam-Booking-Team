@@ -377,6 +377,13 @@ export default function BookingListPage() {
             >
               + Tạo Booking
             </Link>
+
+            <Link
+              href="/import/bookings"
+              className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              Import Booking
+            </Link>
           </div>
         </div>
       </header>
