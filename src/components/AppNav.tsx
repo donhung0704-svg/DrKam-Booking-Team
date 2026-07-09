@@ -16,7 +16,6 @@ const navItems: NavItem[] = [
   { label: "Danh sách Booking", href: "/bookings", icon: "📦" },
   { label: "Danh sách Campaign", href: "/campaigns", icon: "🚀" },
   { label: "Nhân sự", href: "/employees", icon: "👤" },
-  { label: "Import", href: "/import/koc", icon: "📥" },
   { label: "Báo cáo", href: "/reports/daily", icon: "📊" },
 ];
 
