@@ -390,38 +390,47 @@ export default function BookingListPage() {
         </div>
       )}
 
-      <section className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <MiniMetricCard
-          title="Booking đang hiển thị"
-          value={currentPageCount}
-          note={`Trang ${safePageIndex + 1}/${totalPages}`}
-          icon="📋"
-          tone="slate"
-        />
+      <section className="mb-4 rounded-[18px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-[13px] font-bold text-slate-600">
+          <div className="flex flex-wrap items-center gap-3">
+            <span>
+              Booking đang hiển thị:{" "}
+              <b className="text-slate-950">{currentPageCount}</b>
+            </span>
 
-        <MiniMetricCard
-          title="Tổng Booking theo bộ lọc"
-          value={totalBookingCount}
-          note="Tổng sau khi lọc"
-          icon="🗂️"
-          tone="pink"
-        />
+            <span className="text-slate-300">|</span>
 
-        <MiniMetricCard
-          title="Booking nội dung"
-          value={contentBookingCount}
-          note="Trong trang hiện tại"
-          icon="🆕"
-          tone="green"
-        />
+            <span>
+              Tổng Booking theo bộ lọc:{" "}
+              <b className="text-slate-950">{totalBookingCount}</b>
+            </span>
 
-        <MiniMetricCard
-          title="Booking quà"
-          value={giftBookingCount}
-          note={`Đã thanh toán: ${paidCount}`}
-          icon="🎁"
-          tone="orange"
-        />
+            <span className="text-slate-300">|</span>
+
+            <span>
+              Trang:{" "}
+              <b className="text-slate-950">
+                {safePageIndex + 1}/{totalPages}
+              </b>
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <span>
+              Booking nội dung:{" "}
+              <b className="text-emerald-600">{contentBookingCount}</b>
+            </span>
+
+            <span className="text-slate-300">|</span>
+
+            <span>
+              Booking quà: <b className="text-orange-600">{giftBookingCount}</b>{" "}
+              <span className="font-semibold text-slate-400">
+                (Đã thanh toán: {paidCount})
+              </span>
+            </span>
+          </div>
+        </div>
       </section>
 
       <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
@@ -842,47 +851,3 @@ function removeVietnamese(value: string) {
     .replace(/Đ/g, "D");
 }
 
-function MiniMetricCard({
-  title,
-  value,
-  note,
-  icon,
-  tone,
-}: {
-  title: string;
-  value: number | string;
-  note: string;
-  icon: string;
-  tone: "slate" | "pink" | "green" | "orange";
-}) {
-  const toneClass =
-    tone === "green"
-      ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-      : tone === "orange"
-        ? "bg-orange-50 text-orange-700 border-orange-100"
-        : tone === "pink"
-          ? "bg-pink-50 text-pink-700 border-pink-100"
-          : "bg-slate-50 text-slate-600 border-slate-200";
-
-  return (
-    <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[13px] font-bold text-slate-500">{title}</p>
-          <p className="mt-3 text-[30px] font-black leading-none text-slate-950">
-            {value}
-          </p>
-          <p className="mt-2 text-[12px] font-semibold text-slate-400">
-            {note}
-          </p>
-        </div>
-
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl border text-lg ${toneClass}`}
-        >
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
-}
