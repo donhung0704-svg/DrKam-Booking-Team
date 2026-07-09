@@ -22,6 +22,7 @@ const tierOptions = [
 const statusOptions = [
   "Chờ phản hồi",
   "Đã phản hồi",
+  "Cân nhắc",
   "Đã chốt",
   "Từ chối",
 ];
