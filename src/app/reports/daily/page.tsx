@@ -42,43 +42,23 @@ export default function PicReportPage() {
       setLoading(true);
       setMessage("");
 
-      const [bookingResult, kocResult, employeeResult] = await Promise.all([
-        supabase
-          .from("bookings")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(30000),
+      try {
+        // Supabase giới hạn 1000 dòng/lần -> phải phân trang để lấy đủ dữ liệu
+        const [bookingRows, kocRows, employeeRows] = await Promise.all([
+          loadAllRows("bookings"),
+          loadAllRows("koc"),
+          loadAllRows("employees", (query) => query.eq("active", true)),
+        ]);
 
-        supabase
-          .from("koc")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(30000),
-
-        supabase
-          .from("employees")
-          .select("*")
-          .eq("active", true)
-          .order("employee_code", { ascending: true })
-          .limit(3000),
-      ]);
-
-      if (bookingResult.error) {
-        setMessage(`Lỗi tải Booking: ${bookingResult.error.message}`);
-      } else {
-        setBookings(bookingResult.data || []);
-      }
-
-      if (kocResult.error) {
-        setMessage(`Lỗi tải KOC: ${kocResult.error.message}`);
-      } else {
-        setKocs(kocResult.data || []);
-      }
-
-      if (employeeResult.error) {
-        setMessage(`Lỗi tải nhân sự: ${employeeResult.error.message}`);
-      } else {
-        setEmployees(employeeResult.data || []);
+        setBookings(bookingRows);
+        setKocs(kocRows);
+        setEmployees(employeeRows);
+      } catch (error) {
+        setMessage(
+          `Lỗi tải dữ liệu báo cáo: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
       }
 
       setLoading(false);
@@ -513,6 +493,40 @@ function Td({ children }: { children: ReactNode }) {
       {children}
     </td>
   );
+}
+
+// Tải hết dữ liệu từ Supabase (mặc định trả tối đa 1000 dòng/lần -> phân trang)
+async function loadAllRows(
+  table: string,
+  applyFilter?: (query: any) => any
+): Promise<DbRow[]> {
+  const pageSize = 1000;
+  const rows: DbRow[] = [];
+  let from = 0;
+
+  for (;;) {
+    let query: any = supabase.from(table).select("*");
+
+    if (applyFilter) {
+      query = applyFilter(query);
+    }
+
+    query = query
+      .order("id", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    const { data, error } = await query;
+
+    if (error) throw new Error(error.message);
+
+    const batch: DbRow[] = data || [];
+    rows.push(...batch);
+
+    if (batch.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return rows;
 }
 
 function getEmployeeDisplayName(employee?: DbRow | null) {
