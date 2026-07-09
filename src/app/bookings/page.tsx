@@ -503,34 +503,36 @@ export default function BookingListPage() {
                   />
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => removeFilter(condition.id)}
-                  className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[12.5px] font-bold text-slate-700 hover:bg-slate-50"
-                >
-                  Xóa
-                </button>
+                {index === 0 ? (
+                  <div className="flex items-end gap-2">
+                    <button
+                      type="button"
+                      onClick={addFilter}
+                      className="h-10 shrink-0 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
+                    >
+                      + Thêm điều kiện
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="h-10 shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+                    >
+                      Xóa tất cả bộ lọc
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => removeFilter(condition.id)}
+                    className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
+                  >
+                    Xóa
+                  </button>
+                )}
               </div>
             );
           })}
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={addFilter}
-            className="h-10 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-          >
-            + Thêm điều kiện
-          </button>
-
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
-          >
-            Xóa tất cả bộ lọc
-          </button>
         </div>
       </section>
 
