@@ -63,7 +63,7 @@ export default function NewBookingPage() {
     const formData = new FormData(event.currentTarget);
 
     const payload = {
-      created_at: getVietnamTodayDateKey(),
+      created_at: getVietnamNowTimestamp(),
       koc_id: getText(formData, "koc_id") || null,
       employee_id: getText(formData, "employee_id") || null,
       booking_type: getText(formData, "booking_type") || "Booking vid",
@@ -411,4 +411,27 @@ function getVietnamTodayDateKey() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(new Date());
+}
+
+// Trả về mốc thời gian tạo booking theo giờ Việt Nam, có cả giờ/phút/giây
+// (định dạng YYYY-MM-DDTHH:mm:ss) để danh sách sắp xếp đúng "mới nhất trước"
+// ngay cả với nhiều booking tạo trong cùng một ngày.
+function getVietnamNowTimestamp() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+
+  const get = (type: string) =>
+    parts.find((part) => part.type === type)?.value ?? "00";
+
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get(
+    "minute"
+  )}:${get("second")}`;
 }
