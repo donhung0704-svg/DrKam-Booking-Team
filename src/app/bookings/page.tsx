@@ -567,7 +567,7 @@ export default function BookingListPage() {
         }}
       />
 
-      <section className="sticky bottom-0 z-20 mt-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12)]">
+      <section className="sticky bottom-0 z-[200] mt-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12)]">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="text-[13px] font-bold text-slate-700">
             Đang xem:{" "}
