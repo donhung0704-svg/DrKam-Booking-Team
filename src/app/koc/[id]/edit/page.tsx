@@ -114,6 +114,7 @@ export default function EditKocPage() {
       number_of_videos: getNumber(formData, "number_of_videos"),
       campaign_id: getText(formData, "campaign_id") || null,
       gmv: getNumber(formData, "gmv"),
+      gmv_thang: getNumber(formData, "gmv_thang"),
       marital_status: getText(formData, "marital_status") || null,
       new_contact_date: parseVietnameseDateInput(
         formData.get("new_contact_date")
@@ -377,11 +378,20 @@ export default function EditKocPage() {
                   />
                 </CompactField>
 
-                <CompactField label="GMV">
+                <CompactField label="GMV ngày">
                   <input
                     name="gmv"
                     defaultValue={koc.gmv || ""}
                     placeholder="Ví dụ: 1000000"
+                    className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  />
+                </CompactField>
+
+                <CompactField label="GMV tháng">
+                  <input
+                    name="gmv_thang"
+                    defaultValue={koc.gmv_thang || ""}
+                    placeholder="Ví dụ: 30000000"
                     className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
                   />
                 </CompactField>
