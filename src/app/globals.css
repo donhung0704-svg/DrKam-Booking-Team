@@ -1,26 +1,950 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Portal layout giống hệ thống quản trị */
+body {
+  background: #f4f7fb !important;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.portal-shell {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.portal-content > .crm-light {
+  min-height: auto !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.portal-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.portal-sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.portal-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.portal-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.portal-content input,
+.portal-content select,
+.portal-content textarea {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif !important;
+}
+/* CRM compact spacing - làm giao diện gọn và tinh tế hơn */
+.crm-light {
+  font-size: 14px;
+}
+
+.crm-light h1,
+.crm-light h2,
+.crm-light h3 {
+  line-height: 1.22 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.crm-light p,
+.crm-light span,
+.crm-light label,
+.crm-light div,
+.crm-light button,
+.crm-light a,
+.crm-light input,
+.crm-light select,
+.crm-light textarea,
+.crm-light td,
+.crm-light th {
+  line-height: 1.35 !important;
+}
+
+/* Giảm khoảng cách trong card/header */
+.crm-light .p-6 {
+  padding: 1.25rem !important;
+}
+
+.crm-light .p-5 {
+  padding: 1rem !important;
+}
+
+.crm-light .px-6 {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+}
+
+.crm-light .py-6 {
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}
+
+.crm-light .py-5 {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.crm-light .py-4 {
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+.crm-light .py-3 {
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+}
+
+/* Giảm khoảng cách giữa các block */
+.crm-light .gap-6 {
+  gap: 1.125rem !important;
+}
+
+.crm-light .gap-5 {
+  gap: 1rem !important;
+}
+
+.crm-light .gap-4 {
+  gap: 0.875rem !important;
+}
+
+.crm-light .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.125rem !important;
+}
+
+/* Bảng gọn hơn */
+.crm-light table th {
+  padding-top: 0.7rem !important;
+  padding-bottom: 0.7rem !important;
+  line-height: 1.25 !important;
+}
+
+.crm-light table td {
+  padding-top: 0.7rem !important;
+  padding-bottom: 0.7rem !important;
+  line-height: 1.35 !important;
+}
+
+/* Badge/tag gọn hơn */
+.crm-light span.inline-flex.rounded-full,
+.crm-light a.inline-flex.rounded-xl,
+.crm-light button.rounded-2xl,
+.crm-light a.rounded-2xl {
+  line-height: 1.2 !important;
+}
+
+/* Các tag dạng ô trong Import Excel */
+.crm-light .rounded-2xl.border.bg-slate-50 {
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
+}
+
+/* Input/select gọn hơn */
+.crm-light input,
+.crm-light select {
+  min-height: 42px !important;
+}
+
+.crm-light textarea {
+  line-height: 1.45 !important;
+}
+
+/* Sidebar gọn hơn */
+.portal-sidebar-scroll a,
+.portal-sidebar-scroll div {
+  line-height: 1.25 !important;
+}
+
+.portal-sidebar-scroll .py-4 {
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+.portal-sidebar-scroll .py-3 {
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
+}
+/* CRM ultra compact - thu nhỏ field/tag/card và cố định header bảng */
+
+/* Giảm khoảng trắng tổng thể trong vùng nội dung */
+.portal-content > div {
+  padding-top: 16px !important;
+}
+
+/* Header các trang gọn hơn */
+.crm-light header {
+  margin-bottom: 14px !important;
+}
+
+.crm-light header.rounded-\[28px\] {
+  padding-top: 18px !important;
+  padding-bottom: 18px !important;
+}
+
+.crm-light header h1 {
+  font-size: 28px !important;
+  line-height: 1.18 !important;
+  margin-top: 0 !important;
+}
+
+.crm-light header p {
+  margin-top: 6px !important;
+  line-height: 1.35 !important;
+}
+
+/* Card/section gọn hơn */
+.crm-light section.rounded-\[28px\],
+.crm-light .rounded-\[28px\] {
+  border-radius: 22px !important;
+}
+
+.crm-light section.mb-6 {
+  margin-bottom: 14px !important;
+}
+
+.crm-light .mb-6 {
+  margin-bottom: 14px !important;
+}
+
+.crm-light .mb-5 {
+  margin-bottom: 12px !important;
+}
+
+.crm-light .mt-5 {
+  margin-top: 12px !important;
+}
+
+.crm-light .mt-4 {
+  margin-top: 10px !important;
+}
+
+.crm-light .mt-3 {
+  margin-top: 8px !important;
+}
+
+.crm-light .mt-2 {
+  margin-top: 6px !important;
+}
+
+.crm-light .mt-1 {
+  margin-top: 4px !important;
+}
+
+/* Thu nhỏ các ô cột Excel hỗ trợ / tag dạng card */
+.crm-light .grid .rounded-2xl.border.border-slate-200.bg-slate-50,
+.crm-light .grid .rounded-2xl.border.border-slate-200.bg-white {
+  min-height: 34px !important;
+  padding: 8px 14px !important;
+  border-radius: 14px !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+}
+
+/* Thu nhỏ badge/tag trong bảng */
+.crm-light span.inline-flex.rounded-full {
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+}
+
+/* Thu nhỏ nút */
+.crm-light button.rounded-2xl,
+.crm-light a.rounded-2xl,
+.crm-light a.inline-flex.rounded-xl {
+  min-height: 38px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  border-radius: 14px !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+}
+
+/* Thu nhỏ input/select/file */
+.crm-light input,
+.crm-light select {
+  height: 40px !important;
+  min-height: 40px !important;
+  border-radius: 14px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  font-size: 13px !important;
+}
+
+.crm-light input[type="file"] {
+  height: auto !important;
+  min-height: 40px !important;
+  padding-top: 9px !important;
+  padding-bottom: 9px !important;
+}
+
+.crm-light textarea {
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+}
+
+/* Form label gọn hơn */
+.crm-light label span {
+  margin-bottom: 6px !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+}
+
+/* Giảm khoảng cách grid */
+.crm-light .gap-4 {
+  gap: 10px !important;
+}
+
+.crm-light .gap-3 {
+  gap: 8px !important;
+}
+
+.crm-light .gap-5 {
+  gap: 12px !important;
+}
+
+/* Bảng gọn hơn */
+.crm-light table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.crm-light table th {
+  padding: 10px 14px !important;
+  font-size: 11.5px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.crm-light table td {
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+  vertical-align: middle !important;
+}
+
+/* CỐ ĐỊNH HÀNG TÊN TRƯỜNG CỦA BẢNG */
+
+
+/* Nếu bảng nằm trong trang có topbar cố định, giữ header nổi rõ */
+.crm-light table thead {
+  z-index: 25 !important;
+}
+
+/* Dòng tổng cộng cuối bảng nổi nhẹ */
+.crm-light table tbody tr:last-child td {
+  background: #f8fafc !important;
+}
+
+/* Thu nhỏ metric card */
+.crm-light .text-4xl {
+  font-size: 30px !important;
+  line-height: 1.1 !important;
+}
+
+.crm-light .text-2xl {
+  font-size: 22px !important;
+  line-height: 1.2 !important;
+}
+
+.crm-light .text-xl {
+  font-size: 18px !important;
+  line-height: 1.25 !important;
+}
+
+/* Thu nhỏ icon card */
+.crm-light .h-12.w-12 {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+}
+
+/* Sidebar gọn hơn */
+.portal-sidebar-scroll {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+.portal-sidebar-scroll .rounded-3xl {
+  border-radius: 20px !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.portal-sidebar-scroll a,
+.portal-sidebar-scroll div {
+  font-size: 13px !important;
+}
+
+.portal-sidebar-scroll .h-10.w-10 {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 12px !important;
+}
+
+/* Topbar gọn hơn một chút */
+header.fixed.h-\[92px\] {
+  height: 82px !important;
+}
+
+.portal-content {
+  padding-top: 82px !important;
+}
+/* Fix sticky table header - cố định tên trường đúng trong khung bảng */
+.crm-light section.overflow-hidden > .overflow-x-auto {
+  max-height: calc(100vh - 260px) !important;
+  overflow: auto !important;
+}
+
+.crm-light section.overflow-hidden > .overflow-x-auto table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 20 !important;
+  background: #f8fafc !important;
+  box-shadow: inset 0 -1px 0 #e2e8f0;
+}
+
+.crm-light section.overflow-hidden > .overflow-x-auto table tbody td {
+  background: #ffffff !important;
+}
+
+.crm-light section.overflow-hidden > .overflow-x-auto table tbody tr:hover td {
+  background: #f8fafc !important;
+}
+/* KOC table - cố định cột thao tác sửa bên trái */
+.crm-light .koc-table thead th:first-child {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 35 !important;
+  min-width: 78px !important;
+  width: 78px !important;
+  background: #f8fafc !important;
+  box-shadow: 1px 0 0 #e2e8f0;
+  text-align: center !important;
+}
+
+.crm-light .koc-table tbody td:first-child {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 30 !important;
+  min-width: 78px !important;
+  width: 78px !important;
+  background: #ffffff !important;
+  box-shadow: 1px 0 0 #eef2f7;
+  text-align: center !important;
+}
+
+.crm-light .koc-table tbody tr:hover td:first-child {
+  background: #f8fafc !important;
+}
+/* Sửa KOC - ultra compact form */
+.koc-edit-ultra {
+  padding-top: 12px !important;
+}
+
+.koc-edit-ultra header {
+  margin-bottom: 10px !important;
+  padding: 12px 16px !important;
+  border-radius: 16px !important;
+}
+
+.koc-edit-ultra header .h-10.w-10 {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
+  font-size: 15px !important;
+}
+
+.koc-edit-ultra header h1 {
+  font-size: 22px !important;
+  line-height: 1.15 !important;
+}
+
+.koc-edit-ultra header p {
+  margin-top: 3px !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+}
+
+.koc-edit-ultra form {
+  row-gap: 10px !important;
+}
+
+.koc-edit-ultra form.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 10px !important;
+}
+
+.koc-edit-ultra form > section {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+.koc-edit-ultra form > section > div:first-child {
+  padding: 8px 14px !important;
+}
+
+.koc-edit-ultra form > section > div:first-child p {
+  font-size: 10px !important;
+  letter-spacing: 0.18em !important;
+  line-height: 1.1 !important;
+}
+
+.koc-edit-ultra form > section > div:first-child h2 {
+  margin-top: 3px !important;
+  font-size: 15px !important;
+  line-height: 1.15 !important;
+}
+
+/* Làm các dòng field sát nhau hơn */
+.koc-edit-ultra form label {
+  grid-template-columns: 112px minmax(0, 1fr) !important;
+  gap: 6px !important;
+  padding: 6px 10px !important;
+  min-height: 42px !important;
+  align-items: center !important;
+}
+
+.koc-edit-ultra form label span {
+  margin: 0 !important;
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0.055em !important;
+  color: #64748b !important;
+}
+
+/* Ô nhập/select nhỏ hơn */
+.koc-edit-ultra form input,
+.koc-edit-ultra form select {
+  height: 30px !important;
+  min-height: 30px !important;
+  border-radius: 8px !important;
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
+.koc-edit-ultra form textarea {
+  min-height: 48px !important;
+  border-radius: 8px !important;
+  padding: 7px 9px !important;
+  font-size: 12px !important;
+  line-height: 1.32 !important;
+}
+
+/* Note cao hơn một chút nhưng vẫn gọn */
+.koc-edit-ultra textarea[name="note"] {
+  min-height: 62px !important;
+}
+
+.koc-edit-ultra textarea[name="address"] {
+  min-height: 48px !important;
+}
+
+/* Giảm độ dày đường chia bảng field */
+.koc-edit-ultra .bg-slate-200 {
+  gap: 1px !important;
+}
+
+/* Thanh lưu dưới cùng gọn hơn */
+.koc-edit-ultra .sticky.bottom-4 {
+  bottom: 10px !important;
+  border-radius: 14px !important;
+  padding: 8px !important;
+}
+
+.koc-edit-ultra .sticky.bottom-4 a,
+.koc-edit-ultra .sticky.bottom-4 button {
+  height: 34px !important;
+  border-radius: 10px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  font-size: 12px !important;
+}
+
+/* Trên màn hình rộng cho bảng field thoáng nhưng vẫn sát */
+@media (min-width: 1280px) {
+  .koc-edit-ultra form label {
+    grid-template-columns: 118px minmax(0, 1fr) !important;
+  }
+}
+/* Thêm KOC - tiny compact mode */
+.koc-new-tiny {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+/* Header trang nhỏ lại */
+.koc-new-tiny header {
+  margin-bottom: 8px !important;
+  padding: 10px 14px !important;
+  border-radius: 14px !important;
+}
+
+.koc-new-tiny header .h-12.w-12,
+.koc-new-tiny header .h-10.w-10 {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 9px !important;
+  font-size: 14px !important;
+}
+
+.koc-new-tiny header p {
+  margin: 0 !important;
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+}
+
+.koc-new-tiny header h1 {
+  margin-top: 2px !important;
+  font-size: 21px !important;
+  line-height: 1.12 !important;
+}
+
+.koc-new-tiny header h1 + p,
+.koc-new-tiny header div > p:last-child {
+  margin-top: 4px !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+}
+
+/* Khoảng cách giữa các khối nhỏ hơn */
+.koc-new-tiny form {
+  gap: 8px !important;
+}
+
+.koc-new-tiny form.space-y-6 > :not([hidden]) ~ :not([hidden]),
+.koc-new-tiny form.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 8px !important;
+}
+
+/* Section form nhỏ lại */
+.koc-new-tiny form > section {
+  border-radius: 14px !important;
+  padding: 10px 12px !important;
+}
+
+.koc-new-tiny form > section > div:first-child {
+  margin-bottom: 8px !important;
+}
+
+.koc-new-tiny form > section h2 {
+  font-size: 15px !important;
+  line-height: 1.15 !important;
+}
+
+.koc-new-tiny form > section p {
+  margin-top: 2px !important;
+  font-size: 11.5px !important;
+  line-height: 1.25 !important;
+}
+
+/* Grid field sát hơn */
+.koc-new-tiny .grid {
+  gap: 7px !important;
+}
+
+/* Label nhỏ hơn */
+.koc-new-tiny label span {
+  margin-bottom: 3px !important;
+  font-size: 11px !important;
+  line-height: 1.15 !important;
+  font-weight: 700 !important;
+}
+
+/* Input/select nhỏ hơn gần một nửa */
+.koc-new-tiny input,
+.koc-new-tiny select {
+  height: 28px !important;
+  min-height: 28px !important;
+  border-radius: 8px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+}
+
+/* Textarea nhỏ lại */
+.koc-new-tiny textarea {
+  min-height: 46px !important;
+  border-radius: 8px !important;
+  padding: 7px 8px !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+}
+
+.koc-new-tiny textarea[name="note"] {
+  min-height: 58px !important;
+}
+
+.koc-new-tiny textarea[name="address"] {
+  min-height: 46px !important;
+}
+
+/* Nút nhỏ hơn */
+.koc-new-tiny button,
+.koc-new-tiny a.rounded-2xl,
+.koc-new-tiny a.rounded-xl {
+  height: 32px !important;
+  min-height: 32px !important;
+  border-radius: 9px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+}
+
+/* Thanh lưu cuối nhỏ hơn */
+.koc-new-tiny .sticky.bottom-4 {
+  bottom: 8px !important;
+  padding: 7px !important;
+  border-radius: 12px !important;
+}
+
+.koc-new-tiny .sticky.bottom-4 a,
+.koc-new-tiny .sticky.bottom-4 button {
+  height: 32px !important;
+  min-height: 32px !important;
+  border-radius: 9px !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  font-size: 12px !important;
+}
+
+/* Giảm khoảng trắng trong các class tailwind lớn */
+.koc-new-tiny .p-6 {
+  padding: 10px 12px !important;
+}
+
+.koc-new-tiny .px-6 {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.koc-new-tiny .py-6 {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+.koc-new-tiny .mb-6,
+.koc-new-tiny .mb-5 {
+  margin-bottom: 8px !important;
+}
+
+.koc-new-tiny .mt-5,
+.koc-new-tiny .mt-4,
+.koc-new-tiny .mt-3 {
+  margin-top: 6px !important;
+}
+/* KOC table compact width - thu hẹp khoảng cách ngang các cột */
+.crm-light .koc-table-compact th {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  font-size: 11px !important;
+  letter-spacing: 0.04em !important;
+}
+
+.crm-light .koc-table-compact td {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  font-size: 12.5px !important;
+}
+
+/* Cột thao tác nhỏ hơn */
+.crm-light .koc-table-compact thead th:first-child {
+  min-width: 58px !important;
+  width: 58px !important;
+  max-width: 58px !important;
+}
+
+.crm-light .koc-table-compact tbody td:first-child {
+  min-width: 58px !important;
+  width: 58px !important;
+  max-width: 58px !important;
+}
+
+/* Nút bút sửa nhỏ xinh hơn */
+.crm-light .koc-table-compact tbody td:first-child a {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+}
+
+/* Các badge trong bảng gọn hơn */
+.crm-light .koc-table-compact span.inline-flex {
+  padding: 3px 8px !important;
+  font-size: 11.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Link Facebook/TikTok gọn hơn */
+.crm-light .koc-table-compact a.inline-flex {
+  padding: 5px 9px !important;
+  font-size: 11.5px !important;
+  border-radius: 9px !important;
+}
+
+/* Text dài như Address/Note thu hẹp lại */
+.crm-light .koc-table-compact td div {
+  max-width: 190px !important;
+  line-height: 1.3 !important;
+}
+
+/* Các cột ngày/number không cần quá rộng */
+.crm-light .koc-table-compact th,
+.crm-light .koc-table-compact td {
+  white-space: nowrap;
+}
+
+/* Riêng Address/Note cho phép xuống dòng để bảng không bị quá rộng */
+.crm-light .koc-table-compact td:nth-child(11) div,
+.crm-light .koc-table-compact td:nth-child(12) div {
+  white-space: normal !important;
+  max-width: 190px !important;
+}
+/* Thêm KOC - thu hẹp chiều rộng bảng/form */
+.koc-new-tiny header,
+.koc-new-tiny form > section,
+.koc-new-tiny .sticky.bottom-4 {
+  max-width: 920px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Form nhỏ hơn nữa trên màn hình lớn */
+@media (min-width: 1280px) {
+  .koc-new-tiny header,
+  .koc-new-tiny form > section,
+  .koc-new-tiny .sticky.bottom-4 {
+    max-width: 900px !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Các field không bị kéo quá rộng */
+.koc-new-tiny input,
+.koc-new-tiny select,
+.koc-new-tiny textarea {
+  max-width: 100% !important;
+}
+
+/* Siết lại khoảng cách ngang giữa các cột */
+.koc-new-tiny form > section .grid {
+  column-gap: 14px !important;
+  row-gap: 7px !important;
+}
+
+/* Với layout 3 cột, mỗi cột gọn lại */
+@media (min-width: 1280px) {
+  .koc-new-tiny form > section .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Riêng các ô textarea như Address/Note không làm section quá rộng */
+.koc-new-tiny textarea[name="address"],
+.koc-new-tiny textarea[name="note"] {
+  max-width: 100% !important;
+}
+
+/* Header cũng gọn theo form */
+.koc-new-tiny header {
+  min-height: unset !important;
+}
+
+/* Nếu muốn form lệch trái thay vì căn giữa, đổi auto thành 0 ở 2 dòng dưới */
+/* Fix KOC Advanced Table - cố định hàng tiêu đề */
+.crm-light .koc-advanced-scroll {
+  position: relative !important;
+}
+
+.crm-light .koc-advanced-scroll thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 80 !important;
+  background: #f8fafc !important;
+  box-shadow: inset 0 -1px 0 #e2e8f0, 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Nếu cột vừa ghim ngang vừa nằm ở header thì phải nổi cao hơn */
+.crm-light .koc-advanced-scroll thead th:first-child,
+.crm-light .koc-advanced-scroll thead th[style*="left"] {
+  z-index: 100 !important;
+  background: #f8fafc !important;
+}
+
+/* Dữ liệu ở cột ghim không được đè lên header */
+.crm-light .koc-advanced-scroll tbody td {
+  z-index: 1;
+}
+
+.crm-light .koc-advanced-scroll tbody td[style*="left"] {
+  z-index: 60 !important;
+  background: #ffffff !important;
+}
+
+.crm-light .koc-advanced-scroll tbody tr:hover td[style*="left"] {
+  background: #f8fafc !important;
+}
+/* Booking Advanced Table - Excel mode */
+.crm-light .booking-advanced-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.crm-light .booking-advanced-scroll {
+  position: relative !important;
+}
+
+.crm-light .booking-advanced-scroll thead th {
+  position: sticky !important;
+  top: 0 !important;
+  background: #f8fafc !important;
+  box-shadow: inset 0 -1px 0 #e2e8f0, 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+.crm-light .booking-advanced-table input,
+.crm-light .booking-advanced-table select {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif !important;
+}
+
+.crm-light .booking-advanced-table td,
+.crm-light .booking-advanced-table th {
+  overflow: hidden;
+}
+/* Campaign Advanced Table - Excel mode */
+.crm-light .campaign-advanced-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.crm-light .campaign-advanced-scroll {
+  position: relative !important;
+}
+
+.crm-light .campaign-advanced-scroll thead th {
+  position: sticky !important;
+  top: 0 !important;
+  background: #f8fafc !important;
+  box-shadow: inset 0 -1px 0 #e2e8f0, 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+.crm-light .campaign-advanced-table input,
+.crm-light .campaign-advanced-table select {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif !important;
+}
+
+.crm-light .campaign-advanced-table td,
+.crm-light .campaign-advanced-table th {
+  overflow: hidden;
 }
