@@ -428,35 +428,23 @@ export default function BookingListPage() {
         </div>
       </section>
 
-      <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
-        <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
-              Bộ lọc nâng cao
-            </p>
+      <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[12.5px] font-bold text-slate-700 hover:bg-slate-100"
+          >
+            Xóa tất cả bộ lọc
+          </button>
 
-            <h2 className="mt-1 text-[18px] font-bold leading-tight text-slate-950">
-              Lọc tất cả trường
-            </h2>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[12.5px] font-bold text-slate-700 hover:bg-slate-100"
-            >
-              Xóa tất cả bộ lọc
-            </button>
-
-            <button
-              type="button"
-              onClick={addFilter}
-              className="h-9 rounded-xl bg-[#3964ff] px-4 text-[12.5px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-            >
-              + Thêm điều kiện
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={addFilter}
+            className="h-9 rounded-xl bg-[#3964ff] px-4 text-[12.5px] font-bold text-white shadow-md hover:bg-[#2f55df]"
+          >
+            + Thêm điều kiện
+          </button>
         </div>
 
         <div className="space-y-3">
