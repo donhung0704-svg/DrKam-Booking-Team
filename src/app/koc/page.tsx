@@ -616,7 +616,24 @@ export default function KocListPage() {
         )}
       </section>
 
-      <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <KocAdvancedTable
+        kocs={kocs}
+        campaigns={campaigns}
+        employees={employees}
+        visibleColumnKeys={visibleColumnKeys}
+        resetLayoutSignal={resetColumnSignal}
+        loading={loading}
+        onExport={exportKocExcel}
+        onKocUpdated={(id, patch) => {
+          setKocs((prev) =>
+            prev.map((item) =>
+              String(item.id) === String(id) ? { ...item, ...patch } : item
+            )
+          );
+        }}
+      />
+
+      <section className="sticky bottom-0 z-[200] mt-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12)]">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="text-[13px] font-bold text-slate-600">
             Đang xem <span className="text-slate-950">{startRow} - {endRow}</span> / {totalKocCount} KOC
@@ -642,24 +659,6 @@ export default function KocListPage() {
           </div>
         </div>
       </section>
-
-      <KocAdvancedTable
-        kocs={kocs}
-        totalKocs={totalKocCount}
-        campaigns={campaigns}
-        employees={employees}
-        visibleColumnKeys={visibleColumnKeys}
-        resetLayoutSignal={resetColumnSignal}
-        loading={loading}
-        onExport={exportKocExcel}
-        onKocUpdated={(id, patch) => {
-          setKocs((prev) =>
-            prev.map((item) =>
-              String(item.id) === String(id) ? { ...item, ...patch } : item
-            )
-          );
-        }}
-      />
     </section>
   );
 }
