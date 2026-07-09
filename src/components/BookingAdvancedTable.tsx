@@ -146,7 +146,7 @@ export default function BookingAdvancedTable({
   kocs,
   employees,
   loading,
-  onExport,
+  resetLayoutSignal,
   onBookingUpdated,
   onBookingDeleted,
 }: {
@@ -155,7 +155,7 @@ export default function BookingAdvancedTable({
   kocs: DbRow[];
   employees: DbRow[];
   loading: boolean;
-  onExport: () => void;
+  resetLayoutSignal?: number;
   onBookingUpdated: (id: string, patch: DbRow) => void;
   onBookingDeleted?: (ids: string[]) => void;
 }) {
@@ -173,6 +173,8 @@ export default function BookingAdvancedTable({
   const [bulkClearField, setBulkClearField] = useState("");
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const firstResetSignalRef = useRef(resetLayoutSignal);
 
   useEffect(() => {
     const savedOrder = window.localStorage.getItem(storageKeyOrder);
@@ -206,6 +208,14 @@ export default function BookingAdvancedTable({
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (resetLayoutSignal === undefined) return;
+
+    if (firstResetSignalRef.current === resetLayoutSignal) return;
+
+    resetLayout();
+  }, [resetLayoutSignal]);
 
   useEffect(() => {
     const visibleIdSet = new Set(bookings.map((booking) => String(booking.id)));
@@ -555,30 +565,6 @@ export default function BookingAdvancedTable({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={resetLayout}
-            className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-          >
-            Reset cột
-          </button>
-
-          <button
-            type="button"
-            onClick={onExport}
-            className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
-          >
-            Xuất Excel
-          </button>
-
-          <Link
-            href="/bookings/new"
-            className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-          >
-            + Tạo Booking
-          </Link>
-        </div>
       </div>
 
       <div className="border-b border-slate-200 bg-slate-50 px-5 py-3">

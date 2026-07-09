@@ -73,6 +73,7 @@ export default function BookingListPage() {
 
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(100);
+  const [resetColumnSignal, setResetColumnSignal] = useState(0);
 
   const [filters, setFilters] = useState<FilterCondition[]>([
     {
@@ -356,6 +357,14 @@ export default function BookingListPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
+              onClick={() => setResetColumnSignal((current) => current + 1)}
+              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              Reset cột
+            </button>
+
+            <button
+              type="button"
               onClick={exportBookingExcel}
               className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
             >
@@ -590,7 +599,7 @@ export default function BookingListPage() {
         kocs={kocs}
         employees={employees}
         loading={loading}
-        onExport={exportBookingExcel}
+        resetLayoutSignal={resetColumnSignal}
         onBookingUpdated={(id, patch) => {
           setBookings((prev) =>
             prev.map((item) =>
