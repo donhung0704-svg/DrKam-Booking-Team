@@ -160,8 +160,15 @@ const defaultColumns: ColumnConfig[] = [
   },
   {
     key: "gmv",
-    label: "GMV",
+    label: "GMV ngày",
     field: "gmv",
+    type: "number",
+    width: 115,
+  },
+  {
+    key: "gmv_thang",
+    label: "GMV tháng",
+    field: "gmv_thang",
     type: "number",
     width: 115,
   },
