@@ -113,8 +113,8 @@ export default function AppNav() {
           </div>
         </div>
 
-        <div className="portal-sidebar-scroll h-[calc(100vh-92px)] overflow-y-auto px-5 py-6">
-          <nav className="space-y-3">
+        <div className="portal-sidebar-scroll h-[calc(100vh-92px)] overflow-y-auto px-4 py-4">
+          <nav className="space-y-1.5">
             <MainNavLink
               href="/"
               icon="▣"
@@ -205,7 +205,7 @@ export default function AppNav() {
               ))}
             </NavGroup>
 
-            <div className="my-6 border-t border-slate-100" />
+            <div className="my-4 border-t border-slate-100" />
 
             <p className="px-4 text-[12px] font-black uppercase tracking-[0.22em] text-slate-400">
               Nhóm & quản trị
@@ -291,15 +291,15 @@ function MainNavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center justify-between rounded-2xl px-4 py-4 text-sm font-black transition ${
+      className={`flex items-center justify-between rounded-2xl px-3 py-2 text-sm font-black transition ${
         active
           ? "bg-red-50 text-red-600"
           : "text-slate-500 hover:bg-slate-50 hover:text-slate-950"
       }`}
     >
-      <span className="flex items-center gap-4">
+      <span className="flex items-center gap-3">
         <span
-          className={`flex h-10 w-10 items-center justify-center rounded-2xl text-lg ${
+          className={`flex h-8 w-8 items-center justify-center rounded-xl text-base ${
             active ? "bg-white text-red-600" : "bg-slate-50 text-slate-400"
           }`}
         >
@@ -324,18 +324,18 @@ function NavGroup({
 }) {
   return (
     <div
-      className={`rounded-3xl px-4 py-4 ${
+      className={`rounded-2xl px-3 py-2.5 ${
         active ? "bg-red-50" : "bg-transparent"
       }`}
     >
       <div
-        className={`mb-3 flex items-center justify-between text-sm font-black ${
+        className={`mb-2 flex items-center justify-between text-sm font-black ${
           active ? "text-red-600" : "text-slate-600"
         }`}
       >
-        <span className="flex items-center gap-4">
+        <span className="flex items-center gap-3">
           <span
-            className={`flex h-10 w-10 items-center justify-center rounded-2xl text-lg ${
+            className={`flex h-8 w-8 items-center justify-center rounded-xl text-base ${
               active ? "bg-white text-red-600" : "bg-slate-50 text-slate-400"
             }`}
           >
@@ -347,7 +347,7 @@ function NavGroup({
         <span className="text-lg">{active ? "⌃" : "⌄"}</span>
       </div>
 
-      <div className="ml-5 border-l border-slate-200 pl-4">{children}</div>
+      <div className="ml-4 border-l border-slate-200 pl-3">{children}</div>
     </div>
   );
 }
@@ -366,7 +366,7 @@ function SubNavLink({
   return (
     <Link
       href={href}
-      className={`mb-2 flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-black transition ${
+      className={`mb-1 flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-black transition ${
         active
           ? "bg-white text-red-600 shadow-sm"
           : "text-slate-500 hover:bg-white hover:text-slate-950"
@@ -380,9 +380,9 @@ function SubNavLink({
 
 function LockedNavItem({ icon, label }: { icon: string; label: string }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl px-4 py-4 text-sm font-black text-slate-400">
-      <span className="flex items-center gap-4">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-lg">
+    <div className="flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm font-black text-slate-400">
+      <span className="flex items-center gap-3">
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-base">
           {icon}
         </span>
         {label}

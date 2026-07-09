@@ -335,10 +335,10 @@ export default function BookingListPage() {
 
   return (
     <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-5 py-6 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
-      <header className="mb-4 rounded-[22px] border border-slate-200 bg-white px-5 py-4 shadow-sm">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-lg">
+      <header className="mb-3 rounded-[18px] border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
+        <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-base">
               📦
             </div>
 
@@ -347,14 +347,9 @@ export default function BookingListPage() {
                 DRKAM CRM PORTAL
               </p>
 
-              <h1 className="text-[26px] font-bold leading-tight tracking-normal text-slate-950 md:text-[28px]">
+              <h1 className="text-[20px] font-bold leading-tight tracking-normal text-slate-950 md:text-[22px]">
                 Danh sách Booking
               </h1>
-
-              <p className="mt-2 max-w-3xl text-[13px] leading-5 text-slate-500">
-                Giao diện đồng bộ với Danh sách KOC: bộ lọc nâng cao, phân trang,
-                sửa hàng loạt, kéo thả cột, ghim cột và xuất Excel trang hiện tại.
-              </p>
             </div>
           </div>
 
