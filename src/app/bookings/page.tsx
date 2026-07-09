@@ -547,7 +547,6 @@ export default function BookingListPage() {
 
       <BookingAdvancedTable
         bookings={currentPageBookings}
-        totalBookings={totalBookingCount}
         kocs={kocs}
         employees={employees}
         loading={loading}

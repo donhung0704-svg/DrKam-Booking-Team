@@ -142,7 +142,6 @@ const storageKeyPinned = "drkam_booking_pinned_columns_v4";
 
 export default function BookingAdvancedTable({
   bookings,
-  totalBookings,
   kocs,
   employees,
   loading,
@@ -151,7 +150,6 @@ export default function BookingAdvancedTable({
   onBookingDeleted,
 }: {
   bookings: DbRow[];
-  totalBookings: number;
   kocs: DbRow[];
   employees: DbRow[];
   loading: boolean;
@@ -543,29 +541,11 @@ export default function BookingAdvancedTable({
 
   return (
     <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
-            Booking database
-          </p>
-
-          <h2 className="mt-1 text-[20px] font-bold leading-tight text-slate-950">
-            Danh sách Booking
-          </h2>
-
-          <p className="mt-1 text-[13px] text-slate-500">
-            Đang hiển thị{" "}
-            <span className="font-bold text-slate-950">{bookings.length}</span>{" "}
-            / {totalBookings} booking phù hợp. Kéo thả tiêu đề cột để đổi vị
-            trí, bấm ghim để cố định cột.
-          </p>
-
-          {error && (
-            <p className="mt-2 text-[12px] font-bold text-red-600">{error}</p>
-          )}
+      {error && (
+        <div className="border-b border-slate-200 px-5 py-3">
+          <p className="text-[12px] font-bold text-red-600">{error}</p>
         </div>
-
-      </div>
+      )}
 
       <div className="border-b border-slate-200 bg-slate-50 px-5 py-3">
         <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
