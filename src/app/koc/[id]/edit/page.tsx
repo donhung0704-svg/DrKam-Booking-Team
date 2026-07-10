@@ -112,6 +112,7 @@ export default function EditKocPage() {
       booking_date: parseVietnameseDateInput(formData.get("booking_date")),
       date_of_birth: parseVietnameseDateInput(formData.get("date_of_birth")),
       number_of_videos: getNumber(formData, "number_of_videos"),
+      monthly_videos: getNumber(formData, "monthly_videos"),
       campaign_id: getText(formData, "campaign_id") || null,
       gmv: getNumber(formData, "gmv"),
       gmv_thang: getNumber(formData, "gmv_thang"),
@@ -369,11 +370,20 @@ export default function EditKocPage() {
                   />
                 </CompactField>
 
-                <CompactField label="Number of videos">
+                <CompactField label="Daily Videos(T-1)">
                   <input
                     name="number_of_videos"
                     defaultValue={koc.number_of_videos || ""}
                     placeholder="Số video"
+                    className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  />
+                </CompactField>
+
+                <CompactField label="Monthly Videos">
+                  <input
+                    name="monthly_videos"
+                    defaultValue={koc.monthly_videos || ""}
+                    placeholder="Số video tháng"
                     className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
                   />
                 </CompactField>
