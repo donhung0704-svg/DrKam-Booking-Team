@@ -146,8 +146,15 @@ const defaultColumns: ColumnConfig[] = [
   },
   {
     key: "number_of_videos",
-    label: "Number of videos",
+    label: "Daily Videos(T-1)",
     field: "number_of_videos",
+    type: "number",
+    width: 145,
+  },
+  {
+    key: "monthly_videos",
+    label: "Monthly Videos",
+    field: "monthly_videos",
     type: "number",
     width: 145,
   },
