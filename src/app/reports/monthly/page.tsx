@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import ReportCharts from "@/components/ReportCharts";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -389,6 +390,10 @@ export default function MonthlyReportPage() {
           </p>
         </div>
       </section>
+
+      {!loading && (
+        <ReportCharts rows={reportRows} videoLabel="Monthly Videos" />
+      )}
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
