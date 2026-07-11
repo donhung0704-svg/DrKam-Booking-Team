@@ -288,6 +288,7 @@ export default function PicReportPage() {
       "Booking mới": row.bookingMoi,
       "Daily Videos(T-1) (New KOCs)": row.dailyVideoNew,
       "Daily Videos(T-1) (Old KOCs)": row.dailyVideoOld,
+      "Daily Videos(T-1)": row.dailyVideoNew + row.dailyVideoOld,
       GMV: row.gmvNgay,
     }));
 
@@ -305,6 +306,7 @@ export default function PicReportPage() {
       { wch: 12 },
       { wch: 18 },
       { wch: 18 },
+      { wch: 16 },
       { wch: 16 },
     ];
 
@@ -398,6 +400,7 @@ export default function PicReportPage() {
                 <Th>Booking mới</Th>
                 <Th>Daily Videos(T-1) (New KOCs)</Th>
                 <Th>Daily Videos(T-1) (Old KOCs)</Th>
+                <Th>Daily Videos(T-1)</Th>
                 <Th>GMV</Th>
               </tr>
             </thead>
@@ -406,7 +409,7 @@ export default function PicReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -417,7 +420,7 @@ export default function PicReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -439,6 +442,9 @@ export default function PicReportPage() {
                     <Td>{row.bookingMoi}</Td>
                     <Td>{formatNumber(row.dailyVideoNew)}</Td>
                     <Td>{formatNumber(row.dailyVideoOld)}</Td>
+                    <Td>
+                      {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
+                    </Td>
                     <Td>{formatMoney(row.gmvNgay)}</Td>
                   </tr>
                 ))}
@@ -456,6 +462,9 @@ export default function PicReportPage() {
                   </td>
                   <td className="px-5 py-4 font-bold">
                     {formatNumber(totals.dailyVideoOld)}
+                  </td>
+                  <td className="px-5 py-4 font-bold">
+                    {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
                   </td>
                   <td className="px-5 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
