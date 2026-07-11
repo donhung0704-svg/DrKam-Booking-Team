@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import KpiAchievement from "@/components/KpiAchievement";
+import PicFilter from "@/components/PicFilter";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -23,6 +24,8 @@ type ReportRow = {
 
 // Status được coi là "chưa phản hồi" -> không tính vào cột Phản hồi
 const notRespondedStatuses = ["Chờ phản hồi", "Đã phản hồi"];
+
+const PIC_FILTER_KEY = "drkam_report_pic_filter";
 
 type KpiInput = {
   lienHe: string;
@@ -65,6 +68,9 @@ export default function MonthlyReportPage() {
   // KPI ngày nhập tay theo từng PIC (lưu vào employees.kpi_*)
   const [kpiInputs, setKpiInputs] = useState<Record<string, KpiInput>>({});
   const [savingKpiId, setSavingKpiId] = useState("");
+
+  // Lọc cố định nhân sự hiển thị (null = chưa khởi tạo -> hiển thị tất cả)
+  const [selectedPics, setSelectedPics] = useState<string[] | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -111,6 +117,26 @@ export default function MonthlyReportPage() {
 
     setKpiInputs(map);
   }, [employees]);
+
+  // Tải lựa chọn nhân sự đã lưu
+  useEffect(() => {
+    const saved = window.localStorage.getItem(PIC_FILTER_KEY);
+    if (!saved) return;
+
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) setSelectedPics(parsed.map(String));
+    } catch {
+      // bỏ qua dữ liệu hỏng
+    }
+  }, []);
+
+  // Mặc định chọn tất cả nếu chưa có lựa chọn đã lưu
+  useEffect(() => {
+    if (selectedPics === null && employees.length > 0) {
+      setSelectedPics(employees.map((employee) => String(employee.id)));
+    }
+  }, [employees, selectedPics]);
 
   const employeeMap = useMemo(() => {
     const map = new Map<string, DbRow>();
@@ -203,10 +229,15 @@ export default function MonthlyReportPage() {
       }
     });
 
+    const picFilterActive = selectedPics !== null;
+    const selectedSet = new Set(selectedPics ?? []);
+
     return Array.from(rowMap.values())
       .filter((row) => {
-        // Giữ mọi PIC thật; nhóm "Chưa có PIC" chỉ hiện khi có số liệu
-        if (row.isRealPic) return true;
+        // Chỉ hiển thị nhân sự được chọn; nhóm "Chưa có PIC" hiện khi có số liệu
+        if (row.isRealPic) {
+          return !picFilterActive || selectedSet.has(row.employeeId);
+        }
 
         return (
           row.lienHe > 0 ||
@@ -222,7 +253,7 @@ export default function MonthlyReportPage() {
         if (!b.isRealPic) return -1;
         return a.employeeName.localeCompare(b.employeeName, "vi");
       });
-  }, [bookings, kocs, employees, employeeMap, reportMonth]);
+  }, [bookings, kocs, employees, employeeMap, reportMonth, selectedPics]);
 
   const totals = useMemo(() => {
     return reportRows.reduce(
@@ -249,6 +280,11 @@ export default function MonthlyReportPage() {
 
   function setThisMonth() {
     setReportMonth(getVietnamCurrentMonth());
+  }
+
+  function updateSelectedPics(next: string[]) {
+    setSelectedPics(next);
+    window.localStorage.setItem(PIC_FILTER_KEY, JSON.stringify(next));
   }
 
   function updateKpiInput(
@@ -383,6 +419,12 @@ export default function MonthlyReportPage() {
           >
             Tháng này
           </button>
+
+          <PicFilter
+            employees={employees}
+            selectedIds={selectedPics ?? []}
+            onChange={updateSelectedPics}
+          />
 
           <p className="text-[12px] font-semibold text-slate-400 md:ml-auto">
             Liên hệ / Phản hồi / Booking mới tính theo tháng đã chọn. Monthly
