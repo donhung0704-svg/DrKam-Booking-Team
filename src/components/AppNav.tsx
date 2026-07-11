@@ -16,7 +16,8 @@ const navItems: NavItem[] = [
   { label: "Danh sách Booking", href: "/bookings", icon: "📦" },
   { label: "Danh sách Campaign", href: "/campaigns", icon: "🚀" },
   { label: "Nhân sự", href: "/employees", icon: "👤" },
-  { label: "Báo cáo", href: "/reports/daily", icon: "📊" },
+  { label: "Báo cáo ngày", href: "/reports/daily", icon: "📊" },
+  { label: "Báo cáo tháng", href: "/reports/monthly", icon: "📆" },
 ];
 
 export default function AppNav() {
@@ -156,6 +157,5 @@ function MainNavLink({
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
 
-  const base = `/${href.split("/")[1]}`;
-  return pathname === base || pathname.startsWith(`${base}/`);
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
