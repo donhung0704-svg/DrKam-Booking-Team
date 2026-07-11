@@ -19,7 +19,6 @@ type ReportRow = {
   dailyVideoNew: number;
   dailyVideoOld: number;
   gmvNgay: number;
-  gmvThang: number;
 };
 
 // Status được coi là "chưa phản hồi" -> không tính vào cột Phản hồi
@@ -33,10 +32,6 @@ export default function PicReportPage() {
   const [employees, setEmployees] = useState<DbRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-
-  // KPI GMV nhập tay theo từng PIC (lưu vào employees.kpi_gmv)
-  const [kpiMap, setKpiMap] = useState<Record<string, string>>({});
-  const [savingKpiId, setSavingKpiId] = useState("");
 
   useEffect(() => {
     async function loadData() {
@@ -67,21 +62,6 @@ export default function PicReportPage() {
 
     loadData();
   }, []);
-
-  // Khởi tạo KPI GMV từ dữ liệu nhân sự
-  useEffect(() => {
-    const map: Record<string, string> = {};
-
-    employees.forEach((employee) => {
-      const value = employee.kpi_gmv;
-      map[String(employee.id)] =
-        value === null || value === undefined || value === ""
-          ? ""
-          : String(value);
-    });
-
-    setKpiMap(map);
-  }, [employees]);
 
   const employeeMap = useMemo(() => {
     const map = new Map<string, DbRow>();
@@ -120,7 +100,6 @@ export default function PicReportPage() {
           dailyVideoNew: 0,
           dailyVideoOld: 0,
           gmvNgay: 0,
-          gmvThang: 0,
         });
       }
 
@@ -163,7 +142,6 @@ export default function PicReportPage() {
       }
 
       row.gmvNgay += parseNumber(koc.gmv);
-      row.gmvThang += parseNumber(koc.gmv_thang);
     });
 
     bookings.forEach((booking) => {
@@ -185,8 +163,7 @@ export default function PicReportPage() {
           row.bookingMoi > 0 ||
           row.dailyVideoNew > 0 ||
           row.dailyVideoOld > 0 ||
-          row.gmvNgay > 0 ||
-          row.gmvThang > 0
+          row.gmvNgay > 0
         );
       })
       .sort((a, b) => {
@@ -205,8 +182,6 @@ export default function PicReportPage() {
         total.dailyVideoNew += row.dailyVideoNew;
         total.dailyVideoOld += row.dailyVideoOld;
         total.gmvNgay += row.gmvNgay;
-        total.gmvThang += row.gmvThang;
-        total.kpiGmv += parseNumber(kpiMap[row.employeeId]);
 
         return total;
       },
@@ -217,55 +192,24 @@ export default function PicReportPage() {
         dailyVideoNew: 0,
         dailyVideoOld: 0,
         gmvNgay: 0,
-        gmvThang: 0,
-        kpiGmv: 0,
       }
     );
-  }, [reportRows, kpiMap]);
+  }, [reportRows]);
 
   function setToday() {
     setReportDate(getVietnamTodayDisplay());
   }
 
-  async function saveKpi(employeeId: string) {
-    if (employeeId === "no-pic") return;
-
-    const raw = (kpiMap[employeeId] ?? "").trim();
-    const value = raw === "" ? null : parseNumber(raw);
-
-    setSavingKpiId(employeeId);
-
-    const { error } = await supabase
-      .from("employees")
-      .update({ kpi_gmv: value })
-      .eq("id", employeeId);
-
-    setSavingKpiId("");
-
-    if (error) {
-      setMessage(`Lỗi lưu KPI GMV: ${error.message}`);
-    } else {
-      setMessage("");
-    }
-  }
-
   function exportExcel() {
-    const exportRows = reportRows.map((row) => {
-      const kpi = parseNumber(kpiMap[row.employeeId]);
-
-      return {
-        PIC: row.employeeName,
-        "Liên hệ": row.lienHe,
-        "Phản hồi": row.phanHoi,
-        "Booking mới": row.bookingMoi,
-        "Daily Videos(T-1) (New KOCs)": row.dailyVideoNew,
-        "Daily Videos(T-1) (Old KOCs)": row.dailyVideoOld,
-        "GMV ngày": row.gmvNgay,
-        "GMV tháng": row.gmvThang,
-        "KPI GMV": kpi,
-        "Tỷ lệ hoàn thành KPI": formatPercent(row.gmvThang, kpi),
-      };
-    });
+    const exportRows = reportRows.map((row) => ({
+      PIC: row.employeeName,
+      "Liên hệ": row.lienHe,
+      "Phản hồi": row.phanHoi,
+      "Booking mới": row.bookingMoi,
+      "Daily Videos(T-1) (New KOCs)": row.dailyVideoNew,
+      "Daily Videos(T-1) (Old KOCs)": row.dailyVideoOld,
+      GMV: row.gmvNgay,
+    }));
 
     if (exportRows.length === 0) {
       alert("Không có dữ liệu để xuất Excel.");
@@ -280,10 +224,8 @@ export default function PicReportPage() {
       { wch: 10 },
       { wch: 12 },
       { wch: 18 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 16 },
       { wch: 18 },
+      { wch: 16 },
     ];
 
     const workbook = XLSX.utils.book_new();
@@ -374,10 +316,7 @@ export default function PicReportPage() {
                 <Th>Booking mới</Th>
                 <Th>Daily Videos(T-1) (New KOCs)</Th>
                 <Th>Daily Videos(T-1) (Old KOCs)</Th>
-                <Th>GMV ngày</Th>
-                <Th>GMV tháng</Th>
-                <Th>KPI GMV</Th>
-                <Th>Tỷ lệ hoàn thành KPI</Th>
+                <Th>GMV</Th>
               </tr>
             </thead>
 
@@ -385,7 +324,7 @@ export default function PicReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={7}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -396,7 +335,7 @@ export default function PicReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={7}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -405,63 +344,22 @@ export default function PicReportPage() {
               )}
 
               {!loading &&
-                reportRows.map((row) => {
-                  const kpi = parseNumber(kpiMap[row.employeeId]);
+                reportRows.map((row) => (
+                  <tr key={row.employeeId} className="hover:bg-slate-50">
+                    <Td>
+                      <span className="font-bold text-slate-950">
+                        {row.employeeName}
+                      </span>
+                    </Td>
 
-                  return (
-                    <tr key={row.employeeId} className="hover:bg-slate-50">
-                      <Td>
-                        <span className="font-bold text-slate-950">
-                          {row.employeeName}
-                        </span>
-                      </Td>
-
-                      <Td>{row.lienHe}</Td>
-                      <Td>{row.phanHoi}</Td>
-                      <Td>{row.bookingMoi}</Td>
-                      <Td>{formatNumber(row.dailyVideoNew)}</Td>
-                      <Td>{formatNumber(row.dailyVideoOld)}</Td>
-                      <Td>{formatMoney(row.gmvNgay)}</Td>
-                      <Td>{formatMoney(row.gmvThang)}</Td>
-
-                      <Td>
-                        {row.isRealPic ? (
-                          <input
-                            value={kpiMap[row.employeeId] ?? ""}
-                            onChange={(event) =>
-                              setKpiMap((prev) => ({
-                                ...prev,
-                                [row.employeeId]: event.target.value,
-                              }))
-                            }
-                            onBlur={() => saveKpi(row.employeeId)}
-                            placeholder="Nhập KPI"
-                            className="h-9 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
-                          />
-                        ) : (
-                          <span className="text-slate-400">—</span>
-                        )}
-
-                        {savingKpiId === row.employeeId && (
-                          <span className="ml-2 text-[11px] font-semibold text-slate-400">
-                            Đang lưu…
-                          </span>
-                        )}
-                      </Td>
-
-                      <Td>
-                        <span
-                          className={`font-bold ${completionColor(
-                            row.gmvThang,
-                            kpi
-                          )}`}
-                        >
-                          {formatPercent(row.gmvThang, kpi)}
-                        </span>
-                      </Td>
-                    </tr>
-                  );
-                })}
+                    <Td>{row.lienHe}</Td>
+                    <Td>{row.phanHoi}</Td>
+                    <Td>{row.bookingMoi}</Td>
+                    <Td>{formatNumber(row.dailyVideoNew)}</Td>
+                    <Td>{formatNumber(row.dailyVideoOld)}</Td>
+                    <Td>{formatMoney(row.gmvNgay)}</Td>
+                  </tr>
+                ))}
 
               {!loading && reportRows.length > 0 && (
                 <tr className="border-t-2 border-slate-200 bg-slate-50">
@@ -479,15 +377,6 @@ export default function PicReportPage() {
                   </td>
                   <td className="px-5 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
-                  </td>
-                  <td className="px-5 py-4 font-bold">
-                    {formatMoney(totals.gmvThang)}
-                  </td>
-                  <td className="px-5 py-4 font-bold">
-                    {formatMoney(totals.kpiGmv)}
-                  </td>
-                  <td className="px-5 py-4 font-bold">
-                    {formatPercent(totals.gmvThang, totals.kpiGmv)}
                   </td>
                 </tr>
               )}
@@ -575,28 +464,6 @@ function formatNumber(value: unknown) {
 
 function formatMoney(value: unknown) {
   return `${Number(value || 0).toLocaleString("vi-VN")}đ`;
-}
-
-function formatPercent(gmvThang: number, kpi: number) {
-  if (!kpi || kpi <= 0) return "—";
-
-  const pct = (gmvThang / kpi) * 100;
-
-  return `${pct.toLocaleString("vi-VN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 1,
-  })}%`;
-}
-
-function completionColor(gmvThang: number, kpi: number) {
-  if (!kpi || kpi <= 0) return "text-slate-400";
-
-  const pct = (gmvThang / kpi) * 100;
-
-  if (pct >= 100) return "text-emerald-600";
-  if (pct >= 70) return "text-orange-600";
-
-  return "text-red-600";
 }
 
 function getVietnamTodayDisplay() {
