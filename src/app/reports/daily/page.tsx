@@ -24,6 +24,35 @@ type ReportRow = {
 // Status được coi là "chưa phản hồi" -> không tính vào cột Phản hồi
 const notRespondedStatuses = ["Chờ phản hồi", "Đã phản hồi"];
 
+type KpiInput = {
+  lienHe: string;
+  phanHoi: string;
+  bookingMoi: string;
+  gmv: string;
+};
+
+// KPI của từng chỉ tiêu lưu vào cột tương ứng trong bảng employees
+const KPI_COLUMN: Record<keyof KpiInput, string> = {
+  lienHe: "kpi_lien_he",
+  phanHoi: "kpi_phan_hoi",
+  bookingMoi: "kpi_booking_moi",
+  gmv: "kpi_gmv",
+};
+
+const EMPTY_KPI: KpiInput = {
+  lienHe: "",
+  phanHoi: "",
+  bookingMoi: "",
+  gmv: "",
+};
+
+const KPI_FIELDS: (keyof KpiInput)[] = [
+  "lienHe",
+  "phanHoi",
+  "bookingMoi",
+  "gmv",
+];
+
 export default function PicReportPage() {
   const [reportDate, setReportDate] = useState(getVietnamTodayDisplay());
 
@@ -32,6 +61,10 @@ export default function PicReportPage() {
   const [employees, setEmployees] = useState<DbRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+
+  // KPI ngày nhập tay theo từng PIC (lưu vào employees.kpi_*)
+  const [kpiInputs, setKpiInputs] = useState<Record<string, KpiInput>>({});
+  const [savingKpiId, setSavingKpiId] = useState("");
 
   useEffect(() => {
     async function loadData() {
@@ -62,6 +95,22 @@ export default function PicReportPage() {
 
     loadData();
   }, []);
+
+  // Khởi tạo KPI từ dữ liệu nhân sự
+  useEffect(() => {
+    const map: Record<string, KpiInput> = {};
+
+    employees.forEach((employee) => {
+      map[String(employee.id)] = {
+        lienHe: toKpiInput(employee.kpi_lien_he),
+        phanHoi: toKpiInput(employee.kpi_phan_hoi),
+        bookingMoi: toKpiInput(employee.kpi_booking_moi),
+        gmv: toKpiInput(employee.kpi_gmv),
+      };
+    });
+
+    setKpiInputs(map);
+  }, [employees]);
 
   const employeeMap = useMemo(() => {
     const map = new Map<string, DbRow>();
@@ -200,6 +249,37 @@ export default function PicReportPage() {
     setReportDate(getVietnamTodayDisplay());
   }
 
+  function updateKpiInput(
+    employeeId: string,
+    field: keyof KpiInput,
+    value: string
+  ) {
+    setKpiInputs((prev) => ({
+      ...prev,
+      [employeeId]: { ...(prev[employeeId] || EMPTY_KPI), [field]: value },
+    }));
+  }
+
+  async function saveKpi(employeeId: string, field: keyof KpiInput) {
+    if (!employeeId || employeeId === "no-pic") return;
+
+    const raw = (kpiInputs[employeeId]?.[field] ?? "").trim();
+    const value = raw === "" ? null : parseNumber(raw);
+
+    setSavingKpiId(employeeId);
+
+    const { error } = await supabase
+      .from("employees")
+      .update({ [KPI_COLUMN[field]]: value })
+      .eq("id", employeeId);
+
+    setSavingKpiId("");
+
+    if (error) {
+      setMessage(`Lỗi lưu KPI: ${error.message}`);
+    }
+  }
+
   function exportExcel() {
     const exportRows = reportRows.map((row) => ({
       PIC: row.employeeName,
@@ -237,6 +317,8 @@ export default function PicReportPage() {
     );
   }
 
+  const kpiRows = reportRows.filter((row) => row.isRealPic);
+
   return (
     <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-5 py-6 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
       <header className="mb-4 rounded-[18px] border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
@@ -252,7 +334,7 @@ export default function PicReportPage() {
               </p>
 
               <h1 className="text-[20px] font-bold leading-tight tracking-normal text-slate-950 md:text-[22px]">
-                Báo cáo nhân sự
+                Báo cáo ngày
               </h1>
             </div>
           </div>
@@ -384,6 +466,138 @@ export default function PicReportPage() {
           </table>
         </div>
       </section>
+
+      <section className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-5 py-3">
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
+            KPI ngày
+          </p>
+
+          <p className="mt-1 text-[12.5px] text-slate-500">
+            Nhập KPI mục tiêu cho từng PIC. Tỷ lệ % thực đạt = số thực tế (bảng
+            Báo cáo ngày) / KPI.
+            {savingKpiId && (
+              <span className="ml-2 font-semibold text-slate-400">
+                Đang lưu…
+              </span>
+            )}
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1100px] text-left text-sm">
+            <thead>
+              <tr className="bg-slate-50">
+                <th
+                  rowSpan={2}
+                  className="border-b border-r border-slate-200 px-5 py-3 text-[11px] font-black uppercase tracking-[0.06em] text-slate-700"
+                >
+                  PIC
+                </th>
+                <th
+                  colSpan={4}
+                  className="border-b border-r border-slate-200 px-5 py-2 text-center text-[11px] font-black uppercase tracking-[0.1em] text-blue-700"
+                >
+                  KPI
+                </th>
+                <th
+                  colSpan={4}
+                  className="border-b border-slate-200 px-5 py-2 text-center text-[11px] font-black uppercase tracking-[0.1em] text-emerald-700"
+                >
+                  Tỷ lệ % thực đạt
+                </th>
+              </tr>
+
+              <tr className="bg-slate-50">
+                <KpiTh>Liên hệ</KpiTh>
+                <KpiTh>Phản hồi</KpiTh>
+                <KpiTh>Booking mới</KpiTh>
+                <KpiTh borderRight>GMV</KpiTh>
+                <KpiTh>Liên hệ</KpiTh>
+                <KpiTh>Phản hồi</KpiTh>
+                <KpiTh>Booking mới</KpiTh>
+                <KpiTh>GMV</KpiTh>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading && (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="px-5 py-10 text-center text-slate-500"
+                  >
+                    Đang tải dữ liệu...
+                  </td>
+                </tr>
+              )}
+
+              {!loading && kpiRows.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="px-5 py-10 text-center text-slate-500"
+                  >
+                    Không có PIC.
+                  </td>
+                </tr>
+              )}
+
+              {!loading &&
+                kpiRows.map((row) => {
+                  const k = kpiInputs[row.employeeId] || EMPTY_KPI;
+                  const actual: Record<keyof KpiInput, number> = {
+                    lienHe: row.lienHe,
+                    phanHoi: row.phanHoi,
+                    bookingMoi: row.bookingMoi,
+                    gmv: row.gmvNgay,
+                  };
+
+                  return (
+                    <tr key={row.employeeId} className="hover:bg-slate-50">
+                      <Td>
+                        <span className="font-bold text-slate-950">
+                          {row.employeeName}
+                        </span>
+                      </Td>
+
+                      {KPI_FIELDS.map((field) => (
+                        <Td key={`kpi-${field}`}>
+                          <input
+                            value={k[field]}
+                            onChange={(event) =>
+                              updateKpiInput(
+                                row.employeeId,
+                                field,
+                                event.target.value
+                              )
+                            }
+                            onBlur={() => saveKpi(row.employeeId, field)}
+                            placeholder="KPI"
+                            className="h-9 w-[100px] rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                          />
+                        </Td>
+                      ))}
+
+                      {KPI_FIELDS.map((field) => (
+                        <Td key={`pct-${field}`}>
+                          <span
+                            className={`font-bold ${pctColor(
+                              actual[field],
+                              parseNumber(k[field])
+                            )}`}
+                          >
+                            {formatPercent(actual[field], parseNumber(k[field]))}
+                          </span>
+                        </Td>
+                      ))}
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   );
 }
@@ -402,6 +616,48 @@ function Td({ children }: { children: ReactNode }) {
       {children}
     </td>
   );
+}
+
+function KpiTh({
+  children,
+  borderRight,
+}: {
+  children: ReactNode;
+  borderRight?: boolean;
+}) {
+  return (
+    <th
+      className={`border-b border-slate-200 px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600 ${
+        borderRight ? "border-r" : ""
+      }`}
+    >
+      {children}
+    </th>
+  );
+}
+
+function toKpiInput(value: unknown) {
+  if (value === null || value === undefined || value === "") return "";
+  return String(value);
+}
+
+function formatPercent(actual: number, kpi: number) {
+  if (!kpi || kpi <= 0) return "—";
+
+  const pct = (actual / kpi) * 100;
+
+  return `${pct.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`;
+}
+
+function pctColor(actual: number, kpi: number) {
+  if (!kpi || kpi <= 0) return "text-slate-400";
+
+  const pct = (actual / kpi) * 100;
+
+  if (pct >= 100) return "text-emerald-600";
+  if (pct >= 70) return "text-orange-600";
+
+  return "text-red-600";
 }
 
 // Tải hết dữ liệu từ Supabase (mặc định trả tối đa 1000 dòng/lần -> phân trang)
