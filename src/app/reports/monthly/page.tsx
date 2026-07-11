@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
-import ReportCharts from "@/components/ReportCharts";
+import KpiAchievement from "@/components/KpiAchievement";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -392,7 +392,7 @@ export default function MonthlyReportPage() {
       </section>
 
       {!loading && (
-        <ReportCharts rows={reportRows} videoLabel="Monthly Videos" />
+        <KpiAchievement rows={reportRows} kpiInputs={kpiInputs} />
       )}
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
