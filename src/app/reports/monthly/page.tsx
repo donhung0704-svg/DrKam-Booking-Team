@@ -1,7 +1,6 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
-import DatePickerInput from "@/components/DatePickerInput";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -33,10 +32,10 @@ type KpiInput = {
 
 // KPI của từng chỉ tiêu lưu vào cột tương ứng trong bảng employees
 const KPI_COLUMN: Record<keyof KpiInput, string> = {
-  lienHe: "kpi_lien_he",
-  phanHoi: "kpi_phan_hoi",
-  bookingMoi: "kpi_booking_moi",
-  gmv: "kpi_gmv",
+  lienHe: "kpi_thang_lien_he",
+  phanHoi: "kpi_thang_phan_hoi",
+  bookingMoi: "kpi_thang_booking_moi",
+  gmv: "kpi_thang_gmv",
 };
 
 const EMPTY_KPI: KpiInput = {
@@ -53,8 +52,8 @@ const KPI_FIELDS: (keyof KpiInput)[] = [
   "gmv",
 ];
 
-export default function PicReportPage() {
-  const [reportDate, setReportDate] = useState(getVietnamTodayDisplay());
+export default function MonthlyReportPage() {
+  const [reportMonth, setReportMonth] = useState(getVietnamCurrentMonth());
 
   const [bookings, setBookings] = useState<DbRow[]>([]);
   const [kocs, setKocs] = useState<DbRow[]>([]);
@@ -102,10 +101,10 @@ export default function PicReportPage() {
 
     employees.forEach((employee) => {
       map[String(employee.id)] = {
-        lienHe: toKpiInput(employee.kpi_lien_he),
-        phanHoi: toKpiInput(employee.kpi_phan_hoi),
-        bookingMoi: toKpiInput(employee.kpi_booking_moi),
-        gmv: toKpiInput(employee.kpi_gmv),
+        lienHe: toKpiInput(employee.kpi_thang_lien_he),
+        phanHoi: toKpiInput(employee.kpi_thang_phan_hoi),
+        bookingMoi: toKpiInput(employee.kpi_thang_booking_moi),
+        gmv: toKpiInput(employee.kpi_thang_gmv),
       };
     });
 
@@ -125,9 +124,9 @@ export default function PicReportPage() {
   }, [employees]);
 
   const reportRows = useMemo(() => {
-    const dayKey = parseDisplayDateToKey(reportDate);
+    const monthKey = reportMonth;
 
-    if (!dayKey) return [];
+    if (!monthKey) return [];
 
     const rowMap = new Map<string, ReportRow>();
 
@@ -167,36 +166,38 @@ export default function PicReportPage() {
       const contactKey = toVietnamDateKey(koc.new_contact_date);
       const status = String(koc.status || "").trim();
 
-      // Liên hệ = số KOC tạo mới trong ngày + số KOC được chăm sóc (CS gần nhất) trong ngày
-      if (createdKey === dayKey) {
+      // Liên hệ = số KOC tạo mới trong tháng + số KOC được chăm sóc (CS gần nhất) trong tháng
+      if (createdKey.slice(0, 7) === monthKey) {
         row.lienHe += 1;
       }
 
-      if (contactKey === dayKey) {
+      if (contactKey.slice(0, 7) === monthKey) {
         row.lienHe += 1;
       }
 
-      // Phản hồi: KOC tạo mới trong ngày và Status khác Chờ phản hồi & Đã phản hồi
-      if (createdKey === dayKey && !notRespondedStatuses.includes(status)) {
+      // Phản hồi: KOC tạo mới trong tháng và Status khác Chờ phản hồi & Đã phản hồi
+      if (
+        createdKey.slice(0, 7) === monthKey &&
+        !notRespondedStatuses.includes(status)
+      ) {
         row.phanHoi += 1;
       }
 
-      // Tổng theo KOC phụ trách (không lọc theo ngày)
-      // Daily Videos(T-1): tách theo KOC mới (tier "Mới hoạt động") và KOC cũ
-      const dailyVideos = parseNumber(koc.number_of_videos);
+      // Tổng theo KOC phụ trách: Monthly Videos + GMV tháng
+      const monthlyVideos = parseNumber(koc.monthly_videos);
       if (String(koc.tier || "").trim() === "Mới hoạt động") {
-        row.dailyVideoNew += dailyVideos;
+        row.dailyVideoNew += monthlyVideos;
       } else {
-        row.dailyVideoOld += dailyVideos;
+        row.dailyVideoOld += monthlyVideos;
       }
 
-      row.gmvNgay += parseNumber(koc.gmv);
+      row.gmvNgay += parseNumber(koc.gmv_thang);
     });
 
     bookings.forEach((booking) => {
       const row = ensureRow(String(booking.employee_id || ""));
 
-      if (toVietnamDateKey(booking.created_at) === dayKey) {
+      if (toVietnamDateKey(booking.created_at).slice(0, 7) === monthKey) {
         row.bookingMoi += 1;
       }
     });
@@ -220,7 +221,7 @@ export default function PicReportPage() {
         if (!b.isRealPic) return -1;
         return a.employeeName.localeCompare(b.employeeName, "vi");
       });
-  }, [bookings, kocs, employees, employeeMap, reportDate]);
+  }, [bookings, kocs, employees, employeeMap, reportMonth]);
 
   const totals = useMemo(() => {
     return reportRows.reduce(
@@ -245,8 +246,8 @@ export default function PicReportPage() {
     );
   }, [reportRows]);
 
-  function setToday() {
-    setReportDate(getVietnamTodayDisplay());
+  function setThisMonth() {
+    setReportMonth(getVietnamCurrentMonth());
   }
 
   function updateKpiInput(
@@ -286,9 +287,9 @@ export default function PicReportPage() {
       "Liên hệ": row.lienHe,
       "Phản hồi": row.phanHoi,
       "Booking mới": row.bookingMoi,
-      "Daily Videos(T-1) (New KOCs)": row.dailyVideoNew,
-      "Daily Videos(T-1) (Old KOCs)": row.dailyVideoOld,
-      "Daily Videos(T-1)": row.dailyVideoNew + row.dailyVideoOld,
+      "Monthly Videos (New KOCs)": row.dailyVideoNew,
+      "Monthly Videos (Old KOCs)": row.dailyVideoOld,
+      "Monthly Videos": row.dailyVideoNew + row.dailyVideoOld,
       GMV: row.gmvNgay,
     }));
 
@@ -315,7 +316,7 @@ export default function PicReportPage() {
 
     XLSX.writeFile(
       workbook,
-      `bao-cao-nhan-su-${reportDate.replaceAll("/", "-")}.xlsx`
+      `bao-cao-thang-${reportMonth}.xlsx`
     );
   }
 
@@ -336,7 +337,7 @@ export default function PicReportPage() {
               </p>
 
               <h1 className="text-[20px] font-bold leading-tight tracking-normal text-slate-950 md:text-[22px]">
-                Báo cáo ngày
+                Báo cáo tháng
               </h1>
             </div>
           </div>
@@ -363,28 +364,28 @@ export default function PicReportPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
           <div className="md:w-[240px]">
             <label className="mb-1.5 block text-[13px] font-bold text-slate-600">
-              Ngày báo cáo
+              Tháng báo cáo
             </label>
 
-            <DatePickerInput
-              name="report_date"
-              value={reportDate}
-              onChange={setReportDate}
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10"
+            <input
+              type="month"
+              value={reportMonth}
+              onChange={(event) => setReportMonth(event.target.value)}
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10"
             />
           </div>
 
           <button
             type="button"
-            onClick={setToday}
+            onClick={setThisMonth}
             className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
           >
-            Hôm nay
+            Tháng này
           </button>
 
           <p className="text-[12px] font-semibold text-slate-400 md:ml-auto">
-            Liên hệ / Phản hồi / Booking mới tính theo ngày đã chọn. Số video,
-            GMV tính trên toàn bộ KOC phụ trách.
+            Liên hệ / Phản hồi / Booking mới tính theo tháng đã chọn. Monthly
+            Videos, GMV tháng tính trên toàn bộ KOC phụ trách.
           </p>
         </div>
       </section>
@@ -398,9 +399,9 @@ export default function PicReportPage() {
                 <Th>Liên hệ</Th>
                 <Th>Phản hồi</Th>
                 <Th>Booking mới</Th>
-                <Th>Daily Videos(T-1) (New KOCs)</Th>
-                <Th>Daily Videos(T-1) (Old KOCs)</Th>
-                <Th>Daily Videos(T-1)</Th>
+                <Th>Monthly Videos (New KOCs)</Th>
+                <Th>Monthly Videos (Old KOCs)</Th>
+                <Th>Monthly Videos</Th>
                 <Th>GMV</Th>
               </tr>
             </thead>
@@ -479,12 +480,12 @@ export default function PicReportPage() {
       <section className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 py-3">
           <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
-            KPI ngày
+            KPI tháng
           </p>
 
           <p className="mt-1 text-[12.5px] text-slate-500">
             Nhập KPI mục tiêu cho từng PIC. Tỷ lệ % thực đạt = số thực tế (bảng
-            Báo cáo ngày) / KPI.
+            Báo cáo tháng) / KPI.
             {savingKpiId && (
               <span className="ml-2 font-semibold text-slate-400">
                 Đang lưu…
@@ -731,50 +732,17 @@ function formatMoney(value: unknown) {
   return `${Number(value || 0).toLocaleString("vi-VN")}đ`;
 }
 
-function getVietnamTodayDisplay() {
+function getVietnamCurrentMonth() {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Ho_Chi_Minh",
     year: "numeric",
     month: "2-digit",
-    day: "2-digit",
   }).formatToParts(new Date());
 
   const year = parts.find((part) => part.type === "year")?.value || "";
   const month = parts.find((part) => part.type === "month")?.value || "";
-  const day = parts.find((part) => part.type === "day")?.value || "";
 
-  return `${day}/${month}/${year}`;
-}
-
-function parseDisplayDateToKey(value: string) {
-  const raw = String(value || "").trim();
-
-  if (!raw) return "";
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-
-  if (/^\d{8}$/.test(raw)) {
-    const day = raw.slice(0, 2);
-    const month = raw.slice(2, 4);
-    const year = raw.slice(4, 8);
-
-    return `${year}-${month}-${day}`;
-  }
-
-  if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/.test(raw)) {
-    const [dayRaw, monthRaw, year] = raw.split(/[\/-]/);
-    return `${year}-${monthRaw.padStart(2, "0")}-${dayRaw.padStart(2, "0")}`;
-  }
-
-  const parsedDate = new Date(raw);
-
-  if (!Number.isNaN(parsedDate.getTime())) {
-    return new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Ho_Chi_Minh",
-    }).format(parsedDate);
-  }
-
-  return "";
+  return `${year}-${month}`;
 }
 
 function toVietnamDateKey(value: unknown) {
