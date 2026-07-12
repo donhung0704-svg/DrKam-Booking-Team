@@ -17,8 +17,14 @@ type ReportRow = {
   lienHe: number;
   phanHoi: number;
   bookingMoi: number;
+  giaCast: number;
   dailyVideoNew: number;
   dailyVideoOld: number;
+  videoPov: number;
+  videoUnbox: number;
+  videoAi: number;
+  videoReal: number;
+  videoOther: number;
   gmvNgay: number;
 };
 
@@ -172,8 +178,14 @@ export default function MonthlyReportPage() {
           lienHe: 0,
           phanHoi: 0,
           bookingMoi: 0,
+          giaCast: 0,
           dailyVideoNew: 0,
           dailyVideoOld: 0,
+          videoPov: 0,
+          videoUnbox: 0,
+          videoAi: 0,
+          videoReal: 0,
+          videoOther: 0,
           gmvNgay: 0,
         });
       }
@@ -216,6 +228,20 @@ export default function MonthlyReportPage() {
         row.dailyVideoOld += monthlyVideos;
       }
 
+      // Video chia theo channel type
+      const channelType = String(koc.channel_type || "").trim();
+      if (channelType === "POV") {
+        row.videoPov += monthlyVideos;
+      } else if (channelType === "Unbox") {
+        row.videoUnbox += monthlyVideos;
+      } else if (channelType === "AI") {
+        row.videoAi += monthlyVideos;
+      } else if (channelType === "Người thật") {
+        row.videoReal += monthlyVideos;
+      } else {
+        row.videoOther += monthlyVideos;
+      }
+
       row.gmvNgay += parseNumber(koc.gmv_thang);
     });
 
@@ -224,6 +250,7 @@ export default function MonthlyReportPage() {
 
       if (toVietnamDateKey(booking.created_at).slice(0, 7) === monthKey) {
         row.bookingMoi += 1;
+        row.giaCast += parseNumber(booking.cast_price);
       }
     });
 
@@ -259,8 +286,14 @@ export default function MonthlyReportPage() {
         total.lienHe += row.lienHe;
         total.phanHoi += row.phanHoi;
         total.bookingMoi += row.bookingMoi;
+        total.giaCast += row.giaCast;
         total.dailyVideoNew += row.dailyVideoNew;
         total.dailyVideoOld += row.dailyVideoOld;
+        total.videoPov += row.videoPov;
+        total.videoUnbox += row.videoUnbox;
+        total.videoAi += row.videoAi;
+        total.videoReal += row.videoReal;
+        total.videoOther += row.videoOther;
         total.gmvNgay += row.gmvNgay;
 
         return total;
@@ -269,8 +302,14 @@ export default function MonthlyReportPage() {
         lienHe: 0,
         phanHoi: 0,
         bookingMoi: 0,
+        giaCast: 0,
         dailyVideoNew: 0,
         dailyVideoOld: 0,
+        videoPov: 0,
+        videoUnbox: 0,
+        videoAi: 0,
+        videoReal: 0,
+        videoOther: 0,
         gmvNgay: 0,
       }
     );
@@ -322,9 +361,15 @@ export default function MonthlyReportPage() {
       "Liên hệ": row.lienHe,
       "Phản hồi": row.phanHoi,
       "Booking mới": row.bookingMoi,
+      "Giá Cast": row.giaCast,
       "Monthly Videos (New KOCs)": row.dailyVideoNew,
       "Monthly Videos (Old KOCs)": row.dailyVideoOld,
       "Monthly Videos": row.dailyVideoNew + row.dailyVideoOld,
+      "Video POV": row.videoPov,
+      "Video Unbox": row.videoUnbox,
+      "Video AI": row.videoAi,
+      "Video Người thật": row.videoReal,
+      "Video khác": row.videoOther,
       GMV: row.gmvNgay,
     }));
 
@@ -437,16 +482,22 @@ export default function MonthlyReportPage() {
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-left text-sm">
+          <table className="report-table w-full table-fixed text-center text-sm">
             <thead>
               <tr className="bg-slate-50">
                 <Th>PIC</Th>
                 <Th>Liên hệ</Th>
                 <Th>Phản hồi</Th>
                 <Th>Booking mới</Th>
+                <Th>Giá Cast</Th>
                 <Th>Monthly Videos (New KOCs)</Th>
                 <Th>Monthly Videos (Old KOCs)</Th>
                 <Th>Monthly Videos</Th>
+                <Th>Video POV</Th>
+                <Th>Video Unbox</Th>
+                <Th>Video AI</Th>
+                <Th>Video Người thật</Th>
+                <Th>Video khác</Th>
                 <Th>GMV</Th>
               </tr>
             </thead>
@@ -455,7 +506,7 @@ export default function MonthlyReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={14}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -466,7 +517,7 @@ export default function MonthlyReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={14}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -486,33 +537,57 @@ export default function MonthlyReportPage() {
                     <Td>{row.lienHe}</Td>
                     <Td>{row.phanHoi}</Td>
                     <Td>{row.bookingMoi}</Td>
+                    <Td>{formatMoney(row.giaCast)}</Td>
                     <Td>{formatNumber(row.dailyVideoNew)}</Td>
                     <Td>{formatNumber(row.dailyVideoOld)}</Td>
                     <Td>
                       {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
                     </Td>
+                    <Td>{formatNumber(row.videoPov)}</Td>
+                    <Td>{formatNumber(row.videoUnbox)}</Td>
+                    <Td>{formatNumber(row.videoAi)}</Td>
+                    <Td>{formatNumber(row.videoReal)}</Td>
+                    <Td>{formatNumber(row.videoOther)}</Td>
                     <Td>{formatMoney(row.gmvNgay)}</Td>
                   </tr>
                 ))}
 
               {!loading && reportRows.length > 0 && (
                 <tr className="border-t-2 border-slate-200 bg-slate-50">
-                  <td className="px-5 py-4 font-bold text-slate-950">
+                  <td className="px-2 py-4 font-bold text-slate-950">
                     Tổng cộng
                   </td>
-                  <td className="px-5 py-4 font-bold">{totals.lienHe}</td>
-                  <td className="px-5 py-4 font-bold">{totals.phanHoi}</td>
-                  <td className="px-5 py-4 font-bold">{totals.bookingMoi}</td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">{totals.lienHe}</td>
+                  <td className="px-2 py-4 font-bold">{totals.phanHoi}</td>
+                  <td className="px-2 py-4 font-bold">{totals.bookingMoi}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatMoney(totals.giaCast)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoOld)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(totals.videoPov)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(totals.videoUnbox)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(totals.videoAi)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(totals.videoReal)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(totals.videoOther)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
                   </td>
                 </tr>
@@ -659,7 +734,7 @@ export default function MonthlyReportPage() {
 
 function Th({ children }: { children: ReactNode }) {
   return (
-    <th className="border-b border-slate-200 px-5 py-3 text-[11px] font-black uppercase tracking-[0.06em] whitespace-nowrap text-slate-700">
+    <th className="border-b border-slate-200 px-2 py-2 text-center align-middle text-[11px] font-black uppercase tracking-[0.04em] text-slate-700">
       {children}
     </th>
   );
@@ -667,7 +742,7 @@ function Th({ children }: { children: ReactNode }) {
 
 function Td({ children }: { children: ReactNode }) {
   return (
-    <td className="border-b border-slate-100 px-5 py-3 align-middle text-[13px]">
+    <td className="border-b border-slate-100 px-2 py-3 align-middle text-[13px]">
       {children}
     </td>
   );

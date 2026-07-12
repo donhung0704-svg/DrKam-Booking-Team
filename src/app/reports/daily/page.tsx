@@ -18,6 +18,7 @@ type ReportRow = {
   lienHe: number;
   phanHoi: number;
   bookingMoi: number;
+  giaCast: number;
   dailyVideoNew: number;
   dailyVideoOld: number;
   gmvNgay: number;
@@ -173,6 +174,7 @@ export default function PicReportPage() {
           lienHe: 0,
           phanHoi: 0,
           bookingMoi: 0,
+          giaCast: 0,
           dailyVideoNew: 0,
           dailyVideoOld: 0,
           gmvNgay: 0,
@@ -223,6 +225,7 @@ export default function PicReportPage() {
 
       if (toVietnamDateKey(booking.created_at) === dayKey) {
         row.bookingMoi += 1;
+        row.giaCast += parseNumber(booking.cast_price);
       }
     });
 
@@ -258,6 +261,7 @@ export default function PicReportPage() {
         total.lienHe += row.lienHe;
         total.phanHoi += row.phanHoi;
         total.bookingMoi += row.bookingMoi;
+        total.giaCast += row.giaCast;
         total.dailyVideoNew += row.dailyVideoNew;
         total.dailyVideoOld += row.dailyVideoOld;
         total.gmvNgay += row.gmvNgay;
@@ -268,6 +272,7 @@ export default function PicReportPage() {
         lienHe: 0,
         phanHoi: 0,
         bookingMoi: 0,
+        giaCast: 0,
         dailyVideoNew: 0,
         dailyVideoOld: 0,
         gmvNgay: 0,
@@ -321,6 +326,7 @@ export default function PicReportPage() {
       "Liên hệ": row.lienHe,
       "Phản hồi": row.phanHoi,
       "Booking mới": row.bookingMoi,
+      "Giá Cast": row.giaCast,
       "Daily Videos(T-1) (New KOCs)": row.dailyVideoNew,
       "Daily Videos(T-1) (Old KOCs)": row.dailyVideoOld,
       "Daily Videos(T-1)": row.dailyVideoNew + row.dailyVideoOld,
@@ -436,13 +442,14 @@ export default function PicReportPage() {
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-left text-sm">
+          <table className="report-table w-full table-fixed text-center text-sm">
             <thead>
               <tr className="bg-slate-50">
                 <Th>PIC</Th>
                 <Th>Liên hệ</Th>
                 <Th>Phản hồi</Th>
                 <Th>Booking mới</Th>
+                <Th>Giá Cast</Th>
                 <Th>Daily Videos(T-1) (New KOCs)</Th>
                 <Th>Daily Videos(T-1) (Old KOCs)</Th>
                 <Th>Daily Videos(T-1)</Th>
@@ -454,7 +461,7 @@ export default function PicReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -465,7 +472,7 @@ export default function PicReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -485,6 +492,7 @@ export default function PicReportPage() {
                     <Td>{row.lienHe}</Td>
                     <Td>{row.phanHoi}</Td>
                     <Td>{row.bookingMoi}</Td>
+                    <Td>{formatMoney(row.giaCast)}</Td>
                     <Td>{formatNumber(row.dailyVideoNew)}</Td>
                     <Td>{formatNumber(row.dailyVideoOld)}</Td>
                     <Td>
@@ -496,22 +504,25 @@ export default function PicReportPage() {
 
               {!loading && reportRows.length > 0 && (
                 <tr className="border-t-2 border-slate-200 bg-slate-50">
-                  <td className="px-5 py-4 font-bold text-slate-950">
+                  <td className="px-2 py-4 font-bold text-slate-950">
                     Tổng cộng
                   </td>
-                  <td className="px-5 py-4 font-bold">{totals.lienHe}</td>
-                  <td className="px-5 py-4 font-bold">{totals.phanHoi}</td>
-                  <td className="px-5 py-4 font-bold">{totals.bookingMoi}</td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">{totals.lienHe}</td>
+                  <td className="px-2 py-4 font-bold">{totals.phanHoi}</td>
+                  <td className="px-2 py-4 font-bold">{totals.bookingMoi}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatMoney(totals.giaCast)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoOld)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
                   </td>
                 </tr>
@@ -658,7 +669,7 @@ export default function PicReportPage() {
 
 function Th({ children }: { children: ReactNode }) {
   return (
-    <th className="border-b border-slate-200 px-5 py-3 text-[11px] font-black uppercase tracking-[0.06em] whitespace-nowrap text-slate-700">
+    <th className="border-b border-slate-200 px-2 py-2 text-center align-middle text-[11px] font-black uppercase tracking-[0.04em] text-slate-700">
       {children}
     </th>
   );
@@ -666,7 +677,7 @@ function Th({ children }: { children: ReactNode }) {
 
 function Td({ children }: { children: ReactNode }) {
   return (
-    <td className="border-b border-slate-100 px-5 py-3 align-middle text-[13px]">
+    <td className="border-b border-slate-100 px-2 py-3 align-middle text-[13px]">
       {children}
     </td>
   );
