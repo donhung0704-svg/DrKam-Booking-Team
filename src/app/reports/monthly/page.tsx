@@ -74,6 +74,7 @@ export default function MonthlyReportPage() {
   // KPI ngày nhập tay theo từng PIC (lưu vào employees.kpi_*)
   const [kpiInputs, setKpiInputs] = useState<Record<string, KpiInput>>({});
   const [savingKpiId, setSavingKpiId] = useState("");
+  const [teamTypeMap, setTeamTypeMap] = useState<Record<string, string>>({});
 
   // Lọc cố định nhân sự hiển thị (null = chưa khởi tạo -> hiển thị tất cả)
   const [selectedPics, setSelectedPics] = useState<string[] | null>(null);
@@ -122,6 +123,15 @@ export default function MonthlyReportPage() {
     });
 
     setKpiInputs(map);
+  }, [employees]);
+
+  // Khởi tạo nhóm Hunter/Famer từ dữ liệu nhân sự
+  useEffect(() => {
+    const map: Record<string, string> = {};
+    employees.forEach((employee) => {
+      map[String(employee.id)] = employee.team_type || "";
+    });
+    setTeamTypeMap(map);
   }, [employees]);
 
   // Tải lựa chọn nhân sự đã lưu
@@ -355,6 +365,21 @@ export default function MonthlyReportPage() {
     }
   }
 
+  async function saveTeam(employeeId: string, value: string) {
+    if (!employeeId || employeeId === "no-pic") return;
+
+    setTeamTypeMap((prev) => ({ ...prev, [employeeId]: value }));
+
+    const { error } = await supabase
+      .from("employees")
+      .update({ team_type: value })
+      .eq("id", employeeId);
+
+    if (error) {
+      setMessage(`Lỗi lưu nhóm: ${error.message}`);
+    }
+  }
+
   function exportExcel() {
     const exportRows = reportRows.map((row) => ({
       PIC: row.employeeName,
@@ -401,6 +426,12 @@ export default function MonthlyReportPage() {
   }
 
   const kpiRows = reportRows.filter((row) => row.isRealPic);
+
+  const teamOf = (employeeId: string) =>
+    teamTypeMap[employeeId] === "Famer" ? "Famer" : "Hunter";
+
+  const hunterRows = kpiRows.filter((row) => teamOf(row.employeeId) !== "Famer");
+  const famerRows = kpiRows.filter((row) => teamOf(row.employeeId) === "Famer");
 
   return (
     <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-5 py-6 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
@@ -597,15 +628,15 @@ export default function MonthlyReportPage() {
         </div>
       </section>
 
-      <section className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 py-3">
+      <section className="mt-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+        <div className="mb-2">
           <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
             KPI tháng
           </p>
 
           <p className="mt-1 text-[12.5px] text-slate-500">
-            Nhập KPI mục tiêu cho từng PIC. Tỷ lệ % thực đạt = số thực tế (bảng
-            Báo cáo tháng) / KPI.
+            Nhập KPI mục tiêu + chọn nhóm Hunter/Famer cho từng PIC. Tỷ lệ % thực
+            đạt = số thực tế / KPI.
             {savingKpiId && (
               <span className="ml-2 font-semibold text-slate-400">
                 Đang lưu…
@@ -614,118 +645,30 @@ export default function MonthlyReportPage() {
           </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-left text-sm">
-            <thead>
-              <tr className="bg-slate-50">
-                <th
-                  rowSpan={2}
-                  className="border-b border-r border-slate-200 px-5 py-3 text-[11px] font-black uppercase tracking-[0.06em] text-slate-700"
-                >
-                  PIC
-                </th>
-                <th
-                  colSpan={4}
-                  className="border-b border-r border-slate-200 px-5 py-2 text-center text-[11px] font-black uppercase tracking-[0.1em] text-blue-700"
-                >
-                  KPI
-                </th>
-                <th
-                  colSpan={4}
-                  className="border-b border-slate-200 px-5 py-2 text-center text-[11px] font-black uppercase tracking-[0.1em] text-emerald-700"
-                >
-                  Tỷ lệ % thực đạt
-                </th>
-              </tr>
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <KpiGroupTable
+            title="Hunter"
+            accent="text-blue-700"
+            loading={loading}
+            rows={hunterRows}
+            kpiInputs={kpiInputs}
+            teamOf={teamOf}
+            onKpiChange={updateKpiInput}
+            onKpiBlur={saveKpi}
+            onTeamChange={saveTeam}
+          />
 
-              <tr className="bg-slate-50">
-                <KpiTh>Liên hệ</KpiTh>
-                <KpiTh>Phản hồi</KpiTh>
-                <KpiTh>Booking mới</KpiTh>
-                <KpiTh borderRight>GMV</KpiTh>
-                <KpiTh>Liên hệ</KpiTh>
-                <KpiTh>Phản hồi</KpiTh>
-                <KpiTh>Booking mới</KpiTh>
-                <KpiTh>GMV</KpiTh>
-              </tr>
-            </thead>
-
-            <tbody>
-              {loading && (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="px-5 py-10 text-center text-slate-500"
-                  >
-                    Đang tải dữ liệu...
-                  </td>
-                </tr>
-              )}
-
-              {!loading && kpiRows.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="px-5 py-10 text-center text-slate-500"
-                  >
-                    Không có PIC.
-                  </td>
-                </tr>
-              )}
-
-              {!loading &&
-                kpiRows.map((row) => {
-                  const k = kpiInputs[row.employeeId] || EMPTY_KPI;
-                  const actual: Record<keyof KpiInput, number> = {
-                    lienHe: row.lienHe,
-                    phanHoi: row.phanHoi,
-                    bookingMoi: row.bookingMoi,
-                    gmv: row.gmvNgay,
-                  };
-
-                  return (
-                    <tr key={row.employeeId} className="hover:bg-slate-50">
-                      <Td>
-                        <span className="font-bold text-slate-950">
-                          {row.employeeName}
-                        </span>
-                      </Td>
-
-                      {KPI_FIELDS.map((field) => (
-                        <Td key={`kpi-${field}`}>
-                          <input
-                            value={k[field]}
-                            onChange={(event) =>
-                              updateKpiInput(
-                                row.employeeId,
-                                field,
-                                event.target.value
-                              )
-                            }
-                            onBlur={() => saveKpi(row.employeeId, field)}
-                            placeholder="KPI"
-                            className="h-9 w-[100px] rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
-                          />
-                        </Td>
-                      ))}
-
-                      {KPI_FIELDS.map((field) => (
-                        <Td key={`pct-${field}`}>
-                          <span
-                            className={`font-bold ${pctColor(
-                              actual[field],
-                              parseNumber(k[field])
-                            )}`}
-                          >
-                            {formatPercent(actual[field], parseNumber(k[field]))}
-                          </span>
-                        </Td>
-                      ))}
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
+          <KpiGroupTable
+            title="Famer"
+            accent="text-emerald-700"
+            loading={loading}
+            rows={famerRows}
+            kpiInputs={kpiInputs}
+            teamOf={teamOf}
+            onKpiChange={updateKpiInput}
+            onKpiBlur={saveKpi}
+            onTeamChange={saveTeam}
+          />
         </div>
       </section>
     </section>
@@ -763,6 +706,150 @@ function KpiTh({
     >
       {children}
     </th>
+  );
+}
+
+function KpiGroupTable({
+  title,
+  accent,
+  loading,
+  rows,
+  kpiInputs,
+  teamOf,
+  onKpiChange,
+  onKpiBlur,
+  onTeamChange,
+}: {
+  title: string;
+  accent: string;
+  loading: boolean;
+  rows: DbRow[];
+  kpiInputs: Record<string, KpiInput>;
+  teamOf: (id: string) => string;
+  onKpiChange: (id: string, field: keyof KpiInput, value: string) => void;
+  onKpiBlur: (id: string, field: keyof KpiInput) => void;
+  onTeamChange: (id: string, value: string) => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 px-4 py-2.5">
+        <p
+          className={`text-[12px] font-black uppercase tracking-[0.16em] ${accent}`}
+        >
+          {title} ({rows.length})
+        </p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="report-table w-full text-center text-sm">
+          <thead>
+            <tr className="bg-slate-50">
+              <th
+                rowSpan={2}
+                className="border-b border-r border-slate-200 px-2 py-2 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
+              >
+                PIC
+              </th>
+              <th
+                colSpan={4}
+                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-blue-700"
+              >
+                KPI
+              </th>
+              <th
+                colSpan={4}
+                className="border-b border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-emerald-700"
+              >
+                % thực đạt
+              </th>
+            </tr>
+
+            <tr className="bg-slate-50">
+              <KpiTh>Liên hệ</KpiTh>
+              <KpiTh>Phản hồi</KpiTh>
+              <KpiTh>Booking</KpiTh>
+              <KpiTh borderRight>GMV</KpiTh>
+              <KpiTh>Liên hệ</KpiTh>
+              <KpiTh>Phản hồi</KpiTh>
+              <KpiTh>Booking</KpiTh>
+              <KpiTh>GMV</KpiTh>
+            </tr>
+          </thead>
+
+          <tbody>
+            {!loading && rows.length === 0 && (
+              <tr>
+                <td
+                  colSpan={9}
+                  className="px-4 py-6 text-center text-[12px] text-slate-400"
+                >
+                  Chưa có PIC trong nhóm này.
+                </td>
+              </tr>
+            )}
+
+            {rows.map((row) => {
+              const k = kpiInputs[row.employeeId] || EMPTY_KPI;
+              const actual: Record<keyof KpiInput, number> = {
+                lienHe: row.lienHe,
+                phanHoi: row.phanHoi,
+                bookingMoi: row.bookingMoi,
+                gmv: row.gmvNgay,
+              };
+
+              return (
+                <tr key={row.employeeId} className="hover:bg-slate-50">
+                  <Td>
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="font-bold text-slate-950">
+                        {row.employeeName}
+                      </span>
+                      <select
+                        value={teamOf(row.employeeId)}
+                        onChange={(event) =>
+                          onTeamChange(row.employeeId, event.target.value)
+                        }
+                        className="h-6 rounded-md border border-slate-200 bg-white px-1 text-[10.5px] font-semibold text-slate-600 outline-none focus:border-[#3964ff]"
+                      >
+                        <option value="Hunter">Hunter</option>
+                        <option value="Famer">Famer</option>
+                      </select>
+                    </div>
+                  </Td>
+
+                  {KPI_FIELDS.map((field) => (
+                    <Td key={`kpi-${field}`}>
+                      <input
+                        value={k[field]}
+                        onChange={(event) =>
+                          onKpiChange(row.employeeId, field, event.target.value)
+                        }
+                        onBlur={() => onKpiBlur(row.employeeId, field)}
+                        placeholder="KPI"
+                        className="h-8 w-[58px] rounded-lg border border-slate-200 bg-white px-1.5 text-[12px] outline-none focus:border-[#3964ff]"
+                      />
+                    </Td>
+                  ))}
+
+                  {KPI_FIELDS.map((field) => (
+                    <Td key={`pct-${field}`}>
+                      <span
+                        className={`font-bold ${pctColor(
+                          actual[field],
+                          parseNumber(k[field])
+                        )}`}
+                      >
+                        {formatPercent(actual[field], parseNumber(k[field]))}
+                      </span>
+                    </Td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
