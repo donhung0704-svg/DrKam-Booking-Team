@@ -194,12 +194,10 @@ export default function PicReportPage() {
       const contactKey = toVietnamDateKey(koc.new_contact_date);
       const status = String(koc.status || "").trim();
 
-      // Liên hệ = số KOC tạo mới trong ngày + số KOC được chăm sóc (CS gần nhất) trong ngày
+      // Liên hệ = KOC tạo mới trong ngày + KOC có CS trong ngày nhưng NGÀY TẠO khác ngày báo cáo
       if (createdKey === dayKey) {
         row.lienHe += 1;
-      }
-
-      if (contactKey === dayKey) {
+      } else if (contactKey === dayKey) {
         row.lienHe += 1;
       }
 

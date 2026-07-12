@@ -193,12 +193,10 @@ export default function MonthlyReportPage() {
       const contactKey = toVietnamDateKey(koc.new_contact_date);
       const status = String(koc.status || "").trim();
 
-      // Liên hệ = số KOC tạo mới trong tháng + số KOC được chăm sóc (CS gần nhất) trong tháng
+      // Liên hệ = KOC tạo mới trong tháng + KOC có CS trong tháng nhưng THÁNG TẠO khác tháng báo cáo
       if (createdKey.slice(0, 7) === monthKey) {
         row.lienHe += 1;
-      }
-
-      if (contactKey.slice(0, 7) === monthKey) {
+      } else if (contactKey.slice(0, 7) === monthKey) {
         row.lienHe += 1;
       }
 
