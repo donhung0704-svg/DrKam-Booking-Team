@@ -24,6 +24,20 @@ const statusBookingOptions = [
   "Đã thanh toán",
 ];
 
+// Danh sách sản phẩm có sẵn (đồng bộ với BookingAdvancedTable).
+// Dùng để tự tách ô "Sản phẩm" trong Excel thành nhiều SP đã chọn.
+const productOptions = [
+  "Nước súc miệng CYK",
+  "Nước súc miệng Postbiotic",
+  "Xịt miệng Plus",
+  "Gel cạo lưỡi bạc hà",
+  "Gel cạo lưỡi dưa lưới",
+  "Kem đánh răng bạc hà",
+  "Kem đánh răng cam",
+  "Bàn chải ULTRASOFT",
+  "Bộ cạo lưỡi nhựa",
+];
+
 export default function ImportBookingPage() {
   const [rows, setRows] = useState<ExcelRow[]>([]);
   const [kocs, setKocs] = useState<DbRow[]>([]);
@@ -76,11 +90,12 @@ export default function ImportBookingPage() {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
 
-      // raw:false -> đọc đúng chuỗi HIỂN THỊ trong Excel (vd "12/6/2026"),
-      // rồi tự parse dd/mm để không bị hoán đổi ngày/tháng (WYSIWYG).
+      // raw:true -> ô ngày thật trả về SERIAL NUMBER (số tuyệt đối, không thể
+      // nhầm mm/dd, không lệch timezone). optionalDate() sẽ tự convert serial.
+      // Ô ngày dạng TEXT vẫn là chuỗi -> parse dd/mm như thường.
       const parsedRows = XLSX.utils.sheet_to_json<ExcelRow>(worksheet, {
         defval: "",
-        raw: false,
+        raw: true,
       });
 
       setRows(parsedRows);
@@ -180,7 +195,7 @@ function downloadBookingTemplate() {
             "actual_post_date",
           ])
         ),
-        product: optionalText(pick(row, ["Sản phẩm", "Product", "product"])),
+        product: resolveProducts(pick(row, ["Sản phẩm", "Product", "product"])),
         note: optionalText(pick(row, ["Ghi chú", "Note", "note"])),
       });
 
@@ -400,7 +415,7 @@ function downloadBookingTemplate() {
                       ) || "-"}
                     </Td>
                     <Td>
-                      {text(
+                      {optionalDate(
                         pick(row, [
                           "Ngày dự kiến đăng",
                           "Expected post date",
@@ -408,7 +423,7 @@ function downloadBookingTemplate() {
                         ])
                       ) || "-"}
                     </Td>
-                    <Td>{text(pick(row, ["Sản phẩm", "Product", "product"])) || "-"}</Td>
+                    <Td>{resolveProducts(pick(row, ["Sản phẩm", "Product", "product"])) || "-"}</Td>
                   </tr>
                 );
               })}
@@ -579,6 +594,29 @@ function optionalText(value: any) {
   return output ? output : undefined;
 }
 
+// Dò các sản phẩm có sẵn xuất hiện trong ô "Sản phẩm" của Excel rồi nối bằng
+// ", " để ô multi-select tự tách thành nhiều SP đã chọn (thay vì 1 SP gộp).
+// Nếu không khớp SP có sẵn nào -> giữ nguyên text gốc để không mất dữ liệu.
+function resolveProducts(value: any) {
+  const raw = text(value);
+  if (!raw) return undefined;
+
+  const normalizedRaw = normalizeProductText(raw);
+
+  const matched = productOptions.filter((option) =>
+    normalizedRaw.includes(normalizeProductText(option))
+  );
+
+  return matched.length > 0 ? matched.join(", ") : raw;
+}
+
+function normalizeProductText(value: string) {
+  return removeVietnamese(String(value || ""))
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function optionalNumber(value: any) {
   const raw = text(value);
   if (!raw) return undefined;
@@ -597,15 +635,7 @@ function optionalDate(value: any) {
   }
 
   if (typeof value === "number") {
-    const parsed = XLSX.SSF.parse_date_code(value);
-
-    if (parsed) {
-      const year = String(parsed.y).padStart(4, "0");
-      const month = String(parsed.m).padStart(2, "0");
-      const day = String(parsed.d).padStart(2, "0");
-
-      return `${year}-${month}-${day}`;
-    }
+    return excelSerialToDateKey(value);
   }
 
   const raw = text(value);
@@ -624,6 +654,25 @@ function optionalDate(value: any) {
   }
 
   return undefined;
+}
+
+// Excel serial number -> "YYYY-MM-DD". Tự tính, KHÔNG phụ thuộc XLSX.SSF
+// (SSF có thể undefined trong bundle). Serial là ngày tuyệt đối nên không bao
+// giờ bị hoán đổi mm/dd hay lệch timezone.
+function excelSerialToDateKey(serial: number) {
+  if (!Number.isFinite(serial)) return undefined;
+
+  // 25569 = số ngày từ mốc Excel (1899-12-30) tới 1970-01-01.
+  const ms = Math.round((serial - 25569) * 86400000);
+  const date = new Date(ms);
+
+  if (Number.isNaN(date.getTime())) return undefined;
+
+  const year = String(date.getUTCFullYear()).padStart(4, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
 
 function toVietnamDateKey(date: Date) {

@@ -78,8 +78,11 @@ export default function ImportKocPage() {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
 
+      // raw:true -> ô ngày thật là SERIAL NUMBER (tuyệt đối, không nhầm mm/dd);
+      // ô ngày dạng text vẫn là chuỗi -> parse dd/mm.
       const parsedRows = XLSX.utils.sheet_to_json<ExcelRow>(worksheet, {
         defval: "",
+        raw: true,
       });
 
       setRows(parsedRows);
@@ -697,15 +700,7 @@ function optionalDate(value: any) {
   }
 
   if (typeof value === "number") {
-    const parsed = XLSX.SSF.parse_date_code(value);
-
-    if (parsed) {
-      const year = String(parsed.y).padStart(4, "0");
-      const month = String(parsed.m).padStart(2, "0");
-      const day = String(parsed.d).padStart(2, "0");
-
-      return `${year}-${month}-${day}`;
-    }
+    return excelSerialToDateKey(value);
   }
 
   const raw = text(value);
@@ -744,6 +739,23 @@ function formatExcelDatePreview(value: any) {
   if (!year || !month || !day) return text(value);
 
   return `${day}/${month}/${year}`;
+}
+
+// Excel serial number -> "YYYY-MM-DD". Tự tính, KHÔNG phụ thuộc XLSX.SSF.
+// Serial là ngày tuyệt đối nên không bao giờ bị hoán đổi mm/dd hay lệch timezone.
+function excelSerialToDateKey(serial: number) {
+  if (!Number.isFinite(serial)) return undefined;
+
+  const ms = Math.round((serial - 25569) * 86400000);
+  const date = new Date(ms);
+
+  if (Number.isNaN(date.getTime())) return undefined;
+
+  const year = String(date.getUTCFullYear()).padStart(4, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
 
 function dateObjectToVietnamDateKey(value: Date) {
