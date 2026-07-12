@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import DatePickerInput from "@/components/DatePickerInput";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -48,7 +49,6 @@ const statusBookingOptions = [
 ];
 
 const defaultColumns: ColumnConfig[] = [
-  { key: "action", label: "Sửa", type: "action", width: 58 },
   { key: "koc_id", label: "KOC", field: "koc_id", type: "select", width: 190 },
   {
     key: "koc_name",
@@ -139,6 +139,7 @@ const defaultColumns: ColumnConfig[] = [
 const selectColumnWidth = 52;
 const storageKeyOrder = "drkam_booking_column_order_v4";
 const storageKeyPinned = "drkam_booking_pinned_columns_v4";
+const storageKeyWidths = "drkam_booking_column_widths_v1";
 
 export default function BookingAdvancedTable({
   bookings,
@@ -157,10 +158,12 @@ export default function BookingAdvancedTable({
   onBookingUpdated: (id: string, patch: DbRow) => void;
   onBookingDeleted?: (ids: string[]) => void;
 }) {
+  const router = useRouter();
+
   const [columnOrder, setColumnOrder] = useState<string[]>(
     defaultColumns.map((column) => column.key)
   );
-  const [pinnedColumns, setPinnedColumns] = useState<string[]>(["action"]);
+  const [pinnedColumns, setPinnedColumns] = useState<string[]>([]);
   const [draggingColumn, setDraggingColumn] = useState("");
   const [savingCell, setSavingCell] = useState("");
   const [error, setError] = useState("");
@@ -171,6 +174,7 @@ export default function BookingAdvancedTable({
   const [bulkClearField, setBulkClearField] = useState("");
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
 
   const firstResetSignalRef = useRef(resetLayoutSignal);
 
@@ -200,6 +204,18 @@ export default function BookingAdvancedTable({
         const parsed = JSON.parse(savedPinned);
         if (Array.isArray(parsed)) {
           setPinnedColumns(parsed);
+        }
+      } catch {
+        // Ignore invalid localStorage data.
+      }
+    }
+
+    const savedWidths = window.localStorage.getItem(storageKeyWidths);
+    if (savedWidths) {
+      try {
+        const parsed = JSON.parse(savedWidths);
+        if (parsed && typeof parsed === "object") {
+          setColumnWidths(parsed as Record<string, number>);
         }
       } catch {
         // Ignore invalid localStorage data.
@@ -291,9 +307,12 @@ export default function BookingAdvancedTable({
   const tableWidth = useMemo(() => {
     return (
       selectColumnWidth +
-      orderedColumns.reduce((sum, column) => sum + column.width, 0)
+      orderedColumns.reduce(
+        (sum, column) => sum + (columnWidths[column.key] ?? column.width),
+        0
+      )
     );
-  }, [orderedColumns]);
+  }, [orderedColumns, columnWidths]);
 
   function saveColumnOrder(nextOrder: string[]) {
     setColumnOrder(nextOrder);
@@ -307,7 +326,9 @@ export default function BookingAdvancedTable({
 
   function resetLayout() {
     saveColumnOrder(defaultColumns.map((column) => column.key));
-    savePinnedColumns(["action"]);
+    savePinnedColumns([]);
+    setColumnWidths({});
+    window.localStorage.removeItem(storageKeyWidths);
   }
 
   function handleDrop(targetColumnKey: string) {
@@ -336,6 +357,10 @@ export default function BookingAdvancedTable({
     savePinnedColumns(nextPinned);
   }
 
+  function getColumnWidth(column: ColumnConfig) {
+    return columnWidths[column.key] ?? column.width;
+  }
+
   function getStickyStyle(column: ColumnConfig) {
     if (!pinnedColumns.includes(column.key)) {
       return {};
@@ -349,7 +374,9 @@ export default function BookingAdvancedTable({
 
     const left =
       selectColumnWidth +
-      pinnedOrdered.slice(0, index).reduce((sum, item) => sum + item.width, 0);
+      pinnedOrdered
+        .slice(0, index)
+        .reduce((sum, item) => sum + getColumnWidth(item), 0);
 
     return {
       position: "sticky" as const,
@@ -566,11 +593,33 @@ export default function BookingAdvancedTable({
           </div>
 
           <p className="text-[12px] font-semibold text-slate-500">
-            Chọn checkbox từng dòng hoặc checkbox ở tiêu đề để thao tác hàng loạt.
+            Chọn 1 booking để Sửa / Xóa; chọn từ 2 booking trở lên để thao tác
+            hàng loạt.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_auto_1fr_auto_auto] xl:items-center">
+        {selectedCount === 1 && (
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/bookings/${selectedIds[0]}/edit`}
+              className="flex h-9 items-center rounded-xl bg-emerald-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-emerald-700"
+            >
+              Sửa Booking
+            </Link>
+
+            <button
+              type="button"
+              disabled={bulkDeleting}
+              onClick={bulkDeleteSelectedRows}
+              className="flex h-9 items-center rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {bulkDeleting ? "Đang xóa..." : "Xóa Booking"}
+            </button>
+          </div>
+        )}
+
+        {selectedCount >= 2 && (
+          <div className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_auto_1fr_auto_auto] xl:items-center">
           <select
             value={bulkField}
             onChange={(event) => {
@@ -636,7 +685,8 @@ export default function BookingAdvancedTable({
               {bulkDeleting ? "Đang xóa..." : "Xóa booking đã chọn"}
             </button>
           </div>
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="booking-advanced-scroll max-h-[calc(100vh-375px)] overflow-auto">
@@ -681,9 +731,9 @@ export default function BookingAdvancedTable({
                     onDrop={() => handleDrop(column.key)}
                     className="border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                     style={{
-                      width: column.width,
-                      minWidth: column.width,
-                      maxWidth: column.width,
+                      width: getColumnWidth(column),
+                      minWidth: getColumnWidth(column),
+                      maxWidth: getColumnWidth(column),
                       position: "sticky",
                       top: 0,
                       zIndex: pinned ? 90 : 50,
@@ -712,6 +762,46 @@ export default function BookingAdvancedTable({
                         📌
                       </button>
                     </div>
+
+                    <div
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const key = column.key;
+                        const startX = event.clientX;
+                        const startWidth = getColumnWidth(column);
+
+                        function onMove(moveEvent: MouseEvent) {
+                          const nextWidth = Math.max(
+                            60,
+                            startWidth + (moveEvent.clientX - startX)
+                          );
+                          setColumnWidths((prev) => ({
+                            ...prev,
+                            [key]: nextWidth,
+                          }));
+                        }
+
+                        function onUp() {
+                          document.removeEventListener("mousemove", onMove);
+                          document.removeEventListener("mouseup", onUp);
+                          setColumnWidths((prev) => {
+                            window.localStorage.setItem(
+                              storageKeyWidths,
+                              JSON.stringify(prev)
+                            );
+                            return prev;
+                          });
+                        }
+
+                        document.addEventListener("mousemove", onMove);
+                        document.addEventListener("mouseup", onUp);
+                      }}
+                      onClick={(event) => event.stopPropagation()}
+                      title="Kéo để chỉnh độ rộng cột"
+                      className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-[#3964ff]/40"
+                    />
                   </th>
                 );
               })}
@@ -749,7 +839,18 @@ export default function BookingAdvancedTable({
                 return (
                   <tr
                     key={booking.id}
-                    className={`group ${selected ? "bg-red-50/40" : ""}`}
+                    onClick={(event) => {
+                      const el = event.target as HTMLElement;
+                      if (
+                        el.closest("input, select, textarea, button, a, label")
+                      ) {
+                        return;
+                      }
+                      router.push(`/bookings/${booking.id}/edit`);
+                    }}
+                    className={`group cursor-pointer ${
+                      selected ? "bg-red-50/40" : ""
+                    }`}
                   >
                     <td
                       className="border-b border-slate-100 bg-white px-2 py-1.5 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
@@ -781,9 +882,9 @@ export default function BookingAdvancedTable({
                           key={column.key}
                           className="border-b border-slate-100 bg-white px-2 py-1.5 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
                           style={{
-                            width: column.width,
-                            minWidth: column.width,
-                            maxWidth: column.width,
+                            width: getColumnWidth(column),
+                            minWidth: getColumnWidth(column),
+                            maxWidth: getColumnWidth(column),
                             ...getStickyStyle(column),
                             zIndex: pinned ? 40 : 1,
                             background: pinned
@@ -954,20 +1055,6 @@ function CellEditor({
   saving: boolean;
   onSave: (value: unknown) => void;
 }) {
-  if (column.type === "action") {
-    return (
-      <div className="flex items-center justify-center">
-        <Link
-          href={`/bookings/${booking.id}/edit`}
-          title="Sửa Booking"
-          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-[13px] shadow-sm hover:border-blue-200 hover:bg-blue-50"
-        >
-          ✏️
-        </Link>
-      </div>
-    );
-  }
-
   const value = column.field ? booking[column.field] : "";
 
   if (
