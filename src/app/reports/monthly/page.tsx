@@ -476,7 +476,7 @@ export default function MonthlyReportPage() {
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-center text-sm">
+          <table className="w-full table-fixed text-center text-sm">
             <thead>
               <tr className="bg-slate-50">
                 <Th>PIC</Th>
