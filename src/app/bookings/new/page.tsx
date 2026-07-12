@@ -35,6 +35,14 @@ export default function NewBookingPage() {
   const [employees, setEmployees] = useState<DbRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [initialKocId, setInitialKocId] = useState("");
+
+  // Nếu mở từ Hồ sơ KOC (?koc_id=...) thì chọn sẵn KOC đó
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const kocId = params.get("koc_id");
+    if (kocId) setInitialKocId(kocId);
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -81,7 +89,23 @@ export default function NewBookingPage() {
       return;
     }
 
-    const { error } = await supabase.from("bookings").insert(payload);
+    // Tự sinh mã đơn: DH-{mã KOC}-{STT theo KOC}
+    const selectedKoc = kocs.find(
+      (koc) => String(koc.id) === String(payload.koc_id)
+    );
+
+    const { count } = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("koc_id", payload.koc_id);
+
+    const bookingCode = `DH-${kocCodeBase(selectedKoc)}-${String(
+      (count || 0) + 1
+    ).padStart(3, "0")}`;
+
+    const { error } = await supabase
+      .from("bookings")
+      .insert({ ...payload, booking_code: bookingCode });
 
     if (error) {
       setMessage(`Lỗi tạo Booking: ${error.message}`);
@@ -141,8 +165,10 @@ export default function NewBookingPage() {
           <div className="grid grid-cols-1 gap-px bg-slate-200 p-px xl:grid-cols-2">
             <CompactField label="KOC" required>
               <KocSearchSelect
+                key={initialKocId || "empty"}
                 name="koc_id"
                 kocs={kocs}
+                defaultValue={initialKocId}
                 placeholder="Gõ ID TikTok/Tên FB để tìm KOC..."
               />
             </CompactField>
@@ -353,6 +379,20 @@ function getNumber(formData: FormData, key: string) {
   if (Number.isNaN(numberValue)) return null;
 
   return numberValue;
+}
+
+function kocCodeBase(koc?: DbRow | null) {
+  const raw = koc?.koc_code || koc?.Id_tiktok_Ten_fb || koc?.name || "KOC";
+
+  const slug = String(raw)
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/đ/gi, "d")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
+
+  return slug || "KOC";
 }
 
 function getSelectedProducts(formData: FormData) {

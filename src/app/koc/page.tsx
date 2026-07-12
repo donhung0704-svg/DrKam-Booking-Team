@@ -95,7 +95,6 @@ const filterFields: FilterField[] = [
 ];
 
 const columnOptions: ColumnOption[] = [
-  { key: "action", label: "Sửa", defaultVisible: true },
   { key: "employee_id", label: "PIC phụ trách", defaultVisible: true },
   { key: "Id_tiktok_Ten_fb", label: "ID TikTok/Tên FB", defaultVisible: true },
   { key: "koc_code", label: "Mã KOC", defaultVisible: true },
@@ -163,7 +162,7 @@ export default function KocListPage() {
         const cleanKeys = parsed.filter((key) => validKeys.has(key));
 
         if (cleanKeys.length > 0) {
-          setVisibleColumnKeys(cleanKeys.includes("action") ? cleanKeys : ["action", ...cleanKeys]);
+          setVisibleColumnKeys(cleanKeys);
         }
       }
     } catch {
@@ -324,14 +323,11 @@ export default function KocListPage() {
   }
 
   function saveVisibleColumns(nextKeys: string[]) {
-    const cleanKeys = nextKeys.includes("action") ? nextKeys : ["action", ...nextKeys];
-    setVisibleColumnKeys(cleanKeys);
-    window.localStorage.setItem(visibleColumnsStorageKey, JSON.stringify(cleanKeys));
+    setVisibleColumnKeys(nextKeys);
+    window.localStorage.setItem(visibleColumnsStorageKey, JSON.stringify(nextKeys));
   }
 
   function toggleColumn(columnKey: string) {
-    if (columnKey === "action") return;
-
     const exists = visibleColumnKeys.includes(columnKey);
     const nextKeys = exists
       ? visibleColumnKeys.filter((key) => key !== columnKey)
