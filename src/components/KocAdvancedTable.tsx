@@ -3,6 +3,7 @@
 import { supabase } from "@/lib/supabase/client";
 import DatePickerInput from "@/components/DatePickerInput";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type DbRow = Record<string, any>;
@@ -42,7 +43,7 @@ const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 
 const defaultColumns: ColumnConfig[] = [
-  { key: "action", label: "Thao tác", type: "action", width: 88 },
+  { key: "action", label: "Thao tác", type: "action", width: 72 },
   {
     key: "employee_id",
     label: "PIC phụ trách",
@@ -272,6 +273,8 @@ export default function KocAdvancedTable({
   onKocUpdated: (id: string, patch: DbRow) => void;
   onKocDeleted?: (ids: string[]) => void;
 }) {
+  const router = useRouter();
+
   const [columnOrder, setColumnOrder] = useState<string[]>(
     defaultColumns.map((column) => column.key)
   );
@@ -880,7 +883,18 @@ const orderedColumns = useMemo(() => {
                 return (
                   <tr
                     key={koc.id}
-                    className={`group ${selected ? "bg-red-50/40" : ""}`}
+                    onClick={(event) => {
+                      const el = event.target as HTMLElement;
+                      if (
+                        el.closest("input, select, textarea, button, a, label")
+                      ) {
+                        return;
+                      }
+                      router.push(`/koc/${koc.id}`);
+                    }}
+                    className={`group cursor-pointer ${
+                      selected ? "bg-red-50/40" : ""
+                    }`}
                   >
                     <td
                       className="border-b border-slate-100 bg-white px-2 py-1.5 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
@@ -1072,25 +1086,7 @@ function CellEditor({
   onSave: (value: unknown) => void;
 }) {
   if (column.type === "action") {
-    return (
-      <div className="flex items-center justify-center gap-1">
-        <Link
-          href={`/koc/${koc.id}`}
-          title="Xem hồ sơ KOC"
-          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-[13px] shadow-sm hover:border-blue-200 hover:bg-blue-50"
-        >
-          👁️
-        </Link>
-
-        <Link
-          href={`/koc/${koc.id}/edit`}
-          title="Sửa KOC"
-          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-[13px] shadow-sm hover:border-blue-200 hover:bg-blue-50"
-        >
-          ✏️
-        </Link>
-      </div>
-    );
+    return <ActionMenu kocId={String(koc.id)} />;
   }
 
   const value = column.field ? koc[column.field] : "";
@@ -1216,6 +1212,67 @@ function CellEditor({
   );
 }
 
+
+function ActionMenu({ kocId }: { kocId: string }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  return (
+    <div className="flex items-center justify-center">
+      <button
+        ref={buttonRef}
+        type="button"
+        title="Thao tác"
+        onClick={(event) => {
+          event.stopPropagation();
+
+          if (!open && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setPos({ top: rect.bottom + 4, left: rect.left });
+          }
+
+          setOpen((current) => !current);
+        }}
+        className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-[15px] font-black leading-none text-slate-600 shadow-sm hover:border-blue-200 hover:bg-blue-50"
+      >
+        ⋮
+      </button>
+
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 z-[300]"
+            onClick={(event) => {
+              event.stopPropagation();
+              setOpen(false);
+            }}
+          />
+
+          <div
+            className="fixed z-[310] w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-2xl"
+            style={{ top: pos.top, left: pos.left }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Link
+              href={`/bookings/new?koc_id=${kocId}`}
+              className="block rounded-lg px-3 py-2 text-[12.5px] font-semibold text-slate-700 hover:bg-blue-50"
+            >
+              + Tạo Booking
+            </Link>
+
+            <Link
+              href={`/koc/${kocId}/edit`}
+              className="block rounded-lg px-3 py-2 text-[12.5px] font-semibold text-slate-700 hover:bg-blue-50"
+            >
+              Sửa KOC
+            </Link>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function getSelectColorStyle(columnKey: string, value: unknown) {
   const raw = String(value || "").trim();
