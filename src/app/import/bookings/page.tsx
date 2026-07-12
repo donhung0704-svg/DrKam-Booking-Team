@@ -24,6 +24,20 @@ const statusBookingOptions = [
   "Đã thanh toán",
 ];
 
+// Danh sách sản phẩm có sẵn (đồng bộ với BookingAdvancedTable).
+// Dùng để tự tách ô "Sản phẩm" trong Excel thành nhiều SP đã chọn.
+const productOptions = [
+  "Nước súc miệng CYK",
+  "Nước súc miệng Postbiotic",
+  "Xịt miệng Plus",
+  "Gel cạo lưỡi bạc hà",
+  "Gel cạo lưỡi dưa lưới",
+  "Kem đánh răng bạc hà",
+  "Kem đánh răng cam",
+  "Bàn chải ULTRASOFT",
+  "Bộ cạo lưỡi nhựa",
+];
+
 export default function ImportBookingPage() {
   const [rows, setRows] = useState<ExcelRow[]>([]);
   const [kocs, setKocs] = useState<DbRow[]>([]);
@@ -181,7 +195,7 @@ function downloadBookingTemplate() {
             "actual_post_date",
           ])
         ),
-        product: optionalText(pick(row, ["Sản phẩm", "Product", "product"])),
+        product: resolveProducts(pick(row, ["Sản phẩm", "Product", "product"])),
         note: optionalText(pick(row, ["Ghi chú", "Note", "note"])),
       });
 
@@ -409,7 +423,7 @@ function downloadBookingTemplate() {
                         ])
                       ) || "-"}
                     </Td>
-                    <Td>{text(pick(row, ["Sản phẩm", "Product", "product"])) || "-"}</Td>
+                    <Td>{resolveProducts(pick(row, ["Sản phẩm", "Product", "product"])) || "-"}</Td>
                   </tr>
                 );
               })}
@@ -578,6 +592,29 @@ function text(value: any) {
 function optionalText(value: any) {
   const output = text(value);
   return output ? output : undefined;
+}
+
+// Dò các sản phẩm có sẵn xuất hiện trong ô "Sản phẩm" của Excel rồi nối bằng
+// ", " để ô multi-select tự tách thành nhiều SP đã chọn (thay vì 1 SP gộp).
+// Nếu không khớp SP có sẵn nào -> giữ nguyên text gốc để không mất dữ liệu.
+function resolveProducts(value: any) {
+  const raw = text(value);
+  if (!raw) return undefined;
+
+  const normalizedRaw = normalizeProductText(raw);
+
+  const matched = productOptions.filter((option) =>
+    normalizedRaw.includes(normalizeProductText(option))
+  );
+
+  return matched.length > 0 ? matched.join(", ") : raw;
+}
+
+function normalizeProductText(value: string) {
+  return removeVietnamese(String(value || ""))
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function optionalNumber(value: any) {
