@@ -76,11 +76,12 @@ export default function ImportBookingPage() {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
 
-      // raw:false -> đọc đúng chuỗi HIỂN THỊ trong Excel (vd "12/6/2026"),
-      // rồi tự parse dd/mm để không bị hoán đổi ngày/tháng (WYSIWYG).
+      // raw:true -> ô ngày thật trả về SERIAL NUMBER (số tuyệt đối, không thể
+      // nhầm mm/dd, không lệch timezone). optionalDate() sẽ tự convert serial.
+      // Ô ngày dạng TEXT vẫn là chuỗi -> parse dd/mm như thường.
       const parsedRows = XLSX.utils.sheet_to_json<ExcelRow>(worksheet, {
         defval: "",
-        raw: false,
+        raw: true,
       });
 
       setRows(parsedRows);
@@ -400,7 +401,7 @@ function downloadBookingTemplate() {
                       ) || "-"}
                     </Td>
                     <Td>
-                      {text(
+                      {optionalDate(
                         pick(row, [
                           "Ngày dự kiến đăng",
                           "Expected post date",
@@ -597,15 +598,7 @@ function optionalDate(value: any) {
   }
 
   if (typeof value === "number") {
-    const parsed = XLSX.SSF.parse_date_code(value);
-
-    if (parsed) {
-      const year = String(parsed.y).padStart(4, "0");
-      const month = String(parsed.m).padStart(2, "0");
-      const day = String(parsed.d).padStart(2, "0");
-
-      return `${year}-${month}-${day}`;
-    }
+    return excelSerialToDateKey(value);
   }
 
   const raw = text(value);
@@ -624,6 +617,25 @@ function optionalDate(value: any) {
   }
 
   return undefined;
+}
+
+// Excel serial number -> "YYYY-MM-DD". Tự tính, KHÔNG phụ thuộc XLSX.SSF
+// (SSF có thể undefined trong bundle). Serial là ngày tuyệt đối nên không bao
+// giờ bị hoán đổi mm/dd hay lệch timezone.
+function excelSerialToDateKey(serial: number) {
+  if (!Number.isFinite(serial)) return undefined;
+
+  // 25569 = số ngày từ mốc Excel (1899-12-30) tới 1970-01-01.
+  const ms = Math.round((serial - 25569) * 86400000);
+  const date = new Date(ms);
+
+  if (Number.isNaN(date.getTime())) return undefined;
+
+  const year = String(date.getUTCFullYear()).padStart(4, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
 
 function toVietnamDateKey(date: Date) {
