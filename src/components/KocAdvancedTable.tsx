@@ -234,6 +234,7 @@ const defaultColumns: ColumnConfig[] = [
 const selectColumnWidth = 52;
 const storageKeyOrder = "drkam_koc_column_order_v2";
 const storageKeyPinned = "drkam_koc_pinned_columns_v2";
+const storageKeyWidths = "drkam_koc_column_widths_v1";
 const defaultVisibleColumnKeys = [
   "employee_id",
   "Id_tiktok_Ten_fb",
@@ -287,6 +288,7 @@ export default function KocAdvancedTable({
   const [bulkClearField, setBulkClearField] = useState("");
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
 
   const firstResetSignalRef = useRef(resetLayoutSignal);
 
@@ -316,6 +318,18 @@ export default function KocAdvancedTable({
         const parsed = JSON.parse(savedPinned);
         if (Array.isArray(parsed)) {
           setPinnedColumns(parsed);
+        }
+      } catch {
+        // Ignore invalid localStorage data.
+      }
+    }
+
+    const savedWidths = window.localStorage.getItem(storageKeyWidths);
+    if (savedWidths) {
+      try {
+        const parsed = JSON.parse(savedWidths);
+        if (parsed && typeof parsed === "object") {
+          setColumnWidths(parsed as Record<string, number>);
         }
       } catch {
         // Ignore invalid localStorage data.
@@ -420,9 +434,12 @@ const orderedColumns = useMemo(() => {
   const tableWidth = useMemo(() => {
     return (
       selectColumnWidth +
-      orderedColumns.reduce((sum, column) => sum + column.width, 0)
+      orderedColumns.reduce(
+        (sum, column) => sum + (columnWidths[column.key] ?? column.width),
+        0
+      )
     );
-  }, [orderedColumns]);
+  }, [orderedColumns, columnWidths]);
 
   function saveColumnOrder(nextOrder: string[]) {
     setColumnOrder(nextOrder);
@@ -437,6 +454,8 @@ const orderedColumns = useMemo(() => {
   function resetLayout() {
     saveColumnOrder(defaultColumns.map((column) => column.key));
     savePinnedColumns([]);
+    setColumnWidths({});
+    window.localStorage.removeItem(storageKeyWidths);
   }
 
   function handleDrop(targetColumnKey: string) {
@@ -465,6 +484,10 @@ const orderedColumns = useMemo(() => {
     savePinnedColumns(nextPinned);
   }
 
+  function getColumnWidth(column: ColumnConfig) {
+    return columnWidths[column.key] ?? column.width;
+  }
+
   function getStickyStyle(column: ColumnConfig) {
     if (!pinnedColumns.includes(column.key)) {
       return {};
@@ -478,7 +501,9 @@ const orderedColumns = useMemo(() => {
 
     const left =
       selectColumnWidth +
-      pinnedOrdered.slice(0, index).reduce((sum, item) => sum + item.width, 0);
+      pinnedOrdered
+        .slice(0, index)
+        .reduce((sum, item) => sum + getColumnWidth(item), 0);
 
     return {
       position: "sticky" as const,
@@ -843,9 +868,9 @@ const orderedColumns = useMemo(() => {
                     onDrop={() => handleDrop(column.key)}
                     className="border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                     style={{
-                      width: column.width,
-                      minWidth: column.width,
-                      maxWidth: column.width,
+                      width: getColumnWidth(column),
+                      minWidth: getColumnWidth(column),
+                      maxWidth: getColumnWidth(column),
                       position: "sticky",
                       top: 0,
                       zIndex: pinned ? 90 : 50,
@@ -874,6 +899,46 @@ const orderedColumns = useMemo(() => {
                         📌
                       </button>
                     </div>
+
+                    <div
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const key = column.key;
+                        const startX = event.clientX;
+                        const startWidth = getColumnWidth(column);
+
+                        function onMove(moveEvent: MouseEvent) {
+                          const nextWidth = Math.max(
+                            60,
+                            startWidth + (moveEvent.clientX - startX)
+                          );
+                          setColumnWidths((prev) => ({
+                            ...prev,
+                            [key]: nextWidth,
+                          }));
+                        }
+
+                        function onUp() {
+                          document.removeEventListener("mousemove", onMove);
+                          document.removeEventListener("mouseup", onUp);
+                          setColumnWidths((prev) => {
+                            window.localStorage.setItem(
+                              storageKeyWidths,
+                              JSON.stringify(prev)
+                            );
+                            return prev;
+                          });
+                        }
+
+                        document.addEventListener("mousemove", onMove);
+                        document.addEventListener("mouseup", onUp);
+                      }}
+                      onClick={(event) => event.stopPropagation()}
+                      title="Kéo để chỉnh độ rộng cột"
+                      className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-[#3964ff]/40"
+                    />
                   </th>
                 );
               })}
@@ -954,9 +1019,9 @@ const orderedColumns = useMemo(() => {
                           key={column.key}
                           className="border-b border-slate-100 bg-white px-2 py-1.5 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
                           style={{
-                            width: column.width,
-                            minWidth: column.width,
-                            maxWidth: column.width,
+                            width: getColumnWidth(column),
+                            minWidth: getColumnWidth(column),
+                            maxWidth: getColumnWidth(column),
                             ...getStickyStyle(column),
                             zIndex: pinned ? 40 : 1,
                             background: pinned
