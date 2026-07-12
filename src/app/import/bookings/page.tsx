@@ -71,14 +71,16 @@ export default function ImportBookingPage() {
 
       const workbook = XLSX.read(buffer, {
         type: "array",
-        cellDates: true,
       });
 
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
 
+      // raw:false -> đọc đúng chuỗi HIỂN THỊ trong Excel (vd "12/6/2026"),
+      // rồi tự parse dd/mm để không bị hoán đổi ngày/tháng (WYSIWYG).
       const parsedRows = XLSX.utils.sheet_to_json<ExcelRow>(worksheet, {
         defval: "",
+        raw: false,
       });
 
       setRows(parsedRows);
@@ -614,8 +616,10 @@ function optionalDate(value: any) {
     return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
 
-  if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/.test(raw)) {
-    const [dayRaw, monthRaw, year] = raw.split(/[\/-]/);
+  if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}$/.test(raw)) {
+    const [dayRaw, monthRaw, yearRaw] = raw.split(/[\/-]/);
+    const year =
+      yearRaw.length === 2 ? `20${yearRaw}` : yearRaw.padStart(4, "0");
     return `${year}-${monthRaw.padStart(2, "0")}-${dayRaw.padStart(2, "0")}`;
   }
 
