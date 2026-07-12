@@ -19,6 +19,10 @@ type ReportRow = {
   bookingMoi: number;
   dailyVideoNew: number;
   dailyVideoOld: number;
+  videoPov: number;
+  videoUnbox: number;
+  videoAi: number;
+  videoReal: number;
   gmvNgay: number;
 };
 
@@ -174,6 +178,10 @@ export default function MonthlyReportPage() {
           bookingMoi: 0,
           dailyVideoNew: 0,
           dailyVideoOld: 0,
+          videoPov: 0,
+          videoUnbox: 0,
+          videoAi: 0,
+          videoReal: 0,
           gmvNgay: 0,
         });
       }
@@ -214,6 +222,18 @@ export default function MonthlyReportPage() {
         row.dailyVideoNew += monthlyVideos;
       } else {
         row.dailyVideoOld += monthlyVideos;
+      }
+
+      // Video chia theo channel type
+      const channelType = String(koc.channel_type || "").trim();
+      if (channelType === "POV") {
+        row.videoPov += monthlyVideos;
+      } else if (channelType === "Unbox") {
+        row.videoUnbox += monthlyVideos;
+      } else if (channelType === "AI") {
+        row.videoAi += monthlyVideos;
+      } else if (channelType === "Người thật") {
+        row.videoReal += monthlyVideos;
       }
 
       row.gmvNgay += parseNumber(koc.gmv_thang);
@@ -261,6 +281,10 @@ export default function MonthlyReportPage() {
         total.bookingMoi += row.bookingMoi;
         total.dailyVideoNew += row.dailyVideoNew;
         total.dailyVideoOld += row.dailyVideoOld;
+        total.videoPov += row.videoPov;
+        total.videoUnbox += row.videoUnbox;
+        total.videoAi += row.videoAi;
+        total.videoReal += row.videoReal;
         total.gmvNgay += row.gmvNgay;
 
         return total;
@@ -271,6 +295,10 @@ export default function MonthlyReportPage() {
         bookingMoi: 0,
         dailyVideoNew: 0,
         dailyVideoOld: 0,
+        videoPov: 0,
+        videoUnbox: 0,
+        videoAi: 0,
+        videoReal: 0,
         gmvNgay: 0,
       }
     );
@@ -325,6 +353,10 @@ export default function MonthlyReportPage() {
       "Monthly Videos (New KOCs)": row.dailyVideoNew,
       "Monthly Videos (Old KOCs)": row.dailyVideoOld,
       "Monthly Videos": row.dailyVideoNew + row.dailyVideoOld,
+      "Video POV": row.videoPov,
+      "Video Unbox": row.videoUnbox,
+      "Video AI": row.videoAi,
+      "Video Người thật": row.videoReal,
       GMV: row.gmvNgay,
     }));
 
@@ -447,6 +479,10 @@ export default function MonthlyReportPage() {
                 <Th>Monthly Videos (New KOCs)</Th>
                 <Th>Monthly Videos (Old KOCs)</Th>
                 <Th>Monthly Videos</Th>
+                <Th>Video POV</Th>
+                <Th>Video Unbox</Th>
+                <Th>Video AI</Th>
+                <Th>Video Người thật</Th>
                 <Th>GMV</Th>
               </tr>
             </thead>
@@ -455,7 +491,7 @@ export default function MonthlyReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={12}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -466,7 +502,7 @@ export default function MonthlyReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={12}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -491,6 +527,10 @@ export default function MonthlyReportPage() {
                     <Td>
                       {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
                     </Td>
+                    <Td>{formatNumber(row.videoPov)}</Td>
+                    <Td>{formatNumber(row.videoUnbox)}</Td>
+                    <Td>{formatNumber(row.videoAi)}</Td>
+                    <Td>{formatNumber(row.videoReal)}</Td>
                     <Td>{formatMoney(row.gmvNgay)}</Td>
                   </tr>
                 ))}
@@ -511,6 +551,18 @@ export default function MonthlyReportPage() {
                   </td>
                   <td className="px-5 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
+                  </td>
+                  <td className="px-5 py-4 font-bold">
+                    {formatNumber(totals.videoPov)}
+                  </td>
+                  <td className="px-5 py-4 font-bold">
+                    {formatNumber(totals.videoUnbox)}
+                  </td>
+                  <td className="px-5 py-4 font-bold">
+                    {formatNumber(totals.videoAi)}
+                  </td>
+                  <td className="px-5 py-4 font-bold">
+                    {formatNumber(totals.videoReal)}
                   </td>
                   <td className="px-5 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
