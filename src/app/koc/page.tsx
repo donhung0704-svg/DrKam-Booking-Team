@@ -134,6 +134,7 @@ export default function KocListPage() {
   const [employees, setEmployees] = useState<DbRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   const [totalKocCount, setTotalKocCount] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
@@ -355,11 +356,47 @@ export default function KocListPage() {
     setPageIndex((current) => Math.min(totalPages - 1, current + 1));
   }
 
-  function exportKocExcel() {
-    const exportRows = kocs.map((koc) => {
-      const campaignName = getCampaignName(koc, campaignMap);
+  async function exportKocExcel() {
+    setExporting(true);
+    setMessage("");
 
-      return {
+    try {
+      // Lấy TOÀN BỘ KOC khớp bộ lọc (phân trang để vượt giới hạn 1000 dòng của Supabase)
+      const pageSize = 1000;
+      const allKocs: DbRow[] = [];
+      let from = 0;
+
+      for (;;) {
+        let query = supabase
+          .from("koc")
+          .select("*")
+          .order("new_contact_date", { ascending: true, nullsFirst: true })
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: true })
+          .range(from, from + pageSize - 1);
+
+        activeFilters.forEach((condition) => {
+          query = applyConditionToQuery(query, condition);
+        });
+
+        const { data, error } = await query;
+
+        if (error) {
+          setMessage(`Lỗi xuất Excel: ${error.message}`);
+          return;
+        }
+
+        const batch = data || [];
+        allKocs.push(...batch);
+
+        if (batch.length < pageSize) break;
+        from += pageSize;
+      }
+
+      const exportRows = allKocs.map((koc) => {
+        const campaignName = getCampaignName(koc, campaignMap);
+
+        return {
         "Mã KOC": koc.koc_code || "",
         "ID TikTok/Tên FB": koc.Id_tiktok_Ten_fb || "",
         "Tên KOC": koc.name || "",
@@ -391,15 +428,18 @@ export default function KocListPage() {
       };
     });
 
-    if (exportRows.length === 0) {
-      alert("Không có dữ liệu KOC để xuất Excel.");
-      return;
-    }
+      if (exportRows.length === 0) {
+        alert("Không có dữ liệu KOC để xuất Excel.");
+        return;
+      }
 
-    const worksheet = XLSX.utils.json_to_sheet(exportRows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Danh sach KOC");
-    XLSX.writeFile(workbook, `danh-sach-koc-trang-${pageIndex + 1}-${getTodayForFileName()}.xlsx`);
+      const worksheet = XLSX.utils.json_to_sheet(exportRows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Danh sach KOC");
+      XLSX.writeFile(workbook, `danh-sach-koc-${getTodayForFileName()}.xlsx`);
+    } finally {
+      setExporting(false);
+    }
   }
 
   return (
@@ -434,9 +474,10 @@ export default function KocListPage() {
             <button
               type="button"
               onClick={exportKocExcel}
-              className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
+              disabled={exporting}
+              className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700 disabled:opacity-60"
             >
-              Xuất Excel trang này
+              {exporting ? "Đang xuất..." : "Xuất Excel"}
             </button>
 
             <Link

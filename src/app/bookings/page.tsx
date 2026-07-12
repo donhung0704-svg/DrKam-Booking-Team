@@ -90,11 +90,7 @@ export default function BookingListPage() {
       setMessage("");
 
       const [bookingResult, employeeResult] = await Promise.all([
-        supabase
-          .from("bookings")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(10000),
+        loadAllBookings(),
 
         supabase
           .from("employees")
@@ -276,7 +272,7 @@ export default function BookingListPage() {
   }
 
   function exportBookingExcel() {
-    const exportRows = currentPageBookings.map((booking) => {
+    const exportRows = filteredBookings.map((booking) => {
       const koc = booking.koc_id ? kocMap.get(String(booking.koc_id)) : null;
 
       const employee = booking.employee_id
@@ -330,7 +326,7 @@ export default function BookingListPage() {
 
     XLSX.writeFile(
       workbook,
-      `danh-sach-booking-trang-${safePageIndex + 1}-${getTodayForFileName()}.xlsx`
+      `danh-sach-booking-${getTodayForFileName()}.xlsx`
     );
   }
 
@@ -368,7 +364,7 @@ export default function BookingListPage() {
               onClick={exportBookingExcel}
               className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
             >
-              Xuất Excel trang này
+              Xuất Excel
             </button>
 
             <Link
@@ -622,6 +618,33 @@ export default function BookingListPage() {
       </section>
     </section>
   );
+}
+
+async function loadAllBookings() {
+  // Tải TOÀN BỘ booking (phân trang để vượt giới hạn 1000 dòng của Supabase),
+  // giữ thứ tự mới nhất trước, thêm id làm mốc để phân trang ổn định.
+  const pageSize = 1000;
+  const rows: DbRow[] = [];
+  let from = 0;
+
+  for (;;) {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) return { data: null as DbRow[] | null, error };
+
+    const batch = data || [];
+    rows.push(...batch);
+
+    if (batch.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return { data: rows as DbRow[] | null, error: null };
 }
 
 async function loadKocsByIds(kocIds: string[]) {
