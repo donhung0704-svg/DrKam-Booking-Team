@@ -476,7 +476,7 @@ export default function MonthlyReportPage() {
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-left text-sm">
+          <table className="w-full text-center text-sm">
             <thead>
               <tr className="bg-slate-50">
                 <Th>PIC</Th>
@@ -546,37 +546,37 @@ export default function MonthlyReportPage() {
 
               {!loading && reportRows.length > 0 && (
                 <tr className="border-t-2 border-slate-200 bg-slate-50">
-                  <td className="px-5 py-4 font-bold text-slate-950">
+                  <td className="px-2 py-4 font-bold text-slate-950">
                     Tổng cộng
                   </td>
-                  <td className="px-5 py-4 font-bold">{totals.lienHe}</td>
-                  <td className="px-5 py-4 font-bold">{totals.phanHoi}</td>
-                  <td className="px-5 py-4 font-bold">{totals.bookingMoi}</td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">{totals.lienHe}</td>
+                  <td className="px-2 py-4 font-bold">{totals.phanHoi}</td>
+                  <td className="px-2 py-4 font-bold">{totals.bookingMoi}</td>
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoOld)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.videoPov)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.videoUnbox)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.videoAi)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.videoReal)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.videoOther)}
                   </td>
-                  <td className="px-5 py-4 font-bold">
+                  <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
                   </td>
                 </tr>
@@ -723,7 +723,7 @@ export default function MonthlyReportPage() {
 
 function Th({ children }: { children: ReactNode }) {
   return (
-    <th className="border-b border-slate-200 px-5 py-3 text-[11px] font-black uppercase tracking-[0.06em] whitespace-nowrap text-slate-700">
+    <th className="border-b border-slate-200 px-2 py-2 text-center align-middle text-[11px] font-black uppercase tracking-[0.04em] text-slate-700">
       {children}
     </th>
   );
@@ -731,7 +731,7 @@ function Th({ children }: { children: ReactNode }) {
 
 function Td({ children }: { children: ReactNode }) {
   return (
-    <td className="border-b border-slate-100 px-5 py-3 align-middle text-[13px]">
+    <td className="border-b border-slate-100 px-2 py-3 align-middle text-[13px]">
       {children}
     </td>
   );
