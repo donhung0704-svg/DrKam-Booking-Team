@@ -17,6 +17,7 @@ type ReportRow = {
   lienHe: number;
   phanHoi: number;
   bookingMoi: number;
+  giaCast: number;
   dailyVideoNew: number;
   dailyVideoOld: number;
   videoPov: number;
@@ -177,6 +178,7 @@ export default function MonthlyReportPage() {
           lienHe: 0,
           phanHoi: 0,
           bookingMoi: 0,
+          giaCast: 0,
           dailyVideoNew: 0,
           dailyVideoOld: 0,
           videoPov: 0,
@@ -248,6 +250,7 @@ export default function MonthlyReportPage() {
 
       if (toVietnamDateKey(booking.created_at).slice(0, 7) === monthKey) {
         row.bookingMoi += 1;
+        row.giaCast += parseNumber(booking.cast_price);
       }
     });
 
@@ -283,6 +286,7 @@ export default function MonthlyReportPage() {
         total.lienHe += row.lienHe;
         total.phanHoi += row.phanHoi;
         total.bookingMoi += row.bookingMoi;
+        total.giaCast += row.giaCast;
         total.dailyVideoNew += row.dailyVideoNew;
         total.dailyVideoOld += row.dailyVideoOld;
         total.videoPov += row.videoPov;
@@ -298,6 +302,7 @@ export default function MonthlyReportPage() {
         lienHe: 0,
         phanHoi: 0,
         bookingMoi: 0,
+        giaCast: 0,
         dailyVideoNew: 0,
         dailyVideoOld: 0,
         videoPov: 0,
@@ -356,6 +361,7 @@ export default function MonthlyReportPage() {
       "Liên hệ": row.lienHe,
       "Phản hồi": row.phanHoi,
       "Booking mới": row.bookingMoi,
+      "Giá Cast": row.giaCast,
       "Monthly Videos (New KOCs)": row.dailyVideoNew,
       "Monthly Videos (Old KOCs)": row.dailyVideoOld,
       "Monthly Videos": row.dailyVideoNew + row.dailyVideoOld,
@@ -483,6 +489,7 @@ export default function MonthlyReportPage() {
                 <Th>Liên hệ</Th>
                 <Th>Phản hồi</Th>
                 <Th>Booking mới</Th>
+                <Th>Giá Cast</Th>
                 <Th>Monthly Videos (New KOCs)</Th>
                 <Th>Monthly Videos (Old KOCs)</Th>
                 <Th>Monthly Videos</Th>
@@ -499,7 +506,7 @@ export default function MonthlyReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={14}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -510,7 +517,7 @@ export default function MonthlyReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={14}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -530,6 +537,7 @@ export default function MonthlyReportPage() {
                     <Td>{row.lienHe}</Td>
                     <Td>{row.phanHoi}</Td>
                     <Td>{row.bookingMoi}</Td>
+                    <Td>{formatMoney(row.giaCast)}</Td>
                     <Td>{formatNumber(row.dailyVideoNew)}</Td>
                     <Td>{formatNumber(row.dailyVideoOld)}</Td>
                     <Td>
@@ -552,6 +560,9 @@ export default function MonthlyReportPage() {
                   <td className="px-2 py-4 font-bold">{totals.lienHe}</td>
                   <td className="px-2 py-4 font-bold">{totals.phanHoi}</td>
                   <td className="px-2 py-4 font-bold">{totals.bookingMoi}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatMoney(totals.giaCast)}
+                  </td>
                   <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew)}
                   </td>
