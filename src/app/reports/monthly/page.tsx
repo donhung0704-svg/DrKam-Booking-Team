@@ -23,6 +23,7 @@ type ReportRow = {
   videoUnbox: number;
   videoAi: number;
   videoReal: number;
+  videoOther: number;
   gmvNgay: number;
 };
 
@@ -182,6 +183,7 @@ export default function MonthlyReportPage() {
           videoUnbox: 0,
           videoAi: 0,
           videoReal: 0,
+          videoOther: 0,
           gmvNgay: 0,
         });
       }
@@ -234,6 +236,8 @@ export default function MonthlyReportPage() {
         row.videoAi += monthlyVideos;
       } else if (channelType === "Người thật") {
         row.videoReal += monthlyVideos;
+      } else {
+        row.videoOther += monthlyVideos;
       }
 
       row.gmvNgay += parseNumber(koc.gmv_thang);
@@ -285,6 +289,7 @@ export default function MonthlyReportPage() {
         total.videoUnbox += row.videoUnbox;
         total.videoAi += row.videoAi;
         total.videoReal += row.videoReal;
+        total.videoOther += row.videoOther;
         total.gmvNgay += row.gmvNgay;
 
         return total;
@@ -299,6 +304,7 @@ export default function MonthlyReportPage() {
         videoUnbox: 0,
         videoAi: 0,
         videoReal: 0,
+        videoOther: 0,
         gmvNgay: 0,
       }
     );
@@ -357,6 +363,7 @@ export default function MonthlyReportPage() {
       "Video Unbox": row.videoUnbox,
       "Video AI": row.videoAi,
       "Video Người thật": row.videoReal,
+      "Video khác": row.videoOther,
       GMV: row.gmvNgay,
     }));
 
@@ -483,6 +490,7 @@ export default function MonthlyReportPage() {
                 <Th>Video Unbox</Th>
                 <Th>Video AI</Th>
                 <Th>Video Người thật</Th>
+                <Th>Video khác</Th>
                 <Th>GMV</Th>
               </tr>
             </thead>
@@ -491,7 +499,7 @@ export default function MonthlyReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={12}
+                    colSpan={13}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -502,7 +510,7 @@ export default function MonthlyReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={12}
+                    colSpan={13}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -531,6 +539,7 @@ export default function MonthlyReportPage() {
                     <Td>{formatNumber(row.videoUnbox)}</Td>
                     <Td>{formatNumber(row.videoAi)}</Td>
                     <Td>{formatNumber(row.videoReal)}</Td>
+                    <Td>{formatNumber(row.videoOther)}</Td>
                     <Td>{formatMoney(row.gmvNgay)}</Td>
                   </tr>
                 ))}
@@ -563,6 +572,9 @@ export default function MonthlyReportPage() {
                   </td>
                   <td className="px-5 py-4 font-bold">
                     {formatNumber(totals.videoReal)}
+                  </td>
+                  <td className="px-5 py-4 font-bold">
+                    {formatNumber(totals.videoOther)}
                   </td>
                   <td className="px-5 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
