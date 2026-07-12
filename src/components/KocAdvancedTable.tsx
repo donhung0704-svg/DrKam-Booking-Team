@@ -718,6 +718,15 @@ const orderedColumns = useMemo(() => {
             >
               Sửa KOC
             </Link>
+
+            <button
+              type="button"
+              disabled={bulkDeleting}
+              onClick={bulkDeleteSelectedRows}
+              className="flex h-9 items-center rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {bulkDeleting ? "Đang xóa..." : "Xóa KOC"}
+            </button>
           </div>
         )}
 
