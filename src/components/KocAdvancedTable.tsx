@@ -43,7 +43,6 @@ const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 
 const defaultColumns: ColumnConfig[] = [
-  { key: "action", label: "Thao tác", type: "action", width: 72 },
   {
     key: "employee_id",
     label: "PIC phụ trách",
@@ -236,7 +235,6 @@ const selectColumnWidth = 52;
 const storageKeyOrder = "drkam_koc_column_order_v2";
 const storageKeyPinned = "drkam_koc_pinned_columns_v2";
 const defaultVisibleColumnKeys = [
-  "action",
   "employee_id",
   "Id_tiktok_Ten_fb",
   "koc_code",
@@ -278,7 +276,7 @@ export default function KocAdvancedTable({
   const [columnOrder, setColumnOrder] = useState<string[]>(
     defaultColumns.map((column) => column.key)
   );
-  const [pinnedColumns, setPinnedColumns] = useState<string[]>(["action"]);
+  const [pinnedColumns, setPinnedColumns] = useState<string[]>([]);
   const [draggingColumn, setDraggingColumn] = useState("");
   const [savingCell, setSavingCell] = useState("");
   const [error, setError] = useState("");
@@ -375,7 +373,7 @@ export default function KocAdvancedTable({
   }, []);
 
   const visibleColumnKeySet = useMemo(() => {
-    return new Set(["action", ...visibleColumnKeys]);
+    return new Set(visibleColumnKeys);
   }, [visibleColumnKeys]);
 
 const orderedColumns = useMemo(() => {
@@ -438,7 +436,7 @@ const orderedColumns = useMemo(() => {
 
   function resetLayout() {
     saveColumnOrder(defaultColumns.map((column) => column.key));
-    savePinnedColumns(["action"]);
+    savePinnedColumns([]);
   }
 
   function handleDrop(targetColumnKey: string) {
@@ -700,11 +698,31 @@ const orderedColumns = useMemo(() => {
           </div>
 
           <p className="text-[12px] font-semibold text-slate-500">
-            Chọn checkbox từng dòng hoặc checkbox ở tiêu đề để thao tác hàng loạt.
+            Chọn 1 KOC để Tạo Booking / Sửa KOC; chọn từ 2 KOC trở lên để thao
+            tác hàng loạt.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_auto_1fr_auto_auto] xl:items-center">
+        {selectedCount === 1 && (
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/bookings/new?koc_id=${selectedIds[0]}`}
+              className="flex h-9 items-center rounded-xl bg-[#3964ff] px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-[#2f55df]"
+            >
+              + Tạo Booking
+            </Link>
+
+            <Link
+              href={`/koc/${selectedIds[0]}/edit`}
+              className="flex h-9 items-center rounded-xl bg-emerald-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-emerald-700"
+            >
+              Sửa KOC
+            </Link>
+          </div>
+        )}
+
+        {selectedCount >= 2 && (
+          <div className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_auto_1fr_auto_auto] xl:items-center">
           <select
             value={bulkField}
             onChange={(event) => {
@@ -770,7 +788,8 @@ const orderedColumns = useMemo(() => {
               {bulkDeleting ? "Đang xóa..." : "Xóa KOC đã chọn"}
             </button>
           </div>
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="koc-advanced-scroll max-h-[calc(100vh-375px)] overflow-auto">
@@ -1085,9 +1104,6 @@ function CellEditor({
   saving: boolean;
   onSave: (value: unknown) => void;
 }) {
-  if (column.type === "action") {
-    return <ActionMenu kocId={String(koc.id)} />;
-  }
 
   const value = column.field ? koc[column.field] : "";
 
@@ -1212,67 +1228,6 @@ function CellEditor({
   );
 }
 
-
-function ActionMenu({ kocId }: { kocId: string }) {
-  const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
-
-  return (
-    <div className="flex items-center justify-center">
-      <button
-        ref={buttonRef}
-        type="button"
-        title="Thao tác"
-        onClick={(event) => {
-          event.stopPropagation();
-
-          if (!open && buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            setPos({ top: rect.bottom + 4, left: rect.left });
-          }
-
-          setOpen((current) => !current);
-        }}
-        className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-[15px] font-black leading-none text-slate-600 shadow-sm hover:border-blue-200 hover:bg-blue-50"
-      >
-        ⋮
-      </button>
-
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 z-[300]"
-            onClick={(event) => {
-              event.stopPropagation();
-              setOpen(false);
-            }}
-          />
-
-          <div
-            className="fixed z-[310] w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-2xl"
-            style={{ top: pos.top, left: pos.left }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <Link
-              href={`/bookings/new?koc_id=${kocId}`}
-              className="block rounded-lg px-3 py-2 text-[12.5px] font-semibold text-slate-700 hover:bg-blue-50"
-            >
-              + Tạo Booking
-            </Link>
-
-            <Link
-              href={`/koc/${kocId}/edit`}
-              className="block rounded-lg px-3 py-2 text-[12.5px] font-semibold text-slate-700 hover:bg-blue-50"
-            >
-              Sửa KOC
-            </Link>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
 
 function getSelectColorStyle(columnKey: string, value: unknown) {
   const raw = String(value || "").trim();
