@@ -42,7 +42,7 @@ const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 
 const defaultColumns: ColumnConfig[] = [
-  { key: "action", label: "Sửa", type: "action", width: 58 },
+  { key: "action", label: "Thao tác", type: "action", width: 88 },
   {
     key: "employee_id",
     label: "PIC phụ trách",
@@ -1073,7 +1073,15 @@ function CellEditor({
 }) {
   if (column.type === "action") {
     return (
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-center gap-1">
+        <Link
+          href={`/koc/${koc.id}`}
+          title="Xem hồ sơ KOC"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-[13px] shadow-sm hover:border-blue-200 hover:bg-blue-50"
+        >
+          👁️
+        </Link>
+
         <Link
           href={`/koc/${koc.id}/edit`}
           title="Sửa KOC"
