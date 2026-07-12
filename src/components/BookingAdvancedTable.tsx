@@ -49,7 +49,7 @@ const statusBookingOptions = [
 ];
 
 const defaultColumns: ColumnConfig[] = [
-  { key: "koc_id", label: "KOC", field: "koc_id", type: "select", width: 190 },
+  { key: "koc_id", label: "ID TikTok/Tên FB", field: "koc_id", type: "readonly", width: 190 },
   {
     key: "koc_name",
     label: "Tên KOC",
