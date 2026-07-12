@@ -94,13 +94,6 @@ export default function KocProfilePage() {
 
           <div className="flex flex-wrap gap-2">
             <Link
-              href={`/bookings/new?koc_id=${kocId}`}
-              className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-            >
-              + Tạo đơn cho KOC này
-            </Link>
-
-            <Link
               href={`/koc/${kocId}/edit`}
               className="flex h-10 items-center rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
             >
