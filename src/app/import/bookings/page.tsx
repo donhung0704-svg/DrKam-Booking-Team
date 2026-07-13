@@ -45,6 +45,11 @@ export default function ImportBookingPage() {
   const [fileName, setFileName] = useState("");
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState("");
+  // Kiểu ngày cho ô ngày dạng TEXT không rõ ràng (cả 2 số đều <= 12).
+  // "mdy" = Tháng/Ngày (kiểu Mỹ), "dmy" = Ngày/Tháng (kiểu VN).
+  // Số > 12 luôn tự nhận đúng là ngày, không phụ thuộc lựa chọn này.
+  const [dateFormat, setDateFormat] = useState<"mdy" | "dmy">("mdy");
+  const preferMonthFirst = dateFormat === "mdy";
 
   useEffect(() => {
     async function loadData() {
@@ -179,21 +184,25 @@ function downloadBookingTemplate() {
         ),
         cast_price: optionalNumber(pick(row, ["Giá cast", "Cast price", "cast_price"])),
         created_at:
-          optionalDate(pick(row, ["Ngày tạo booking", "Created at", "created_at"])) ||
-          getVietnamTodayDateKey(),
+          optionalDate(
+            pick(row, ["Ngày tạo booking", "Created at", "created_at"]),
+            preferMonthFirst
+          ) || getVietnamTodayDateKey(),
         expected_post_date: optionalDate(
           pick(row, [
             "Ngày dự kiến đăng",
             "Expected post date",
             "expected_post_date",
-          ])
+          ]),
+          preferMonthFirst
         ),
         actual_post_date: optionalDate(
           pick(row, [
             "Ngày đăng thực tế",
             "Actual post date",
             "actual_post_date",
-          ])
+          ]),
+          preferMonthFirst
         ),
         product: resolveProducts(pick(row, ["Sản phẩm", "Product", "product"])),
         note: optionalText(pick(row, ["Ghi chú", "Note", "note"])),
@@ -295,6 +304,52 @@ function downloadBookingTemplate() {
             File đã chọn: <span className="text-slate-950">{fileName}</span>
           </p>
         )}
+
+        <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
+          <p className="text-sm font-bold text-amber-800">
+            Định dạng ngày trong file Excel
+          </p>
+          <p className="mt-1 text-xs leading-5 text-amber-700">
+            Chỉ ảnh hưởng ô ngày dạng chữ mà cả 2 số đều ≤ 12 (vd 6/12). Số &gt; 12
+            luôn tự nhận đúng là ngày. Ô ngày thật của Excel luôn đọc chính xác.
+          </p>
+
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <label
+              className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                dateFormat === "mdy"
+                  ? "border-amber-400 bg-white text-amber-900 shadow-sm"
+                  : "border-amber-200 bg-amber-50/40 text-amber-700"
+              }`}
+            >
+              <input
+                type="radio"
+                name="dateFormat"
+                checked={dateFormat === "mdy"}
+                onChange={() => setDateFormat("mdy")}
+                className="h-4 w-4 accent-amber-500"
+              />
+              Tháng/Ngày — mm/dd (kiểu Mỹ). Vd 6/12 = 12 tháng 6
+            </label>
+
+            <label
+              className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                dateFormat === "dmy"
+                  ? "border-amber-400 bg-white text-amber-900 shadow-sm"
+                  : "border-amber-200 bg-amber-50/40 text-amber-700"
+              }`}
+            >
+              <input
+                type="radio"
+                name="dateFormat"
+                checked={dateFormat === "dmy"}
+                onChange={() => setDateFormat("dmy")}
+                className="h-4 w-4 accent-amber-500"
+              />
+              Ngày/Tháng — dd/mm (kiểu VN). Vd 6/12 = 6 tháng 12
+            </label>
+          </div>
+        </div>
       </section>
 
       <section className="mb-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
@@ -349,6 +404,7 @@ function downloadBookingTemplate() {
                 <Th>Loại booking</Th>
                 <Th>Status booking</Th>
                 <Th>Giá cast</Th>
+                <Th>Ngày tạo booking</Th>
                 <Th>Ngày dự kiến đăng</Th>
                 <Th>Sản phẩm</Th>
               </tr>
@@ -358,7 +414,7 @@ function downloadBookingTemplate() {
               {previewRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Chưa có dữ liệu preview.
@@ -417,10 +473,21 @@ function downloadBookingTemplate() {
                     <Td>
                       {optionalDate(
                         pick(row, [
+                          "Ngày tạo booking",
+                          "Created at",
+                          "created_at",
+                        ]),
+                        preferMonthFirst
+                      ) || "-"}
+                    </Td>
+                    <Td>
+                      {optionalDate(
+                        pick(row, [
                           "Ngày dự kiến đăng",
                           "Expected post date",
                           "expected_post_date",
-                        ])
+                        ]),
+                        preferMonthFirst
                       ) || "-"}
                     </Td>
                     <Td>{resolveProducts(pick(row, ["Sản phẩm", "Product", "product"])) || "-"}</Td>
@@ -627,7 +694,7 @@ function optionalNumber(value: any) {
   return Number.isNaN(numberValue) ? undefined : numberValue;
 }
 
-function optionalDate(value: any) {
+function optionalDate(value: any, preferMonthFirst = false) {
   if (value === null || value === undefined || value === "") return undefined;
 
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
@@ -647,7 +714,31 @@ function optionalDate(value: any) {
   }
 
   if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}$/.test(raw)) {
-    const [dayRaw, monthRaw, yearRaw] = raw.split(/[\/-]/);
+    const [p1, p2, yearRaw] = raw.split(/[\/-]/);
+    const n1 = Number(p1);
+    const n2 = Number(p2);
+
+    let dayRaw: string;
+    let monthRaw: string;
+
+    if (n1 > 12 && n2 <= 12) {
+      // Số đầu > 12 -> chắc chắn là NGÀY (dd/mm)
+      dayRaw = p1;
+      monthRaw = p2;
+    } else if (n2 > 12 && n1 <= 12) {
+      // Số sau > 12 -> chắc chắn là NGÀY (mm/dd)
+      dayRaw = p2;
+      monthRaw = p1;
+    } else if (preferMonthFirst) {
+      // Mập mờ (cả 2 <= 12) -> theo lựa chọn Tháng/Ngày (kiểu Mỹ)
+      monthRaw = p1;
+      dayRaw = p2;
+    } else {
+      // Mập mờ -> theo lựa chọn Ngày/Tháng (kiểu VN)
+      dayRaw = p1;
+      monthRaw = p2;
+    }
+
     const year =
       yearRaw.length === 2 ? `20${yearRaw}` : yearRaw.padStart(4, "0");
     return `${year}-${monthRaw.padStart(2, "0")}-${dayRaw.padStart(2, "0")}`;
