@@ -31,12 +31,11 @@ const tierOptions = [
   "VIP",
   "Tiềm năng",
   "Chăm chỉ",
+  "Hoạt động lâu",
   "Mới hoạt động",
   "Ngủ đông",
   "Mất cast",
-  "Trùng KOC",
   "Dừng CS",
-  "Hoạt động lâu",
 ];
 
 const statusOptions = [
