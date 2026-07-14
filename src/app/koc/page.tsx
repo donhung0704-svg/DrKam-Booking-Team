@@ -63,7 +63,7 @@ const statusOptions = ["Chờ phản hồi", "Đã phản hồi", "Cân nhắc",
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 const pageSizeOptions = [100, 200, 300];
-const visibleColumnsStorageKey = "drkam_koc_visible_columns_v4";
+const visibleColumnsStorageKey = "drkam_koc_visible_columns_v5";
 
 const filterFields: FilterField[] = [
   { key: "Id_tiktok_Ten_fb", label: "ID TikTok/Tên FB", field: "Id_tiktok_Ten_fb", type: "text" },
@@ -72,6 +72,7 @@ const filterFields: FilterField[] = [
   { key: "follower", label: "Follower", field: "follower", type: "number" },
   { key: "tier", label: "Tier", field: "tier", type: "select", options: tierOptions },
   { key: "status", label: "Status", field: "status", type: "select", options: statusOptions },
+  { key: "platform", label: "Nền tảng", field: "platform", type: "text" },
   { key: "channel_type", label: "Channel type", field: "channel_type", type: "select", options: channelTypeOptions },
   { key: "employee_id", label: "PIC phụ trách", field: "employee_id", type: "select", relation: "employee" },
   { key: "email", label: "Email", field: "email", type: "text" },
@@ -102,6 +103,7 @@ const columnOptions: ColumnOption[] = [
   { key: "follower", label: "Follower", defaultVisible: true },
   { key: "tier", label: "Tier", defaultVisible: true },
   { key: "status", label: "Status", defaultVisible: true },
+  { key: "platform", label: "Nền tảng", defaultVisible: true },
   { key: "channel_type", label: "Channel type", defaultVisible: true },
   { key: "email", label: "Email" },
   { key: "phone", label: "SĐT/Zalo", defaultVisible: true },
@@ -399,6 +401,7 @@ export default function KocListPage() {
         Follower: Number(koc.follower || 0),
         Tier: koc.tier || "",
         Status: koc.status || "",
+        "Nền tảng": koc.platform || "",
         "Channel type": koc.channel_type || "",
         "PIC phụ trách": getEmployeeDisplayName(
           employees.find((employee) => String(employee.id) === String(koc.employee_id))
