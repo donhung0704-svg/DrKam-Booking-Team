@@ -58,8 +58,9 @@ const tierOptions = [
   "Mất cast",
   "Trùng KOC",
   "Dừng CS",
+  "Hoạt động lâu",
 ];
-const statusOptions = ["Chờ phản hồi", "Đã phản hồi", "Cân nhắc", "Đã chốt", "Từ chối"];
+const statusOptions = ["Chờ phản hồi", "Đã phản hồi", "Cân nhắc", "Đã chốt", "Từ chối", "Trùng KOC"];
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 const pageSizeOptions = [100, 200, 300];

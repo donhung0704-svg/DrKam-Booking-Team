@@ -36,6 +36,7 @@ const tierOptions = [
   "Mất cast",
   "Trùng KOC",
   "Dừng CS",
+  "Hoạt động lâu",
 ];
 
 const statusOptions = [
@@ -44,6 +45,7 @@ const statusOptions = [
   "Cân nhắc",
   "Đã chốt",
   "Từ chối",
+  "Trùng KOC",
 ];
 
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
@@ -1561,6 +1563,7 @@ function getSelectColorStyle(columnKey: string, value: unknown) {
     "Mất cast": { bg: "#fee2e2", text: "#b91c1c", border: "#fecaca" },
     "Trùng KOC": { bg: "#fef3c7", text: "#92400e", border: "#fde68a" },
     "Dừng CS": { bg: "#e2e8f0", text: "#334155", border: "#cbd5e1" },
+    "Hoạt động lâu": { bg: "#cffafe", text: "#0e7490", border: "#a5f3fc" },
 
     "Chờ phản hồi": { bg: "#fef9c3", text: "#854d0e", border: "#fde68a" },
     "Đã phản hồi": { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
