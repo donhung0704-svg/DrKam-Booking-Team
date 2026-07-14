@@ -29,6 +29,9 @@ type ReportRow = {
   // Hunter KPI
   kocChotMoi: number; // KOC có booking đầu tiên trong tháng + có video tháng
   videoKocMoiTruPov: number; // tổng video của KOC chốt mới, trừ KOC channel POV
+  // Báo cáo tổng quát (KOC tạo mới trong tháng theo status)
+  dongY: number; // status "Đã chốt"
+  tuChoi: number; // status "Từ chối"
 };
 
 // Status được coi là "chưa phản hồi" -> không tính vào cột Phản hồi
@@ -249,6 +252,8 @@ export default function MonthlyReportPage() {
           gmvNgay: 0,
           kocChotMoi: 0,
           videoKocMoiTruPov: 0,
+          dongY: 0,
+          tuChoi: 0,
         });
       }
 
@@ -295,6 +300,12 @@ export default function MonthlyReportPage() {
         !notRespondedStatuses.includes(status)
       ) {
         row.phanHoi += 1;
+      }
+
+      // Đồng ý / Từ chối: KOC tạo mới trong tháng theo status
+      if (createdKey.slice(0, 7) === monthKey) {
+        if (status === "Đã chốt") row.dongY += 1;
+        if (status === "Từ chối") row.tuChoi += 1;
       }
 
       // Tổng theo KOC phụ trách: Monthly Videos + GMV tháng
@@ -386,6 +397,8 @@ export default function MonthlyReportPage() {
         total.videoReal += row.videoReal;
         total.videoOther += row.videoOther;
         total.gmvNgay += row.gmvNgay;
+        total.dongY += row.dongY;
+        total.tuChoi += row.tuChoi;
 
         return total;
       },
@@ -402,6 +415,8 @@ export default function MonthlyReportPage() {
         videoReal: 0,
         videoOther: 0,
         gmvNgay: 0,
+        dongY: 0,
+        tuChoi: 0,
       }
     );
   }, [reportRows]);
@@ -698,6 +713,118 @@ export default function MonthlyReportPage() {
                   </td>
                   <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.videoOther)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatMoney(totals.gmvNgay)}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-4 py-3">
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
+            Báo cáo tổng quát
+          </p>
+          <p className="mt-1 text-[12.5px] text-slate-500">
+            Phễu Liên hệ → Phản hồi → Đồng ý (status Đã chốt) / Từ chối. Đồng ý,
+            Từ chối tính trên KOC tạo mới trong tháng.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="report-table w-full table-fixed text-center text-sm">
+            <thead>
+              <tr className="bg-slate-50">
+                <Th>PIC</Th>
+                <Th>Liên hệ</Th>
+                <Th>Phản hồi</Th>
+                <Th>% Phản hồi</Th>
+                <Th>Đồng ý</Th>
+                <Th>% Đồng ý</Th>
+                <Th>Từ chối</Th>
+                <Th>Monthly Videos</Th>
+                <Th>Giá Cast</Th>
+                <Th>GMV</Th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading && (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="px-5 py-10 text-center text-slate-500"
+                  >
+                    Đang tải dữ liệu báo cáo...
+                  </td>
+                </tr>
+              )}
+
+              {!loading && reportRows.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="px-5 py-10 text-center text-slate-500"
+                  >
+                    Không có dữ liệu.
+                  </td>
+                </tr>
+              )}
+
+              {!loading &&
+                reportRows.map((row) => (
+                  <tr key={row.employeeId} className="hover:bg-slate-50">
+                    <Td>
+                      <span className="font-bold text-slate-950">
+                        {row.employeeName}
+                      </span>
+                    </Td>
+                    <Td>{row.lienHe}</Td>
+                    <Td>{row.phanHoi}</Td>
+                    <Td>
+                      <span className="font-semibold text-slate-700">
+                        {formatPercent(row.phanHoi, row.lienHe)}
+                      </span>
+                    </Td>
+                    <Td>{row.dongY}</Td>
+                    <Td>
+                      <span className="font-semibold text-slate-700">
+                        {formatPercent(row.dongY, row.lienHe)}
+                      </span>
+                    </Td>
+                    <Td>{row.tuChoi}</Td>
+                    <Td>
+                      {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
+                    </Td>
+                    <Td>{formatMoney(row.giaCast)}</Td>
+                    <Td>{formatMoney(row.gmvNgay)}</Td>
+                  </tr>
+                ))}
+
+              {!loading && reportRows.length > 0 && (
+                <tr className="border-t-2 border-slate-200 bg-slate-50">
+                  <td className="px-2 py-4 font-bold text-slate-950">
+                    Tổng cộng
+                  </td>
+                  <td className="px-2 py-4 font-bold">{totals.lienHe}</td>
+                  <td className="px-2 py-4 font-bold">{totals.phanHoi}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatPercent(totals.phanHoi, totals.lienHe)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">{totals.dongY}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatPercent(totals.dongY, totals.lienHe)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">{totals.tuChoi}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatMoney(totals.giaCast)}
                   </td>
                   <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
