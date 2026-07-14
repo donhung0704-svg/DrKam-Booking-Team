@@ -44,6 +44,7 @@ type KpiInput = {
   kocMoi: string;
   videoMoi: string;
   chiPhi: string;
+  videoTruPov: string;
 };
 
 // KPI của từng chỉ tiêu lưu vào cột tương ứng trong bảng employees
@@ -55,6 +56,7 @@ const KPI_COLUMN: Record<keyof KpiInput, string> = {
   kocMoi: "kpi_thang_koc_moi",
   videoMoi: "kpi_thang_video_moi",
   chiPhi: "kpi_thang_chi_phi",
+  videoTruPov: "kpi_thang_video_tru_pov",
 };
 
 const EMPTY_KPI: KpiInput = {
@@ -65,6 +67,7 @@ const EMPTY_KPI: KpiInput = {
   kocMoi: "",
   videoMoi: "",
   chiPhi: "",
+  videoTruPov: "",
 };
 
 type MetricConfig = {
@@ -76,12 +79,15 @@ type MetricConfig = {
   cost?: boolean;
 };
 
-// Famer giữ nguyên 4 chỉ số cũ
+// Famer: Video trừ POV + Doanh thu
 const FAMER_METRICS: MetricConfig[] = [
-  { field: "lienHe", label: "Liên hệ", actual: (r) => r.lienHe },
-  { field: "phanHoi", label: "Phản hồi", actual: (r) => r.phanHoi },
-  { field: "bookingMoi", label: "Booking", actual: (r) => r.bookingMoi },
-  { field: "gmv", label: "GMV", actual: (r) => r.gmvNgay, money: true },
+  {
+    field: "videoTruPov",
+    label: "Video trừ POV",
+    // Tổng video KOC phụ trách không phải POV = Unbox + AI + Người thật + khác
+    actual: (r) => r.videoUnbox + r.videoAi + r.videoReal + r.videoOther,
+  },
+  { field: "gmv", label: "Doanh thu", actual: (r) => r.gmvNgay, money: true },
 ];
 
 // Hunter dùng 4 chỉ số riêng
@@ -162,6 +168,7 @@ export default function MonthlyReportPage() {
         kocMoi: toKpiInput(employee.kpi_thang_koc_moi),
         videoMoi: toKpiInput(employee.kpi_thang_video_moi),
         chiPhi: toKpiInput(employee.kpi_thang_chi_phi),
+        videoTruPov: toKpiInput(employee.kpi_thang_video_tru_pov),
       };
     });
 
