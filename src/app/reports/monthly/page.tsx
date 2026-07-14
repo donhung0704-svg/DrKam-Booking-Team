@@ -72,6 +72,8 @@ type MetricConfig = {
   label: string;
   actual: (row: ReportRow) => number;
   money?: boolean;
+  // cost=true: vượt mục tiêu là XẤU (đỏ khi >100%), ngược với chỉ số thường
+  cost?: boolean;
 };
 
 // Famer giữ nguyên 4 chỉ số cũ
@@ -96,6 +98,7 @@ const HUNTER_METRICS: MetricConfig[] = [
     label: "Chi phí Booking",
     actual: (r) => r.giaCast,
     money: true,
+    cost: true,
   },
 ];
 
@@ -913,7 +916,13 @@ function KpiGroupTable({
 
                     return (
                       <Td key={`pct-${metric.field}`}>
-                        <span className={`font-bold ${pctColor(actual, kpi)}`}>
+                        <span
+                          className={`font-bold ${pctColor(
+                            actual,
+                            kpi,
+                            metric.cost
+                          )}`}
+                        >
                           {formatPercent(actual, kpi)}
                         </span>
                       </Td>
@@ -942,10 +951,17 @@ function formatPercent(actual: number, kpi: number) {
   return `${pct.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`;
 }
 
-function pctColor(actual: number, kpi: number) {
+function pctColor(actual: number, kpi: number, cost = false) {
   if (!kpi || kpi <= 0) return "text-slate-400";
 
   const pct = (actual / kpi) * 100;
+
+  if (cost) {
+    // Chi phí: trong ngân sách (<=100%) là tốt, vượt là xấu
+    if (pct <= 100) return "text-emerald-600";
+    if (pct <= 120) return "text-orange-600";
+    return "text-red-600";
+  }
 
   if (pct >= 100) return "text-emerald-600";
   if (pct >= 70) return "text-orange-600";
