@@ -17,6 +17,7 @@ const tierOptions = [
   "Mất cast",
   "Trùng KOC",
   "Dừng CS",
+  "Hoạt động lâu",
 ];
 
 const statusOptions = [
@@ -25,6 +26,7 @@ const statusOptions = [
   "Cân nhắc",
   "Đã chốt",
   "Từ chối",
+  "Trùng KOC",
 ];
 
 const channelTypeOptions = ["Người thật", "AI", "Pov-Unbox"];

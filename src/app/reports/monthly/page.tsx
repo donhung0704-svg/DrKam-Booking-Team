@@ -26,6 +26,9 @@ type ReportRow = {
   videoReal: number;
   videoOther: number;
   gmvNgay: number;
+  // Hunter KPI
+  kocChotMoi: number; // KOC có booking đầu tiên trong tháng + có video tháng
+  videoKocMoiTruPov: number; // tổng video của KOC chốt mới, trừ KOC channel POV
 };
 
 // Status được coi là "chưa phản hồi" -> không tính vào cột Phản hồi
@@ -38,6 +41,9 @@ type KpiInput = {
   phanHoi: string;
   bookingMoi: string;
   gmv: string;
+  kocMoi: string;
+  videoMoi: string;
+  chiPhi: string;
 };
 
 // KPI của từng chỉ tiêu lưu vào cột tương ứng trong bảng employees
@@ -46,6 +52,9 @@ const KPI_COLUMN: Record<keyof KpiInput, string> = {
   phanHoi: "kpi_thang_phan_hoi",
   bookingMoi: "kpi_thang_booking_moi",
   gmv: "kpi_thang_gmv",
+  kocMoi: "kpi_thang_koc_moi",
+  videoMoi: "kpi_thang_video_moi",
+  chiPhi: "kpi_thang_chi_phi",
 };
 
 const EMPTY_KPI: KpiInput = {
@@ -53,13 +62,44 @@ const EMPTY_KPI: KpiInput = {
   phanHoi: "",
   bookingMoi: "",
   gmv: "",
+  kocMoi: "",
+  videoMoi: "",
+  chiPhi: "",
 };
 
-const KPI_FIELDS: (keyof KpiInput)[] = [
-  "lienHe",
-  "phanHoi",
-  "bookingMoi",
-  "gmv",
+type MetricConfig = {
+  field: keyof KpiInput;
+  label: string;
+  actual: (row: ReportRow) => number;
+  money?: boolean;
+  // cost=true: vượt mục tiêu là XẤU (đỏ khi >100%), ngược với chỉ số thường
+  cost?: boolean;
+};
+
+// Famer giữ nguyên 4 chỉ số cũ
+const FAMER_METRICS: MetricConfig[] = [
+  { field: "lienHe", label: "Liên hệ", actual: (r) => r.lienHe },
+  { field: "phanHoi", label: "Phản hồi", actual: (r) => r.phanHoi },
+  { field: "bookingMoi", label: "Booking", actual: (r) => r.bookingMoi },
+  { field: "gmv", label: "GMV", actual: (r) => r.gmvNgay, money: true },
+];
+
+// Hunter dùng 4 chỉ số riêng
+const HUNTER_METRICS: MetricConfig[] = [
+  { field: "kocMoi", label: "KOC chốt mới", actual: (r) => r.kocChotMoi },
+  {
+    field: "videoMoi",
+    label: "Video KOC mới (trừ POV)",
+    actual: (r) => r.videoKocMoiTruPov,
+  },
+  { field: "gmv", label: "Doanh thu", actual: (r) => r.gmvNgay, money: true },
+  {
+    field: "chiPhi",
+    label: "Chi phí Booking",
+    actual: (r) => r.giaCast,
+    money: true,
+    cost: true,
+  },
 ];
 
 export default function MonthlyReportPage() {
@@ -119,6 +159,9 @@ export default function MonthlyReportPage() {
         phanHoi: toKpiInput(employee.kpi_thang_phan_hoi),
         bookingMoi: toKpiInput(employee.kpi_thang_booking_moi),
         gmv: toKpiInput(employee.kpi_thang_gmv),
+        kocMoi: toKpiInput(employee.kpi_thang_koc_moi),
+        videoMoi: toKpiInput(employee.kpi_thang_video_moi),
+        chiPhi: toKpiInput(employee.kpi_thang_chi_phi),
       };
     });
 
@@ -197,6 +240,8 @@ export default function MonthlyReportPage() {
           videoReal: 0,
           videoOther: 0,
           gmvNgay: 0,
+          kocChotMoi: 0,
+          videoKocMoiTruPov: 0,
         });
       }
 
@@ -206,6 +251,21 @@ export default function MonthlyReportPage() {
     // Luôn hiển thị mọi PIC đang hoạt động
     employees.forEach((employee) => {
       ensureRow(String(employee.id));
+    });
+
+    // Map: koc_id -> ngày tạo Booking ĐẦU TIÊN (nhỏ nhất) của KOC đó
+    const firstBookingByKoc = new Map<string, string>();
+    bookings.forEach((booking) => {
+      const kocId = String(booking.koc_id || "");
+      if (!kocId) return;
+
+      const key = toVietnamDateKey(booking.created_at);
+      if (!key) return;
+
+      const existing = firstBookingByKoc.get(kocId);
+      if (!existing || key < existing) {
+        firstBookingByKoc.set(kocId, key);
+      }
     });
 
     kocs.forEach((koc) => {
@@ -253,6 +313,20 @@ export default function MonthlyReportPage() {
       }
 
       row.gmvNgay += parseNumber(koc.gmv_thang);
+
+      // KOC chốt mới = KOC có Booking đầu tiên trong tháng báo cáo + có video tháng
+      const firstBookingKey = firstBookingByKoc.get(String(koc.id)) || "";
+      const isChotMoi =
+        firstBookingKey.slice(0, 7) === monthKey && monthlyVideos > 0;
+
+      if (isChotMoi) {
+        row.kocChotMoi += 1;
+
+        // Video KOC mới (trừ POV): tổng video KOC chốt mới, không tính KOC POV
+        if (channelType !== "POV") {
+          row.videoKocMoiTruPov += monthlyVideos;
+        }
+      }
     });
 
     bookings.forEach((booking) => {
@@ -651,6 +725,7 @@ export default function MonthlyReportPage() {
             accent="text-blue-700"
             loading={loading}
             rows={hunterRows}
+            metrics={HUNTER_METRICS}
             kpiInputs={kpiInputs}
             teamOf={teamOf}
             onKpiChange={updateKpiInput}
@@ -663,6 +738,7 @@ export default function MonthlyReportPage() {
             accent="text-emerald-700"
             loading={loading}
             rows={famerRows}
+            metrics={FAMER_METRICS}
             kpiInputs={kpiInputs}
             teamOf={teamOf}
             onKpiChange={updateKpiInput}
@@ -714,6 +790,7 @@ function KpiGroupTable({
   accent,
   loading,
   rows,
+  metrics,
   kpiInputs,
   teamOf,
   onKpiChange,
@@ -723,7 +800,8 @@ function KpiGroupTable({
   title: string;
   accent: string;
   loading: boolean;
-  rows: DbRow[];
+  rows: ReportRow[];
+  metrics: MetricConfig[];
   kpiInputs: Record<string, KpiInput>;
   teamOf: (id: string) => string;
   onKpiChange: (id: string, field: keyof KpiInput, value: string) => void;
@@ -751,13 +829,13 @@ function KpiGroupTable({
                 PIC
               </th>
               <th
-                colSpan={4}
+                colSpan={metrics.length}
                 className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-blue-700"
               >
                 KPI
               </th>
               <th
-                colSpan={4}
+                colSpan={metrics.length}
                 className="border-b border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-emerald-700"
               >
                 % thực đạt
@@ -765,14 +843,17 @@ function KpiGroupTable({
             </tr>
 
             <tr className="bg-slate-50">
-              <KpiTh>Liên hệ</KpiTh>
-              <KpiTh>Phản hồi</KpiTh>
-              <KpiTh>Booking</KpiTh>
-              <KpiTh borderRight>GMV</KpiTh>
-              <KpiTh>Liên hệ</KpiTh>
-              <KpiTh>Phản hồi</KpiTh>
-              <KpiTh>Booking</KpiTh>
-              <KpiTh>GMV</KpiTh>
+              {metrics.map((metric, index) => (
+                <KpiTh
+                  key={`kpi-head-${metric.field}`}
+                  borderRight={index === metrics.length - 1}
+                >
+                  {metric.label}
+                </KpiTh>
+              ))}
+              {metrics.map((metric) => (
+                <KpiTh key={`pct-head-${metric.field}`}>{metric.label}</KpiTh>
+              ))}
             </tr>
           </thead>
 
@@ -780,7 +861,7 @@ function KpiGroupTable({
             {!loading && rows.length === 0 && (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={1 + metrics.length * 2}
                   className="px-4 py-6 text-center text-[12px] text-slate-400"
                 >
                   Chưa có PIC trong nhóm này.
@@ -790,12 +871,6 @@ function KpiGroupTable({
 
             {rows.map((row) => {
               const k = kpiInputs[row.employeeId] || EMPTY_KPI;
-              const actual: Record<keyof KpiInput, number> = {
-                lienHe: row.lienHe,
-                phanHoi: row.phanHoi,
-                bookingMoi: row.bookingMoi,
-                gmv: row.gmvNgay,
-              };
 
               return (
                 <tr key={row.employeeId} className="hover:bg-slate-50">
@@ -817,32 +892,42 @@ function KpiGroupTable({
                     </div>
                   </Td>
 
-                  {KPI_FIELDS.map((field) => (
-                    <Td key={`kpi-${field}`}>
+                  {metrics.map((metric) => (
+                    <Td key={`kpi-${metric.field}`}>
                       <input
-                        value={k[field]}
+                        value={k[metric.field]}
                         onChange={(event) =>
-                          onKpiChange(row.employeeId, field, event.target.value)
+                          onKpiChange(
+                            row.employeeId,
+                            metric.field,
+                            event.target.value
+                          )
                         }
-                        onBlur={() => onKpiBlur(row.employeeId, field)}
+                        onBlur={() => onKpiBlur(row.employeeId, metric.field)}
                         placeholder="KPI"
                         className="h-8 w-[58px] rounded-lg border border-slate-200 bg-white px-1.5 text-[12px] outline-none focus:border-[#3964ff]"
                       />
                     </Td>
                   ))}
 
-                  {KPI_FIELDS.map((field) => (
-                    <Td key={`pct-${field}`}>
-                      <span
-                        className={`font-bold ${pctColor(
-                          actual[field],
-                          parseNumber(k[field])
-                        )}`}
-                      >
-                        {formatPercent(actual[field], parseNumber(k[field]))}
-                      </span>
-                    </Td>
-                  ))}
+                  {metrics.map((metric) => {
+                    const actual = metric.actual(row);
+                    const kpi = parseNumber(k[metric.field]);
+
+                    return (
+                      <Td key={`pct-${metric.field}`}>
+                        <span
+                          className={`font-bold ${pctColor(
+                            actual,
+                            kpi,
+                            metric.cost
+                          )}`}
+                        >
+                          {formatPercent(actual, kpi)}
+                        </span>
+                      </Td>
+                    );
+                  })}
                 </tr>
               );
             })}
@@ -866,10 +951,17 @@ function formatPercent(actual: number, kpi: number) {
   return `${pct.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`;
 }
 
-function pctColor(actual: number, kpi: number) {
+function pctColor(actual: number, kpi: number, cost = false) {
   if (!kpi || kpi <= 0) return "text-slate-400";
 
   const pct = (actual / kpi) * 100;
+
+  if (cost) {
+    // Chi phí: trong ngân sách (<=100%) là tốt, vượt là xấu
+    if (pct <= 100) return "text-emerald-600";
+    if (pct <= 120) return "text-orange-600";
+    return "text-red-600";
+  }
 
   if (pct >= 100) return "text-emerald-600";
   if (pct >= 70) return "text-orange-600";
