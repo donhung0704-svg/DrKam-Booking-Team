@@ -46,9 +46,9 @@ export default function ImportBookingPage() {
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState("");
   // Kiểu ngày cho ô ngày dạng TEXT không rõ ràng (cả 2 số đều <= 12).
-  // "mdy" = Tháng/Ngày (kiểu Mỹ), "dmy" = Ngày/Tháng (kiểu VN).
+  // "dmy" = Ngày/Tháng (kiểu VN, mặc định), "mdy" = Tháng/Ngày (kiểu Mỹ).
   // Số > 12 luôn tự nhận đúng là ngày, không phụ thuộc lựa chọn này.
-  const [dateFormat, setDateFormat] = useState<"mdy" | "dmy">("mdy");
+  const [dateFormat, setDateFormat] = useState<"mdy" | "dmy">("dmy");
   const preferMonthFirst = dateFormat === "mdy";
 
   useEffect(() => {
@@ -317,23 +317,6 @@ function downloadBookingTemplate() {
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <label
               className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
-                dateFormat === "mdy"
-                  ? "border-amber-400 bg-white text-amber-900 shadow-sm"
-                  : "border-amber-200 bg-amber-50/40 text-amber-700"
-              }`}
-            >
-              <input
-                type="radio"
-                name="dateFormat"
-                checked={dateFormat === "mdy"}
-                onChange={() => setDateFormat("mdy")}
-                className="h-4 w-4 accent-amber-500"
-              />
-              Tháng/Ngày — mm/dd (kiểu Mỹ). Vd 6/12 = 12 tháng 6
-            </label>
-
-            <label
-              className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                 dateFormat === "dmy"
                   ? "border-amber-400 bg-white text-amber-900 shadow-sm"
                   : "border-amber-200 bg-amber-50/40 text-amber-700"
@@ -346,7 +329,24 @@ function downloadBookingTemplate() {
                 onChange={() => setDateFormat("dmy")}
                 className="h-4 w-4 accent-amber-500"
               />
-              Ngày/Tháng — dd/mm (kiểu VN). Vd 6/12 = 6 tháng 12
+              Ngày/Tháng — dd/mm (kiểu VN). Vd 01/07 = 1 tháng 7
+            </label>
+
+            <label
+              className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                dateFormat === "mdy"
+                  ? "border-amber-400 bg-white text-amber-900 shadow-sm"
+                  : "border-amber-200 bg-amber-50/40 text-amber-700"
+              }`}
+            >
+              <input
+                type="radio"
+                name="dateFormat"
+                checked={dateFormat === "mdy"}
+                onChange={() => setDateFormat("mdy")}
+                className="h-4 w-4 accent-amber-500"
+              />
+              Tháng/Ngày — mm/dd (kiểu Mỹ). Vd 01/07 = 7 tháng 1
             </label>
           </div>
         </div>

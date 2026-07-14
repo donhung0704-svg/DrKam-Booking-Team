@@ -31,6 +31,19 @@ const channelTypeOptions = ["Người thật", "AI", "Pov-Unbox"];
 
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 
+const platformOptions = ["TikTok", "FB", "Shopee"];
+
+function parseMultiList(value: unknown) {
+  return Array.from(
+    new Set(
+      String(value || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
 export default function EditKocPage() {
   const params = useParams();
   const router = useRouter();
@@ -107,6 +120,12 @@ export default function EditKocPage() {
       tier: getText(formData, "tier") || null,
       status: getText(formData, "status") || "Chờ phản hồi",
       channel_type: getText(formData, "channel_type") || null,
+      platform:
+        formData
+          .getAll("platform")
+          .map((item) => String(item).trim())
+          .filter(Boolean)
+          .join(", ") || null,
       address: getText(formData, "address") || null,
       note: getText(formData, "note") || null,
       booking_date: parseVietnameseDateInput(formData.get("booking_date")),
@@ -288,6 +307,28 @@ export default function EditKocPage() {
                       </option>
                     ))}
                   </select>
+                </CompactField>
+
+                <CompactField label="Nền tảng" full>
+                  <div className="flex flex-wrap gap-2">
+                    {platformOptions.map((platform) => (
+                      <label
+                        key={platform}
+                        className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[12.5px] font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        <input
+                          type="checkbox"
+                          name="platform"
+                          value={platform}
+                          defaultChecked={parseMultiList(koc.platform).includes(
+                            platform
+                          )}
+                          className="h-4 w-4 accent-[#3964ff]"
+                        />
+                        {platform}
+                      </label>
+                    ))}
+                  </div>
                 </CompactField>
               </div>
             </CompactSection>
