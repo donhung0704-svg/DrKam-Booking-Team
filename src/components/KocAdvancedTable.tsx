@@ -8,7 +8,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 type DbRow = Record<string, any>;
 
-type ColumnType = "action" | "text" | "number" | "date" | "select" | "readonly";
+type ColumnType =
+  | "action"
+  | "text"
+  | "number"
+  | "date"
+  | "select"
+  | "readonly"
+  | "multiselect";
 
 type ColumnConfig = {
   key: string;
@@ -41,6 +48,7 @@ const statusOptions = [
 
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
+const platformOptions = ["TikTok", "FB", "Shopee"];
 
 const defaultColumns: ColumnConfig[] = [
   {
@@ -93,6 +101,14 @@ const defaultColumns: ColumnConfig[] = [
     type: "select",
     options: statusOptions,
     width: 135,
+  },
+  {
+    key: "platform",
+    label: "Nền tảng",
+    field: "platform",
+    type: "multiselect",
+    options: platformOptions,
+    width: 170,
   },
   {
     key: "channel_type",
@@ -243,6 +259,7 @@ const defaultVisibleColumnKeys = [
   "follower",
   "tier",
   "status",
+  "platform",
   "channel_type",
   "phone",
   "created_at",
@@ -1133,6 +1150,17 @@ function BulkValueInput({
     );
   }
 
+  if (column.type === "multiselect") {
+    return (
+      <MultiSelectDropdown
+        value={value}
+        options={column.options || []}
+        onChange={onChange}
+        compact
+      />
+    );
+  }
+
   if (column.type === "date") {
     return (
       <DatePickerInput
@@ -1269,6 +1297,20 @@ function CellEditor({
     );
   }
 
+  if (column.type === "multiselect") {
+    return (
+      <div className="relative">
+        <MultiSelectDropdown
+          value={String(value || "")}
+          options={column.options || []}
+          onChange={(nextValue) => onSave(nextValue || null)}
+        />
+
+        {saving && <SavingDot />}
+      </div>
+    );
+  }
+
   if (column.type === "date") {
     return (
       <div className="relative">
@@ -1302,6 +1344,208 @@ function CellEditor({
   );
 }
 
+
+function parseMultiList(value: unknown) {
+  return Array.from(
+    new Set(
+      String(value || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+function MultiSelectDropdown({
+  value,
+  options,
+  onChange,
+  compact = false,
+}: {
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+  compact?: boolean;
+}) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const [panelStyle, setPanelStyle] = useState<Record<string, string | number>>(
+    {}
+  );
+  const [selectedValues, setSelectedValues] = useState<string[]>(() =>
+    parseMultiList(value)
+  );
+
+  useEffect(() => {
+    setSelectedValues(parseMultiList(value));
+  }, [value]);
+
+  const allOptions = useMemo(() => {
+    return Array.from(new Set([...options, ...selectedValues]));
+  }, [options, selectedValues]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!wrapperRef.current) return;
+      if (!wrapperRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function updatePosition() {
+      const button = buttonRef.current;
+      if (!button) return;
+
+      const rect = button.getBoundingClientRect();
+      const panelWidth = Math.max(compact ? 240 : 260, rect.width);
+      const estimatedHeight = 300;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openAbove = spaceBelow < estimatedHeight && rect.top > estimatedHeight;
+
+      const left = Math.min(
+        Math.max(8, rect.left),
+        Math.max(8, window.innerWidth - panelWidth - 8)
+      );
+
+      setPanelStyle({
+        position: "fixed",
+        left,
+        top: openAbove ? "auto" : rect.bottom + 6,
+        bottom: openAbove ? window.innerHeight - rect.top + 6 : "auto",
+        width: panelWidth,
+        zIndex: 9999,
+      });
+    }
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, compact]);
+
+  function toggleValue(item: string) {
+    const selectedSet = new Set(selectedValues);
+
+    if (selectedSet.has(item)) {
+      selectedSet.delete(item);
+    } else {
+      selectedSet.add(item);
+    }
+
+    const nextValues = allOptions.filter((option) => selectedSet.has(option));
+
+    setSelectedValues(nextValues);
+    onChange(nextValues.join(", "));
+  }
+
+  function clearValues() {
+    setSelectedValues([]);
+    onChange("");
+  }
+
+  const displayText =
+    selectedValues.length === 0
+      ? "Chọn nền tảng"
+      : selectedValues.join(", ");
+
+  return (
+    <div ref={wrapperRef} className="relative min-w-0">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        title={selectedValues.join(", ") || "Chọn nền tảng"}
+        className={`flex w-full items-center justify-between gap-2 rounded-lg border text-left font-semibold outline-none transition ${
+          compact
+            ? "h-9 border-slate-200 bg-white px-3 text-[12.5px]"
+            : "h-8 border-transparent bg-transparent px-2 text-[12px] hover:border-slate-200 hover:bg-white"
+        } ${open ? "border-[#3964ff] bg-white ring-2 ring-[#3964ff]/10" : ""}`}
+      >
+        <span
+          className={
+            selectedValues.length > 0
+              ? "truncate text-slate-800"
+              : "truncate text-slate-400"
+          }
+        >
+          {displayText}
+        </span>
+
+        <span className="shrink-0 text-[11px] text-slate-500">
+          {selectedValues.length > 0 ? selectedValues.length : "⌄"}
+        </span>
+      </button>
+
+      {open && (
+        <div
+          style={panelStyle}
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5">
+            <div>
+              <p className="text-[12px] font-black text-slate-950">
+                Chọn nền tảng
+              </p>
+              <p className="mt-0.5 text-[11px] font-semibold text-slate-400">
+                Có thể chọn nhiều nền tảng
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={clearValues}
+              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100"
+            >
+              Xóa chọn
+            </button>
+          </div>
+
+          <div className="max-h-[260px] overflow-auto p-2">
+            {allOptions.map((item) => {
+              const checked = selectedValues.includes(item);
+
+              return (
+                <label
+                  key={item}
+                  className={`mb-1 flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-[12.5px] font-semibold transition last:mb-0 ${
+                    checked
+                      ? "border-blue-200 bg-blue-50 text-blue-800"
+                      : "border-transparent bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleValue(item)}
+                    className="h-4 w-4 shrink-0 accent-[#3964ff]"
+                  />
+
+                  <span className="leading-5">{item}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="border-t border-slate-100 bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-500">
+            Đã chọn: {selectedValues.length} nền tảng
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function getSelectColorStyle(columnKey: string, value: unknown) {
   const raw = String(value || "").trim();
