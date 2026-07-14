@@ -53,12 +53,11 @@ const tierOptions = [
   "VIP",
   "Tiềm năng",
   "Chăm chỉ",
+  "Hoạt động lâu",
   "Mới hoạt động",
   "Ngủ đông",
   "Mất cast",
-  "Trùng KOC",
   "Dừng CS",
-  "Hoạt động lâu",
 ];
 const statusOptions = ["Chờ phản hồi", "Đã phản hồi", "Cân nhắc", "Đã chốt", "Từ chối", "Trùng KOC"];
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
