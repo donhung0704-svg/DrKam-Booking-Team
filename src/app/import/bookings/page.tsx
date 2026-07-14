@@ -95,12 +95,13 @@ export default function ImportBookingPage() {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
 
-      // raw:true -> ô ngày thật trả về SERIAL NUMBER (số tuyệt đối, không thể
-      // nhầm mm/dd, không lệch timezone). optionalDate() sẽ tự convert serial.
-      // Ô ngày dạng TEXT vẫn là chuỗi -> parse dd/mm như thường.
+      // raw:false -> đọc ĐÚNG CHUỖI Excel đang hiển thị (WYSIWYG), vd ô ngày thật
+      // April 3 mà Excel show kiểu Mỹ "4/3/26" sẽ về đúng "4/3/26". Sau đó
+      // optionalDate() áp dụng lựa chọn dd/mm để hiểu "4/3" = 4 tháng 3 theo
+      // đúng cách người dùng NHÌN thấy, thay vì đọc serial tuyệt đối (April 3).
       const parsedRows = XLSX.utils.sheet_to_json<ExcelRow>(worksheet, {
         defval: "",
-        raw: true,
+        raw: false,
       });
 
       setRows(parsedRows);
