@@ -343,6 +343,10 @@ export default function BookingListPage() {
         "Ngày dự kiến đăng": formatDate(booking.expected_post_date),
         "Ngày đăng thực tế": formatDate(booking.actual_post_date),
         "Sản phẩm": booking.product || "",
+        "Số lượng": booking.quantity ? Number(booking.quantity) : "",
+        "Giá trị đơn": booking.order_value ? Number(booking.order_value) : "",
+        "Địa chỉ giao hàng": booking.delivery_address || "",
+        "SĐT nhận hàng": booking.recipient_phone || "",
         "Ghi chú": booking.note || "",
       };
     });
@@ -368,6 +372,10 @@ export default function BookingListPage() {
       { wch: 18 },
       { wch: 18 },
       { wch: 48 },
+      { wch: 10 },
+      { wch: 14 },
+      { wch: 42 },
+      { wch: 16 },
       { wch: 48 },
     ];
 
