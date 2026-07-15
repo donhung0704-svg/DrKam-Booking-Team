@@ -49,12 +49,9 @@ const statusBookingOptions = [
 ];
 
 const orderStatusOptions = [
-  "Chờ gửi",
   "Đã gửi",
-  "Đang giao",
   "Giao thành công",
-  "Giao thất bại",
-  "Hoàn hàng",
+  "Giao không thành công",
 ];
 
 const defaultColumns: ColumnConfig[] = [
@@ -1324,12 +1321,9 @@ function getSelectColorStyle(columnKey: string, value: unknown) {
     "Đã đăng video": { bg: "#f3e8ff", text: "#7e22ce", border: "#e9d5ff" },
     "Đã thanh toán": { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },
 
-    "Chờ gửi": { bg: "#fef9c3", text: "#854d0e", border: "#fde68a" },
     "Đã gửi": { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
-    "Đang giao": { bg: "#e0f2fe", text: "#0369a1", border: "#bae6fd" },
     "Giao thành công": { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },
-    "Giao thất bại": { bg: "#fee2e2", text: "#b91c1c", border: "#fecaca" },
-    "Hoàn hàng": { bg: "#ffedd5", text: "#c2410c", border: "#fed7aa" },
+    "Giao không thành công": { bg: "#fee2e2", text: "#b91c1c", border: "#fecaca" },
   };
 
   if (columnKey === "koc_id") {
