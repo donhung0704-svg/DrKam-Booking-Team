@@ -24,6 +24,15 @@ const statusBookingOptions = [
   "Đã thanh toán",
 ];
 
+const orderStatusOptions = [
+  "Chờ gửi",
+  "Đã gửi",
+  "Đang giao",
+  "Giao thành công",
+  "Giao thất bại",
+  "Hoàn hàng",
+];
+
 const productOptions = [
   "Nước súc miệng CYK",
   "Nước súc miệng Postbiotic",
@@ -238,6 +247,9 @@ export default function EditBookingPage() {
       order_value: orderItems.length > 0 ? orderTotal : null,
       delivery_address: getText(formData, "delivery_address") || null,
       recipient_phone: getText(formData, "recipient_phone") || null,
+      ship_date: parseVietnameseDateInput(formData.get("ship_date")),
+      tracking_code: getText(formData, "tracking_code") || null,
+      order_status: getText(formData, "order_status") || null,
       note: getText(formData, "note") || null,
     };
 
@@ -559,6 +571,39 @@ export default function EditBookingPage() {
                 placeholder="SĐT người nhận cho đơn này"
                 className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm"
               />
+            </Field>
+
+            <Field label="Ngày gửi">
+              <input
+                name="ship_date"
+                defaultValue={formatDateForDisplay(booking.ship_date)}
+                placeholder="dd/mm/yyyy"
+                className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm"
+              />
+            </Field>
+
+            <Field label="Mã vận đơn">
+              <input
+                name="tracking_code"
+                defaultValue={booking.tracking_code || ""}
+                placeholder="Mã vận đơn / tracking"
+                className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm"
+              />
+            </Field>
+
+            <Field label="Tình trạng đơn hàng">
+              <select
+                name="order_status"
+                defaultValue={booking.order_status || ""}
+                className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm"
+              >
+                <option value="">Chọn tình trạng</option>
+                {orderStatusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
             </Field>
           </div>
         </FormSection>
