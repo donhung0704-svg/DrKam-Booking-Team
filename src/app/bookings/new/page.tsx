@@ -5,7 +5,7 @@ import DatePickerInput from "@/components/DatePickerInput";
 import KocSearchSelect from "@/components/KocSearchSelect";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 type DbRow = Record<string, any>;
 
@@ -36,6 +36,29 @@ export default function NewBookingPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [initialKocId, setInitialKocId] = useState("");
+
+  // KOC đang chọn + địa chỉ/SĐT giao hàng (mặc định lấy theo KOC, sửa được)
+  const [selectedKocId, setSelectedKocId] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const prefilledKocRef = useRef("");
+
+  const selectedKoc =
+    kocs.find((koc) => String(koc.id) === String(selectedKocId)) || null;
+
+  // Khi đổi KOC (và đã có dữ liệu KOC) -> tự điền địa chỉ/SĐT giao hàng theo KOC
+  useEffect(() => {
+    if (!selectedKocId) {
+      prefilledKocRef.current = "";
+      return;
+    }
+    if (!selectedKoc) return;
+    if (prefilledKocRef.current === selectedKocId) return;
+
+    prefilledKocRef.current = selectedKocId;
+    setDeliveryAddress(selectedKoc.address || "");
+    setRecipientPhone(selectedKoc.phone || "");
+  }, [selectedKocId, selectedKoc]);
 
   // Nếu mở từ Hồ sơ KOC (?koc_id=...) thì chọn sẵn KOC đó
   useEffect(() => {
@@ -80,6 +103,11 @@ export default function NewBookingPage() {
         formData.get("expected_post_date")
       ),
       product: getSelectedProducts(formData),
+      quantity: getNumber(formData, "quantity"),
+      order_value: getNumber(formData, "order_value"),
+      // Địa chỉ/SĐT giao hàng riêng cho đơn (không đổi địa chỉ/SĐT gốc KOC)
+      delivery_address: getText(formData, "delivery_address") || null,
+      recipient_phone: getText(formData, "recipient_phone") || null,
       note: getText(formData, "note") || null,
     };
 
@@ -169,6 +197,7 @@ export default function NewBookingPage() {
                 name="koc_id"
                 kocs={kocs}
                 defaultValue={initialKocId}
+                onChange={setSelectedKocId}
                 placeholder="Gõ ID TikTok/Tên FB để tìm KOC..."
               />
             </CompactField>
@@ -238,6 +267,62 @@ export default function NewBookingPage() {
           </div>
         </CompactSection>
 
+        <CompactSection
+          eyebrow="Đơn hàng & giao hàng"
+          title="Số lượng, giá trị & địa chỉ giao"
+          description="Địa chỉ/SĐT giao hàng mặc định lấy theo KOC, có thể sửa riêng cho đơn này mà không đổi thông tin gốc của KOC."
+        >
+          <div className="grid grid-cols-1 gap-px bg-slate-200 p-px xl:grid-cols-2">
+            <CompactField label="Số lượng">
+              <input
+                name="quantity"
+                placeholder="Ví dụ: 1"
+                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+
+            <CompactField label="Giá trị đơn hàng">
+              <input
+                name="order_value"
+                placeholder="Ví dụ: 500000"
+                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+
+            <CompactField label="Địa chỉ gốc KOC">
+              <div className="min-h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12.5px] font-semibold text-slate-500">
+                {selectedKoc?.address || "— (chọn KOC để xem)"}
+              </div>
+            </CompactField>
+
+            <CompactField label="SĐT gốc KOC">
+              <div className="min-h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12.5px] font-semibold text-slate-500">
+                {selectedKoc?.phone || "— (chọn KOC để xem)"}
+              </div>
+            </CompactField>
+
+            <CompactField label="Địa chỉ giao hàng" full>
+              <textarea
+                name="delivery_address"
+                value={deliveryAddress}
+                onChange={(event) => setDeliveryAddress(event.target.value)}
+                placeholder="Địa chỉ nhận hàng cho đơn này"
+                className="min-h-[52px] w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[12.5px] leading-5 outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+
+            <CompactField label="SĐT nhận hàng">
+              <input
+                name="recipient_phone"
+                value={recipientPhone}
+                onChange={(event) => setRecipientPhone(event.target.value)}
+                placeholder="SĐT người nhận cho đơn này"
+                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+          </div>
+        </CompactSection>
+
         <CompactSection eyebrow="Ghi chú" title="Thông tin bổ sung">
           <CompactField label="Ghi chú" full>
             <textarea
@@ -281,7 +366,7 @@ async function loadAllKocsForBookingForm() {
 
     const { data, error } = await supabase
       .from("koc")
-      .select("id, koc_code, Id_tiktok_Ten_fb, name, phone, tiktok_link")
+      .select("id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link")
       .order("created_at", { ascending: false })
       .range(from, to);
 
