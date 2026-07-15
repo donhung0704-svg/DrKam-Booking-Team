@@ -167,9 +167,7 @@ export default function PicReportPage() {
 
         rowMap.set(key, {
           employeeId: key,
-          employeeName: employee
-            ? getEmployeeDisplayName(employee)
-            : "Chưa có PIC",
+          employeeName: employee ? getEmployeeDisplayName(employee) : "Khác",
           isRealPic: Boolean(employee),
           lienHe: 0,
           phanHoi: 0,
@@ -208,16 +206,19 @@ export default function PicReportPage() {
         row.phanHoi += 1;
       }
 
-      // Tổng theo KOC phụ trách (không lọc theo ngày)
+      // Video & GMV: KOC "có PIC nhưng chưa có Booking date" -> dồn sang "Khác"
+      // (videoRow = PIC nếu có Booking date, ngược lại là nhóm Khác = row no-pic).
+      const videoRow = hasBookingDate(koc.booking_date) ? row : ensureRow("");
+
       // Daily Videos(T-1): tách theo KOC mới (tier "Mới hoạt động") và KOC cũ
       const dailyVideos = parseNumber(koc.number_of_videos);
       if (String(koc.tier || "").trim() === "Mới hoạt động") {
-        row.dailyVideoNew += dailyVideos;
+        videoRow.dailyVideoNew += dailyVideos;
       } else {
-        row.dailyVideoOld += dailyVideos;
+        videoRow.dailyVideoOld += dailyVideos;
       }
 
-      row.gmvNgay += parseNumber(koc.gmv);
+      videoRow.gmvNgay += parseNumber(koc.gmv);
     });
 
     bookings.forEach((booking) => {
@@ -777,6 +778,12 @@ function parseNumber(value: unknown) {
   const numberValue = Number(raw);
 
   return Number.isNaN(numberValue) ? 0 : numberValue;
+}
+
+// Booking date được coi là "không trống" khi có giá trị thực (khác rỗng và "-")
+function hasBookingDate(value: unknown) {
+  const raw = String(value ?? "").trim();
+  return raw !== "" && raw !== "-";
 }
 
 function formatNumber(value: unknown) {

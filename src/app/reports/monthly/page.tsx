@@ -234,9 +234,7 @@ export default function MonthlyReportPage() {
 
         rowMap.set(key, {
           employeeId: key,
-          employeeName: employee
-            ? getEmployeeDisplayName(employee)
-            : "Chưa có PIC",
+          employeeName: employee ? getEmployeeDisplayName(employee) : "Khác",
           isRealPic: Boolean(employee),
           lienHe: 0,
           phanHoi: 0,
@@ -308,29 +306,34 @@ export default function MonthlyReportPage() {
         if (status === "Từ chối") row.tuChoi += 1;
       }
 
+      // Video & GMV: KOC "có PIC nhưng chưa có Booking date" -> dồn sang "Khác".
+      // Các chỉ số Video/GMV tính trên videoRow (PIC nếu có Booking date, ngược
+      // lại là nhóm Khác = row no-pic).
+      const videoRow = hasBookingDate(koc.booking_date) ? row : ensureRow("");
+
       // Tổng theo KOC phụ trách: Monthly Videos + GMV tháng
       const monthlyVideos = parseNumber(koc.monthly_videos);
       if (String(koc.tier || "").trim() === "Mới hoạt động") {
-        row.dailyVideoNew += monthlyVideos;
+        videoRow.dailyVideoNew += monthlyVideos;
       } else {
-        row.dailyVideoOld += monthlyVideos;
+        videoRow.dailyVideoOld += monthlyVideos;
       }
 
       // Video chia theo channel type
       const channelType = String(koc.channel_type || "").trim();
       if (channelType === "POV") {
-        row.videoPov += monthlyVideos;
+        videoRow.videoPov += monthlyVideos;
       } else if (channelType === "Unbox") {
-        row.videoUnbox += monthlyVideos;
+        videoRow.videoUnbox += monthlyVideos;
       } else if (channelType === "AI") {
-        row.videoAi += monthlyVideos;
+        videoRow.videoAi += monthlyVideos;
       } else if (channelType === "Người thật") {
-        row.videoReal += monthlyVideos;
+        videoRow.videoReal += monthlyVideos;
       } else {
-        row.videoOther += monthlyVideos;
+        videoRow.videoOther += monthlyVideos;
       }
 
-      row.gmvNgay += parseNumber(koc.gmv_thang);
+      videoRow.gmvNgay += parseNumber(koc.gmv_thang);
 
       // KOC chốt mới = KOC có Booking đầu tiên trong tháng báo cáo + có video tháng
       const firstBookingKey = firstBookingByKoc.get(String(koc.id)) || "";
@@ -342,7 +345,7 @@ export default function MonthlyReportPage() {
 
         // Video KOC mới (trừ POV): tổng video KOC chốt mới, không tính KOC POV
         if (channelType !== "POV") {
-          row.videoKocMoiTruPov += monthlyVideos;
+          videoRow.videoKocMoiTruPov += monthlyVideos;
         }
       }
     });
@@ -1155,6 +1158,12 @@ function parseNumber(value: unknown) {
   const numberValue = Number(raw);
 
   return Number.isNaN(numberValue) ? 0 : numberValue;
+}
+
+// Booking date được coi là "không trống" khi có giá trị thực (khác rỗng và "-")
+function hasBookingDate(value: unknown) {
+  const raw = String(value ?? "").trim();
+  return raw !== "" && raw !== "-";
 }
 
 function formatNumber(value: unknown) {

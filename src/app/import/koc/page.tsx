@@ -400,7 +400,7 @@ function downloadKocTemplate() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1300px] text-left text-sm">
+          <table className="w-full min-w-[1800px] text-left text-sm">
             <thead>
               <tr>
                 <Th>Ngày tạo</Th>
@@ -411,10 +411,14 @@ function downloadKocTemplate() {
                 <Th>Follower</Th>
                 <Th>Tier</Th>
                 <Th>Status</Th>
+                <Th>Nền tảng</Th>
                 <Th>Channel type</Th>
                 <Th>SĐT/Zalo</Th>
+                <Th>Daily Videos(T-1)</Th>
+                <Th>Monthly Videos</Th>
                 <Th>Campaign</Th>
-                <Th>GMV</Th>
+                <Th>GMV ngày</Th>
+                <Th>GMV tháng</Th>
               </tr>
             </thead>
 
@@ -422,7 +426,7 @@ function downloadKocTemplate() {
               {previewRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={12}
+                    colSpan={16}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Chưa có dữ liệu preview.
@@ -454,15 +458,32 @@ function downloadKocTemplate() {
                   <Td>{text(pick(row, ["Tier", "tier"])) || "-"}</Td>
                   <Td>{text(pick(row, ["Status", "status"])) || "-"}</Td>
                   <Td>
+                    {text(pick(row, ["Nền tảng", "Platform", "platform"])) || "-"}
+                  </Td>
+                  <Td>
                     {text(pick(row, ["Channel type", "channel_type"])) || "-"}
                   </Td>
                   <Td>{text(pick(row, ["SĐT/Zalo", "Phone", "phone"])) || "-"}</Td>
                   <Td>
                     {text(
+                      pick(row, [
+                        "Daily Videos(T-1)",
+                        "Daily Videos (T-1)",
+                        "Number of videos",
+                        "number_of_videos",
+                      ])
+                    ) || "-"}
+                  </Td>
+                  <Td>
+                    {text(pick(row, ["Monthly Videos", "monthly_videos"])) || "-"}
+                  </Td>
+                  <Td>
+                    {text(
                       pick(row, ["Campaign name", "Campaign", "campaign_id"])
                     ) || "-"}
                   </Td>
-                  <Td>{text(pick(row, ["GMV", "gmv"])) || "-"}</Td>
+                  <Td>{text(pick(row, ["GMV ngày", "GMV", "gmv"])) || "-"}</Td>
+                  <Td>{text(pick(row, ["GMV tháng", "gmv_thang"])) || "-"}</Td>
                 </tr>
               ))}
             </tbody>
@@ -616,11 +637,16 @@ function createEmployeeMap(employees: DbRow[]) {
 }
 
 function resolveEmployeeId(row: ExcelRow, employeeMap: Map<string, string>) {
+  const picText = pick(row, ["PIC phụ trách", "PIC", "Nhân viên", "employee"]);
+
   const candidates = [
-    pick(row, ["PIC phụ trách", "PIC", "Nhân viên", "employee"]),
+    picText,
     pick(row, ["Mã nhân viên", "employee_code"]),
     pick(row, ["Email PIC", "email"]),
     pick(row, ["SĐT PIC", "Phone PIC", "phone"]),
+    // File export ghi PIC dạng ghép "EMP0004 - Linh - Trưởng nhóm" -> thử
+    // khớp từng phần (mã NV / tên) tách theo dấu "-".
+    ...String(picText || "").split(/\s*-\s*/),
   ];
 
   for (const candidate of candidates) {
