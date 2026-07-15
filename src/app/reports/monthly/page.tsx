@@ -1042,7 +1042,7 @@ function KpiGroupTable({
                         }
                         onBlur={() => onKpiBlur(row.employeeId, metric.field)}
                         placeholder="KPI"
-                        className="h-8 w-[58px] rounded-lg border border-slate-200 bg-white px-1.5 text-[12px] outline-none focus:border-[#3964ff]"
+                        className="h-8 w-full min-w-[72px] rounded-lg border border-slate-200 bg-white px-2 text-right text-[12px] outline-none focus:border-[#3964ff]"
                       />
                     </Td>
                   ))}

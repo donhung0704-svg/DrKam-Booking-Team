@@ -551,7 +551,7 @@ export default function PicReportPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-left text-sm">
+          <table className="report-table w-full min-w-[1100px] text-left text-sm">
             <thead>
               <tr className="bg-slate-50">
                 <th
@@ -640,7 +640,7 @@ export default function PicReportPage() {
                             }
                             onBlur={() => saveKpi(row.employeeId, field)}
                             placeholder="KPI"
-                            className="h-9 w-[100px] rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                            className="h-9 w-full min-w-[90px] rounded-lg border border-slate-200 bg-white px-2.5 text-right text-[13px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
                           />
                         </Td>
                       ))}

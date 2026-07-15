@@ -334,6 +334,24 @@ body {
   padding: 8px 6px !important;
 }
 
+/* Kẻ ô rõ ràng cho bảng báo cáo */
+.crm-light .report-table {
+  border-collapse: collapse !important;
+}
+
+.crm-light .report-table th,
+.crm-light .report-table td {
+  border: 1px solid #f0c9dd !important;
+}
+
+/* Tiêu đề bảng báo cáo: nền hồng nổi bật, chữ trắng đậm */
+.crm-light .report-table thead th {
+  background-color: #db2777 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border-color: #be185d !important;
+}
+
 .crm-light table td {
   padding: 10px 14px !important;
   font-size: 13px !important;
@@ -429,6 +447,19 @@ header.fixed.h-\[92px\] {
 .crm-light section.overflow-hidden > .overflow-x-auto table tbody tr:hover td {
   background: #f8fafc !important;
 }
+
+/* Header bảng báo cáo: nền hồng nổi bật (đè nền trắng của sticky header) */
+.crm-light
+  section.overflow-hidden
+  > .overflow-x-auto
+  table.report-table
+  thead
+  th {
+  background: #db2777 !important;
+  color: #ffffff !important;
+  border-color: #be185d !important;
+}
+
 /* KOC table - cố định cột thao tác sửa bên trái */
 .crm-light .koc-table thead th:first-child {
   position: sticky !important;
