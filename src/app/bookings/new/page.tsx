@@ -342,9 +342,16 @@ export default function NewBookingPage() {
                       <td className="px-2 py-1.5">
                         <select
                           value={item.product}
-                          onChange={(event) =>
-                            updateItem(item.id, { product: event.target.value })
-                          }
+                          onChange={(event) => {
+                            const product = event.target.value;
+                            // Chọn sản phẩm -> mặc định Số lượng = 1 nếu đang trống
+                            updateItem(
+                              item.id,
+                              product && !item.quantity.trim()
+                                ? { product, quantity: "1" }
+                                : { product }
+                            );
+                          }}
                           className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12.5px] outline-none focus:border-[#3964ff]"
                         >
                           <option value="">Chọn sản phẩm</option>
