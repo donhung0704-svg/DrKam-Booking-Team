@@ -306,11 +306,56 @@ export default function KocAdvancedTable({
   // Xóa trắng NHIỀU trường cùng lúc
   const [bulkClearFields, setBulkClearFields] = useState<string[]>([]);
   const [bulkClearOpen, setBulkClearOpen] = useState(false);
+  const bulkClearWrapRef = useRef<HTMLDivElement | null>(null);
+  const bulkClearBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [bulkClearPanelStyle, setBulkClearPanelStyle] = useState<
+    Record<string, string | number>
+  >({});
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
 
   const firstResetSignalRef = useRef(resetLayoutSignal);
+
+  // Định vị panel "Xóa trắng nhiều trường" dạng fixed để không bị bảng che
+  useEffect(() => {
+    if (!bulkClearOpen) return;
+
+    function updatePosition() {
+      const button = bulkClearBtnRef.current;
+      if (!button) return;
+
+      const rect = button.getBoundingClientRect();
+      setBulkClearPanelStyle({
+        position: "fixed",
+        top: rect.bottom + 4,
+        left: Math.min(rect.left, window.innerWidth - 300),
+        width: Math.max(280, rect.width),
+        zIndex: 9999,
+      });
+    }
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [bulkClearOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!bulkClearWrapRef.current) return;
+      if (!bulkClearWrapRef.current.contains(event.target as Node)) {
+        setBulkClearOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const savedOrder = window.localStorage.getItem(storageKeyOrder);
@@ -817,8 +862,9 @@ const orderedColumns = useMemo(() => {
             {bulkSaving ? "Đang xử lý..." : "Cập nhật hàng loạt"}
           </button>
 
-          <div className="relative">
+          <div ref={bulkClearWrapRef} className="relative">
             <button
+              ref={bulkClearBtnRef}
               type="button"
               onClick={() => setBulkClearOpen((open) => !open)}
               className="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-semibold text-slate-700 outline-none hover:border-slate-300 focus:border-[#3964ff]"
@@ -832,7 +878,10 @@ const orderedColumns = useMemo(() => {
             </button>
 
             {bulkClearOpen && (
-              <div className="absolute left-0 top-[calc(100%+4px)] z-50 max-h-72 w-72 overflow-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
+              <div
+                style={bulkClearPanelStyle}
+                className="max-h-72 overflow-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+              >
                 <div className="mb-1 flex items-center justify-between px-1.5 py-1">
                   <span className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-400">
                     Chọn nhiều trường
