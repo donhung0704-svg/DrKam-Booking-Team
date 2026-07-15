@@ -18,6 +18,15 @@ const bookingTypeOptions = [
   "Quà Sinh Nhật",
 ];
 
+const orderStatusOptions = [
+  "Chờ gửi",
+  "Đã gửi",
+  "Đang giao",
+  "Giao thành công",
+  "Giao thất bại",
+  "Hoàn hàng",
+];
+
 const productOptions = [
   "Nước súc miệng CYK",
   "Nước súc miệng Postbiotic",
@@ -176,6 +185,9 @@ export default function NewBookingPage() {
       // Địa chỉ/SĐT giao hàng riêng cho đơn (không đổi địa chỉ/SĐT gốc KOC)
       delivery_address: getText(formData, "delivery_address") || null,
       recipient_phone: getText(formData, "recipient_phone") || null,
+      ship_date: parseVietnameseDateInput(formData.get("ship_date")),
+      tracking_code: getText(formData, "tracking_code") || null,
+      order_status: getText(formData, "order_status") || null,
       note: getText(formData, "note") || null,
     };
 
@@ -461,6 +473,33 @@ export default function NewBookingPage() {
                 placeholder="SĐT người nhận cho đơn này"
                 className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
+            </CompactField>
+
+            <CompactField label="Ngày gửi">
+              <DatePickerInput name="ship_date" />
+            </CompactField>
+
+            <CompactField label="Mã vận đơn">
+              <input
+                name="tracking_code"
+                placeholder="Mã vận đơn / tracking"
+                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+
+            <CompactField label="Tình trạng đơn hàng">
+              <select
+                name="order_status"
+                defaultValue=""
+                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              >
+                <option value="">Chọn tình trạng</option>
+                {orderStatusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
             </CompactField>
           </div>
         </CompactSection>
