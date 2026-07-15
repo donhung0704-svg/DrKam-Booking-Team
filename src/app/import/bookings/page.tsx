@@ -121,7 +121,7 @@ function downloadBookingTemplate() {
       "Ngày tạo booking": "22/06/2026",
       "Ngày dự kiến đăng": "25/06/2026",
       "Ngày đăng thực tế": "",
-      "Sản phẩm": "Nước súc miệng DrKam, Xịt miệng DrKam Plus",
+      "Sản phẩm": "Nước súc miệng CYK, Gel cạo lưỡi bạc hà",
       "Ghi chú": "Booking mẫu",
     },
   ];

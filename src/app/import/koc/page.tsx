@@ -19,8 +19,9 @@ const tierOptions = [
   "Dừng CS",
 ];
 const statusOptions = ["Chờ phản hồi", "Đã phản hồi", "Cân nhắc", "Đã chốt", "Từ chối", "Trùng KOC"];
-const channelTypeOptions = ["Người thật", "AI", "Pov-Unbox"];
+const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
+const platformOptions = ["TikTok", "FB", "Shopee"];
 
 export default function ImportKocPage() {
   const [rows, setRows] = useState<ExcelRow[]>([]);
@@ -102,6 +103,7 @@ function downloadKocTemplate() {
       Follower: 12000,
       Tier: "Tiềm năng",
       Status: "Chờ phản hồi",
+      "Nền tảng": "TikTok, Shopee",
       "Channel type": "Người thật",
       Email: "nguyena@gmail.com",
       "SĐT/Zalo": "0986016911",
@@ -109,9 +111,11 @@ function downloadKocTemplate() {
       Note: "KOC mới cần chăm sóc",
       "Booking date": "22/06/2026",
       "Date of birth": "01/01/2000",
-      "Number of videos": 0,
+      "Daily Videos(T-1)": 0,
+      "Monthly Videos": 0,
       "Campaign name": "",
-      GMV: 0,
+      "GMV ngày": 0,
+      "GMV tháng": 0,
       "Marital status": "Đã có con",
       "CS gần nhất": "22/06/2026",
       "Link Facebook": "https://facebook.com/...",
@@ -351,6 +355,7 @@ function downloadKocTemplate() {
             "Follower",
             "Tier",
             "Status",
+            "Nền tảng",
             "Channel type",
             "Email",
             "SĐT/Zalo",
@@ -358,9 +363,11 @@ function downloadKocTemplate() {
             "Note",
             "Booking date",
             "Date of birth",
-            "Number of videos",
+            "Daily Videos(T-1)",
+            "Monthly Videos",
             "Campaign name",
-            "GMV",
+            "GMV ngày",
+            "GMV tháng",
             "Marital status",
             "CS gần nhất",
             "Link Facebook",
@@ -540,6 +547,7 @@ function buildKocPayload(
       pick(row, ["Channel type", "channel_type"]),
       channelTypeOptions
     ),
+    platform: resolvePlatforms(pick(row, ["Nền tảng", "Platform", "platform"])),
     address: optionalText(pick(row, ["Address", "Địa chỉ", "address"])),
     note: optionalText(pick(row, ["Note", "Ghi chú", "note"])),
     booking_date: optionalDate(pick(row, ["Booking date", "booking_date"])),
@@ -547,10 +555,20 @@ function buildKocPayload(
       pick(row, ["Date of birth", "Ngày sinh", "date_of_birth"])
     ),
     number_of_videos: optionalNumber(
-      pick(row, ["Number of videos", "Số video", "number_of_videos"])
+      pick(row, [
+        "Daily Videos(T-1)",
+        "Daily Videos (T-1)",
+        "Number of videos",
+        "Số video",
+        "number_of_videos",
+      ])
+    ),
+    monthly_videos: optionalNumber(
+      pick(row, ["Monthly Videos", "monthly_videos"])
     ),
     campaign_id: campaignId,
-    gmv: optionalNumber(pick(row, ["GMV", "gmv"])),
+    gmv: optionalNumber(pick(row, ["GMV ngày", "GMV", "gmv"])),
+    gmv_thang: optionalNumber(pick(row, ["GMV tháng", "gmv_thang"])),
     marital_status: matchOption(
       pick(row, ["Marital status", "marital_status"]),
       maritalStatusOptions
@@ -680,6 +698,20 @@ function text(value: any) {
 function optionalText(value: any) {
   const output = text(value);
   return output ? output : undefined;
+}
+
+// Dò các nền tảng có sẵn trong ô "Nền tảng" của Excel rồi nối bằng ", " để
+// khớp multi-select. Không khớp cái nào -> giữ nguyên text gốc.
+function resolvePlatforms(value: any) {
+  const raw = text(value);
+  if (!raw) return undefined;
+
+  const normalized = removeVietnamese(raw).toLowerCase();
+  const matched = platformOptions.filter((option) =>
+    normalized.includes(removeVietnamese(option).toLowerCase())
+  );
+
+  return matched.length > 0 ? matched.join(", ") : raw;
 }
 
 function optionalNumber(value: any) {
