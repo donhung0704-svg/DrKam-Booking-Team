@@ -551,7 +551,7 @@ export default function PicReportPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-left text-sm">
+          <table className="report-table w-full min-w-[1100px] text-left text-sm">
             <thead>
               <tr className="bg-slate-50">
                 <th

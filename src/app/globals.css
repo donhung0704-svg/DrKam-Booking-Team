@@ -334,6 +334,24 @@ body {
   padding: 8px 6px !important;
 }
 
+/* Kẻ ô rõ ràng cho bảng báo cáo */
+.crm-light .report-table {
+  border-collapse: collapse !important;
+}
+
+.crm-light .report-table th,
+.crm-light .report-table td {
+  border: 1px solid #f0c9dd !important;
+}
+
+/* Tiêu đề bảng báo cáo: nền hồng nổi bật, chữ trắng đậm */
+.crm-light .report-table thead th {
+  background-color: #db2777 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border-color: #be185d !important;
+}
+
 .crm-light table td {
   padding: 10px 14px !important;
   font-size: 13px !important;
