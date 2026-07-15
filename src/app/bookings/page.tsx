@@ -54,6 +54,14 @@ const filterFields = [
   { value: "actual_post_date", label: "Ngày đăng thực tế" },
 ];
 
+// Trường cho phép sắp xếp tăng/giảm (số đếm + ngày)
+const sortableFields = [
+  { field: "cast_price", label: "Giá cast", isNumber: true },
+  { field: "created_at", label: "Ngày tạo booking", isNumber: false },
+  { field: "expected_post_date", label: "Ngày dự kiến đăng", isNumber: false },
+  { field: "actual_post_date", label: "Ngày đăng thực tế", isNumber: false },
+];
+
 const filterOperators = [
   { value: "contains", label: "Chứa" },
   { value: "equals", label: "Bằng" },
@@ -74,6 +82,12 @@ export default function BookingListPage() {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(100);
   const [resetColumnSignal, setResetColumnSignal] = useState(0);
+
+  // Sắp xếp theo trường số/ngày (client-side). null = mặc định
+  const [sortState, setSortState] = useState<{
+    field: string;
+    ascending: boolean;
+  } | null>(null);
 
   const [filters, setFilters] = useState<FilterCondition[]>([
     {
@@ -187,16 +201,52 @@ export default function BookingListPage() {
     });
   }, [bookings, filters, kocMap, employeeMap]);
 
+  const sortedBookings = useMemo(() => {
+    if (!sortState) return filteredBookings;
+
+    const meta = sortableFields.find((item) => item.field === sortState.field);
+    const isNumber = meta?.isNumber ?? false;
+
+    return [...filteredBookings].sort((a, b) => {
+      const av = a[sortState.field];
+      const bv = b[sortState.field];
+      const aEmpty = av === null || av === undefined || String(av).trim() === "";
+      const bEmpty = bv === null || bv === undefined || String(bv).trim() === "";
+
+      // Ô trống luôn xuống cuối bất kể chiều
+      if (aEmpty && bEmpty) return 0;
+      if (aEmpty) return 1;
+      if (bEmpty) return -1;
+
+      const cmp = isNumber
+        ? sortNumber(av) - sortNumber(bv)
+        : String(av).localeCompare(String(bv));
+
+      return sortState.ascending ? cmp : -cmp;
+    });
+  }, [filteredBookings, sortState]);
+
   useEffect(() => {
     setPageIndex(0);
-  }, [filters, pageSize]);
+  }, [filters, pageSize, sortState]);
 
-  const totalBookingCount = filteredBookings.length;
+  const totalBookingCount = sortedBookings.length;
   const totalPages = Math.max(1, Math.ceil(totalBookingCount / pageSize));
   const safePageIndex = Math.min(pageIndex, totalPages - 1);
   const pageStart = safePageIndex * pageSize;
   const pageEnd = pageStart + pageSize;
-  const currentPageBookings = filteredBookings.slice(pageStart, pageEnd);
+  const currentPageBookings = sortedBookings.slice(pageStart, pageEnd);
+
+  // Chọn/đảo sắp xếp: bấm lại cùng chiều -> tắt sắp xếp (về mặc định)
+  function toggleSort(field: string, ascending: boolean) {
+    setSortState((current) => {
+      if (current && current.field === field && current.ascending === ascending) {
+        return null;
+      }
+      return { field, ascending };
+    });
+    setPageIndex(0);
+  }
 
   const currentPageCount = currentPageBookings.length;
   const startRow = totalBookingCount === 0 ? 0 : pageStart + 1;
@@ -272,7 +322,7 @@ export default function BookingListPage() {
   }
 
   function exportBookingExcel() {
-    const exportRows = filteredBookings.map((booking) => {
+    const exportRows = sortedBookings.map((booking) => {
       const koc = booking.koc_id ? kocMap.get(String(booking.koc_id)) : null;
 
       const employee = booking.employee_id
@@ -545,6 +595,60 @@ export default function BookingListPage() {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+          <span className="text-[12.5px] font-bold text-slate-600">
+            Sắp xếp:
+          </span>
+
+          <select
+            value={sortState?.field ?? ""}
+            onChange={(event) => {
+              const field = event.target.value;
+              if (!field) {
+                setSortState(null);
+              } else {
+                setSortState({ field, ascending: sortState?.ascending ?? false });
+              }
+              setPageIndex(0);
+            }}
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-semibold outline-none focus:border-[#3964ff]"
+          >
+            <option value="">Mặc định</option>
+            {sortableFields.map((field) => (
+              <option key={field.field} value={field.field}>
+                {field.label}
+              </option>
+            ))}
+          </select>
+
+          {sortState && (
+            <div className="flex overflow-hidden rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => toggleSort(sortState.field, true)}
+                className={`h-9 px-3 text-[12.5px] font-bold ${
+                  sortState.ascending
+                    ? "bg-[#3964ff] text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                ↑ Tăng
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleSort(sortState.field, false)}
+                className={`h-9 border-l border-slate-200 px-3 text-[12.5px] font-bold ${
+                  !sortState.ascending
+                    ? "bg-[#3964ff] text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                ↓ Giảm
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -853,6 +957,13 @@ function getTodayForFileName() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(new Date());
+}
+
+function sortNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return 0;
+  const raw = String(value).trim().replace(/\./g, "").replace(/,/g, "");
+  const num = Number(raw);
+  return Number.isNaN(num) ? 0 : num;
 }
 
 function createFilterId() {
