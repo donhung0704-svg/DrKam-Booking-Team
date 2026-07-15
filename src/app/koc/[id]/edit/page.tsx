@@ -76,7 +76,8 @@ export default function EditKocPage() {
 
         supabase
           .from("employees")
-          .select("id, employee_code, full_name, name, email")
+          .select("id, employee_code, full_name, email, phone, role")
+          .order("employee_code", { ascending: true })
           .limit(1000),
       ]);
 
