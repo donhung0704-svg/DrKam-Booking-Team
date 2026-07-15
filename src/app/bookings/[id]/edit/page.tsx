@@ -25,12 +25,9 @@ const statusBookingOptions = [
 ];
 
 const orderStatusOptions = [
-  "Chờ gửi",
   "Đã gửi",
-  "Đang giao",
   "Giao thành công",
-  "Giao thất bại",
-  "Hoàn hàng",
+  "Giao không thành công",
 ];
 
 const productOptions = [
