@@ -56,6 +56,22 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // Phân quyền: tài khoản "shipper" chỉ được vào ĐÚNG trang Danh sách Booking.
+  // Mọi route khác (kể cả /bookings/new, /bookings/[id]/edit) -> về /bookings.
+  if (user) {
+    const role =
+      (user.app_metadata as { role?: string } | undefined)?.role ||
+      (user.user_metadata as { role?: string } | undefined)?.role ||
+      "";
+
+    if (String(role).toLowerCase() === "shipper" && pathname !== "/bookings") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/bookings";
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
   return response;
 }
 

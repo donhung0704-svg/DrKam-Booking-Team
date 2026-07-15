@@ -197,12 +197,16 @@ const storageKeyOrder = "drkam_booking_column_order_v4";
 const storageKeyPinned = "drkam_booking_pinned_columns_v4";
 const storageKeyWidths = "drkam_booking_column_widths_v1";
 
+// Trường mà tài khoản "shipper" được phép sửa (còn lại chỉ xem)
+const SHIPPER_EDITABLE_KEYS = ["ship_date", "tracking_code", "order_status"];
+
 export default function BookingAdvancedTable({
   bookings,
   kocs,
   employees,
   loading,
   resetLayoutSignal,
+  restricted = false,
   onBookingUpdated,
   onBookingDeleted,
 }: {
@@ -211,6 +215,7 @@ export default function BookingAdvancedTable({
   employees: DbRow[];
   loading: boolean;
   resetLayoutSignal?: number;
+  restricted?: boolean;
   onBookingUpdated: (id: string, patch: DbRow) => void;
   onBookingDeleted?: (ids: string[]) => void;
 }) {
@@ -630,6 +635,16 @@ export default function BookingAdvancedTable({
         </div>
       )}
 
+      {restricted && (
+        <div className="border-b border-slate-200 bg-amber-50 px-5 py-2.5">
+          <p className="text-[12px] font-bold text-amber-700">
+            Tài khoản Giao hàng: chỉ xem và sửa 3 trường Ngày gửi, Mã vận đơn,
+            Tình trạng đơn hàng.
+          </p>
+        </div>
+      )}
+
+      {!restricted && (
       <div className="border-b border-slate-200 bg-slate-50 px-5 py-3">
         <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap items-center gap-2">
@@ -744,6 +759,7 @@ export default function BookingAdvancedTable({
           </div>
         )}
       </div>
+      )}
 
       <div className="booking-advanced-scroll max-h-[calc(100vh-375px)] overflow-auto">
         <table
@@ -752,6 +768,7 @@ export default function BookingAdvancedTable({
         >
           <thead>
             <tr>
+              {!restricted && (
               <th
                 className="border-b border-slate-200 bg-slate-50 px-2 py-2 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                 style={{
@@ -774,6 +791,7 @@ export default function BookingAdvancedTable({
                   className="h-4 w-4 cursor-pointer accent-red-600"
                 />
               </th>
+              )}
 
               {orderedColumns.map((column) => {
                 const pinned = pinnedColumns.includes(column.key);
@@ -896,6 +914,7 @@ export default function BookingAdvancedTable({
                   <tr
                     key={booking.id}
                     onClick={(event) => {
+                      if (restricted) return;
                       const el = event.target as HTMLElement;
                       if (
                         el.closest("input, select, textarea, button, a, label")
@@ -904,10 +923,11 @@ export default function BookingAdvancedTable({
                       }
                       router.push(`/bookings/${booking.id}/edit`);
                     }}
-                    className={`group cursor-pointer ${
+                    className={`group ${restricted ? "" : "cursor-pointer"} ${
                       selected ? "bg-red-50/40" : ""
                     }`}
                   >
+                    {!restricted && (
                     <td
                       className="border-b border-slate-100 bg-white px-2 py-1.5 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
                       style={{
@@ -928,10 +948,14 @@ export default function BookingAdvancedTable({
                         className="h-4 w-4 cursor-pointer accent-red-600"
                       />
                     </td>
+                    )}
 
                     {orderedColumns.map((column) => {
                       const pinned = pinnedColumns.includes(column.key);
                       const cellKey = `${booking.id}_${column.field || column.key}`;
+                      const cellReadonly =
+                        restricted &&
+                        !SHIPPER_EDITABLE_KEYS.includes(column.key);
 
                       return (
                         <td
@@ -960,6 +984,7 @@ export default function BookingAdvancedTable({
                             kocMap={kocMap}
                             employeeMap={employeeMap}
                             saving={savingCell === cellKey}
+                            forceReadonly={cellReadonly}
                             onSave={(value) => updateCell(booking, column, value)}
                           />
                         </td>
@@ -1100,6 +1125,7 @@ function CellEditor({
   kocMap,
   employeeMap,
   saving,
+  forceReadonly = false,
   onSave,
 }: {
   booking: DbRow;
@@ -1109,9 +1135,22 @@ function CellEditor({
   kocMap: Map<string, DbRow>;
   employeeMap: Map<string, DbRow>;
   saving: boolean;
+  forceReadonly?: boolean;
   onSave: (value: unknown) => void;
 }) {
   const value = column.field ? booking[column.field] : "";
+
+  // Tài khoản bị hạn chế: hiển thị chỉ đọc cho các trường không được sửa
+  if (forceReadonly) {
+    return (
+      <div
+        className="truncate font-semibold text-slate-600"
+        title={formatCellDisplay(column, value, kocMap, employeeMap)}
+      >
+        {formatCellDisplay(column, value, kocMap, employeeMap)}
+      </div>
+    );
+  }
 
   if (
     column.key === "koc_name" ||
