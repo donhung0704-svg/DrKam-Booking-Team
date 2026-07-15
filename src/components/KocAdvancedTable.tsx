@@ -303,7 +303,9 @@ export default function KocAdvancedTable({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkField, setBulkField] = useState("");
   const [bulkValue, setBulkValue] = useState("");
-  const [bulkClearField, setBulkClearField] = useState("");
+  // Xóa trắng NHIỀU trường cùng lúc
+  const [bulkClearFields, setBulkClearFields] = useState<string[]>([]);
+  const [bulkClearOpen, setBulkClearOpen] = useState(false);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
@@ -442,12 +444,6 @@ const orderedColumns = useMemo(() => {
   const bulkColumn = useMemo(() => {
     return editableColumns.find((column) => column.field === bulkField) || null;
   }, [bulkField, editableColumns]);
-
-  const bulkClearColumn = useMemo(() => {
-    return (
-      editableColumns.find((column) => column.field === bulkClearField) || null
-    );
-  }, [bulkClearField, editableColumns]);
 
   const tableWidth = useMemo(() => {
     return (
@@ -643,21 +639,33 @@ const orderedColumns = useMemo(() => {
       return;
     }
 
-    if (!bulkClearColumn || !bulkClearColumn.field) {
+    if (bulkClearFields.length === 0) {
       setError("Chưa chọn trường cần xóa trắng.");
       return;
     }
 
-    const confirmMessage = `Xóa trắng trường "${bulkClearColumn.label}" của ${selectedCount} KOC đã chọn?`;
+    const labels = editableColumns
+      .filter((column) => bulkClearFields.includes(String(column.field)))
+      .map((column) => column.label);
+
+    const confirmMessage = `Xóa trắng ${bulkClearFields.length} trường (${labels.join(
+      ", "
+    )}) của ${selectedCount} KOC đã chọn?`;
 
     if (!window.confirm(confirmMessage)) return;
 
     setBulkSaving(true);
     setError("");
 
+    // Gom tất cả trường cần xóa thành 1 payload = null
+    const patch: Record<string, null> = {};
+    bulkClearFields.forEach((field) => {
+      patch[field] = null;
+    });
+
     const { error: updateError } = await supabase
       .from("koc")
-      .update({ [bulkClearColumn.field]: null })
+      .update(patch)
       .in("id", selectedIds);
 
     if (updateError) {
@@ -667,10 +675,11 @@ const orderedColumns = useMemo(() => {
     }
 
     selectedIds.forEach((id) => {
-      onKocUpdated(id, { [bulkClearColumn.field!]: null });
+      onKocUpdated(id, patch);
     });
 
-    setBulkClearField("");
+    setBulkClearFields([]);
+    setBulkClearOpen(false);
     setBulkSaving(false);
   }
 
@@ -808,27 +817,82 @@ const orderedColumns = useMemo(() => {
             {bulkSaving ? "Đang xử lý..." : "Cập nhật hàng loạt"}
           </button>
 
-          <select
-            value={bulkClearField}
-            onChange={(event) => setBulkClearField(event.target.value)}
-            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-semibold text-slate-700 outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
-          >
-            <option value="">Chọn trường cần xóa trắng</option>
-            {editableColumns.map((column) => (
-              <option key={column.field} value={column.field}>
-                {column.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setBulkClearOpen((open) => !open)}
+              className="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-semibold text-slate-700 outline-none hover:border-slate-300 focus:border-[#3964ff]"
+            >
+              <span className="truncate">
+                {bulkClearFields.length === 0
+                  ? "Chọn trường cần xóa trắng"
+                  : `Đã chọn ${bulkClearFields.length} trường`}
+              </span>
+              <span className="shrink-0 text-[11px] text-slate-400">⌄</span>
+            </button>
+
+            {bulkClearOpen && (
+              <div className="absolute left-0 top-[calc(100%+4px)] z-50 max-h-72 w-72 overflow-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
+                <div className="mb-1 flex items-center justify-between px-1.5 py-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-400">
+                    Chọn nhiều trường
+                  </span>
+                  {bulkClearFields.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setBulkClearFields([])}
+                      className="text-[11px] font-bold text-slate-500 hover:text-red-600"
+                    >
+                      Bỏ chọn hết
+                    </button>
+                  )}
+                </div>
+
+                {editableColumns.map((column) => {
+                  const field = String(column.field);
+                  const checked = bulkClearFields.includes(field);
+
+                  return (
+                    <label
+                      key={column.field}
+                      className={`mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-[12.5px] font-semibold transition ${
+                        checked
+                          ? "bg-orange-50 text-orange-700"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() =>
+                          setBulkClearFields((prev) =>
+                            checked
+                              ? prev.filter((item) => item !== field)
+                              : [...prev, field]
+                          )
+                        }
+                        className="h-4 w-4 shrink-0 accent-orange-600"
+                      />
+                      {column.label}
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           <div className="flex gap-2">
             <button
               type="button"
-              disabled={bulkSaving || selectedCount === 0}
+              disabled={
+                bulkSaving || selectedCount === 0 || bulkClearFields.length === 0
+              }
               onClick={bulkClearSelectedField}
               className="h-9 rounded-xl border border-orange-200 bg-orange-50 px-4 text-[12.5px] font-black text-orange-700 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Xóa trắng trường
+              {bulkClearFields.length > 0
+                ? `Xóa trắng ${bulkClearFields.length} trường`
+                : "Xóa trắng trường"}
             </button>
 
             <button
