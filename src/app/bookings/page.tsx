@@ -347,6 +347,9 @@ export default function BookingListPage() {
         "Giá trị đơn": booking.order_value ? Number(booking.order_value) : "",
         "Địa chỉ giao hàng": booking.delivery_address || "",
         "SĐT nhận hàng": booking.recipient_phone || "",
+        "Ngày gửi": formatDate(booking.ship_date),
+        "Mã vận đơn": booking.tracking_code || "",
+        "Tình trạng đơn hàng": booking.order_status || "",
         "Ghi chú": booking.note || "",
       };
     });
@@ -376,6 +379,9 @@ export default function BookingListPage() {
       { wch: 14 },
       { wch: 42 },
       { wch: 16 },
+      { wch: 14 },
+      { wch: 20 },
+      { wch: 20 },
       { wch: 48 },
     ];
 

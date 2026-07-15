@@ -48,6 +48,15 @@ const statusBookingOptions = [
   "Đã thanh toán",
 ];
 
+const orderStatusOptions = [
+  "Chờ gửi",
+  "Đã gửi",
+  "Đang giao",
+  "Giao thành công",
+  "Giao thất bại",
+  "Hoàn hàng",
+];
+
 const defaultColumns: ColumnConfig[] = [
   { key: "koc_id", label: "ID TikTok/Tên FB", field: "koc_id", type: "readonly", width: 190 },
   {
@@ -154,6 +163,28 @@ const defaultColumns: ColumnConfig[] = [
     field: "recipient_phone",
     type: "text",
     width: 140,
+  },
+  {
+    key: "ship_date",
+    label: "Ngày gửi",
+    field: "ship_date",
+    type: "date",
+    width: 130,
+  },
+  {
+    key: "tracking_code",
+    label: "Mã vận đơn",
+    field: "tracking_code",
+    type: "text",
+    width: 160,
+  },
+  {
+    key: "order_status",
+    label: "Tình trạng đơn hàng",
+    field: "order_status",
+    type: "select",
+    options: orderStatusOptions,
+    width: 160,
   },
   {
     key: "note",
@@ -1292,6 +1323,13 @@ function getSelectColorStyle(columnKey: string, value: unknown) {
     "Đang lên video": { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
     "Đã đăng video": { bg: "#f3e8ff", text: "#7e22ce", border: "#e9d5ff" },
     "Đã thanh toán": { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },
+
+    "Chờ gửi": { bg: "#fef9c3", text: "#854d0e", border: "#fde68a" },
+    "Đã gửi": { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
+    "Đang giao": { bg: "#e0f2fe", text: "#0369a1", border: "#bae6fd" },
+    "Giao thành công": { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },
+    "Giao thất bại": { bg: "#fee2e2", text: "#b91c1c", border: "#fecaca" },
+    "Hoàn hàng": { bg: "#ffedd5", text: "#c2410c", border: "#fed7aa" },
   };
 
   if (columnKey === "koc_id") {
