@@ -5,7 +5,7 @@ import DatePickerInput from "@/components/DatePickerInput";
 import KocSearchSelect from "@/components/KocSearchSelect";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 type DbRow = Record<string, any>;
 
@@ -19,14 +19,34 @@ const bookingTypeOptions = [
 ];
 
 const productOptions = [
-  "Nước súc miệng DrKam",
-  "Xịt miệng DrKam Plus",
-  "Kem đánh răng DrKam",
-  "Nước súc miệng Postbiotic 450ml",
-  "Nước súc miệng Postbiotic 150ml",
-  "Gel cạo lưỡi",
-  "Bộ chỉ nha khoa",
+  "Nước súc miệng CYK",
+  "Nước súc miệng Postbiotic",
+  "Xịt miệng Plus",
+  "Gel cạo lưỡi bạc hà",
+  "Gel cạo lưỡi dưa lưới",
+  "Kem đánh răng bạc hà",
+  "Kem đánh răng cam",
+  "Bàn chải ULTRASOFT",
+  "Bộ cạo lưỡi nhựa",
 ];
+
+type OrderItem = {
+  id: string;
+  product: string;
+  quantity: string;
+  unitPrice: string;
+};
+
+function newItemId() {
+  return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+function num(value: unknown) {
+  const raw = String(value ?? "").trim().replace(/\./g, "").replace(/,/g, "");
+  if (!raw) return 0;
+  const n = Number(raw);
+  return Number.isNaN(n) ? 0 : n;
+}
 
 export default function NewBookingPage() {
   const router = useRouter();
@@ -36,6 +56,59 @@ export default function NewBookingPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [initialKocId, setInitialKocId] = useState("");
+
+  // KOC đang chọn + địa chỉ/SĐT giao hàng (mặc định lấy theo KOC, sửa được)
+  const [selectedKocId, setSelectedKocId] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const prefilledKocRef = useRef("");
+
+  // Dòng hàng của đơn (mỗi sản phẩm 1 dòng)
+  const [items, setItems] = useState<OrderItem[]>([
+    { id: newItemId(), product: "", quantity: "", unitPrice: "" },
+  ]);
+
+  function addItem() {
+    setItems((prev) => [
+      ...prev,
+      { id: newItemId(), product: "", quantity: "", unitPrice: "" },
+    ]);
+  }
+
+  function removeItem(id: string) {
+    setItems((prev) =>
+      prev.length <= 1 ? prev : prev.filter((item) => item.id !== id)
+    );
+  }
+
+  function updateItem(id: string, patch: Partial<OrderItem>) {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...patch } : item))
+    );
+  }
+
+  const orderTotal = items.reduce(
+    (sum, item) => sum + num(item.quantity) * num(item.unitPrice),
+    0
+  );
+  const totalQuantity = items.reduce((sum, item) => sum + num(item.quantity), 0);
+
+  const selectedKoc =
+    kocs.find((koc) => String(koc.id) === String(selectedKocId)) || null;
+
+  // Khi đổi KOC (và đã có dữ liệu KOC) -> tự điền địa chỉ/SĐT giao hàng theo KOC
+  useEffect(() => {
+    if (!selectedKocId) {
+      prefilledKocRef.current = "";
+      return;
+    }
+    if (!selectedKoc) return;
+    if (prefilledKocRef.current === selectedKocId) return;
+
+    prefilledKocRef.current = selectedKocId;
+    setDeliveryAddress(selectedKoc.address || "");
+    setRecipientPhone(selectedKoc.phone || "");
+  }, [selectedKocId, selectedKoc]);
 
   // Nếu mở từ Hồ sơ KOC (?koc_id=...) thì chọn sẵn KOC đó
   useEffect(() => {
@@ -70,6 +143,18 @@ export default function NewBookingPage() {
 
     const formData = new FormData(event.currentTarget);
 
+    // Chỉ giữ dòng hàng có nhập ít nhất 1 thông tin
+    const filledItems = items.filter(
+      (item) => item.product || num(item.quantity) || num(item.unitPrice)
+    );
+
+    const orderItems = filledItems.map((item) => ({
+      product: item.product || "",
+      quantity: num(item.quantity),
+      unit_price: num(item.unitPrice),
+      amount: num(item.quantity) * num(item.unitPrice),
+    }));
+
     const payload = {
       created_at: getVietnamNowTimestamp(),
       koc_id: getText(formData, "koc_id") || null,
@@ -79,7 +164,18 @@ export default function NewBookingPage() {
       expected_post_date: parseVietnameseDateInput(
         formData.get("expected_post_date")
       ),
-      product: getSelectedProducts(formData),
+      // Dòng hàng lưu jsonb; product/quantity/order_value tổng hợp từ dòng hàng
+      order_items: orderItems.length > 0 ? orderItems : null,
+      product:
+        filledItems
+          .map((item) => item.product)
+          .filter(Boolean)
+          .join(", ") || null,
+      quantity: orderItems.length > 0 ? totalQuantity : null,
+      order_value: orderItems.length > 0 ? orderTotal : null,
+      // Địa chỉ/SĐT giao hàng riêng cho đơn (không đổi địa chỉ/SĐT gốc KOC)
+      delivery_address: getText(formData, "delivery_address") || null,
+      recipient_phone: getText(formData, "recipient_phone") || null,
       note: getText(formData, "note") || null,
     };
 
@@ -169,6 +265,7 @@ export default function NewBookingPage() {
                 name="koc_id"
                 kocs={kocs}
                 defaultValue={initialKocId}
+                onChange={setSelectedKocId}
                 placeholder="Gõ ID TikTok/Tên FB để tìm KOC..."
               />
             </CompactField>
@@ -216,25 +313,155 @@ export default function NewBookingPage() {
         </CompactSection>
 
         <CompactSection
-          eyebrow="Sản phẩm booking"
-          title="Chọn sản phẩm"
-          description="Có thể chọn nhiều sản phẩm, hệ thống sẽ lưu thành danh sách."
+          eyebrow="Chi tiết đơn hàng"
+          title="Sản phẩm, số lượng & đơn giá"
+          description="Mỗi sản phẩm 1 dòng. Thành tiền và tổng tiền hàng tự tính."
         >
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            {productOptions.map((product) => (
-              <label
-                key={product}
-                className="flex min-h-8 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12.5px] font-bold leading-tight text-slate-700 hover:bg-blue-50"
-              >
-                <input
-                  type="checkbox"
-                  name="products"
-                  value={product}
-                  className="h-3.5 w-3.5 shrink-0"
-                />
-                <span>{product}</span>
-              </label>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[660px] text-[12.5px]">
+              <thead>
+                <tr className="bg-slate-50 text-left text-[10px] font-black uppercase tracking-[0.04em] text-slate-500">
+                  <th className="w-9 px-3 py-2 text-center">#</th>
+                  <th className="px-2 py-2">Sản phẩm</th>
+                  <th className="w-24 px-2 py-2 text-right">Số lượng</th>
+                  <th className="w-32 px-2 py-2 text-right">Đơn giá</th>
+                  <th className="w-32 px-3 py-2 text-right">Thành tiền</th>
+                  <th className="w-10 px-2 py-2"></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {items.map((item, index) => {
+                  const amount = num(item.quantity) * num(item.unitPrice);
+
+                  return (
+                    <tr key={item.id} className="border-t border-slate-100">
+                      <td className="px-3 py-1.5 text-center font-bold text-slate-400">
+                        {index + 1}
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <select
+                          value={item.product}
+                          onChange={(event) => {
+                            const product = event.target.value;
+                            // Chọn sản phẩm -> mặc định Số lượng = 1 nếu đang trống
+                            updateItem(
+                              item.id,
+                              product && !item.quantity.trim()
+                                ? { product, quantity: "1" }
+                                : { product }
+                            );
+                          }}
+                          className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12.5px] outline-none focus:border-[#3964ff]"
+                        >
+                          <option value="">Chọn sản phẩm</option>
+                          {productOptions.map((product) => (
+                            <option key={product} value={product}>
+                              {product}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <input
+                          value={item.quantity}
+                          onChange={(event) =>
+                            updateItem(item.id, { quantity: event.target.value })
+                          }
+                          placeholder="0"
+                          inputMode="numeric"
+                          className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[12.5px] outline-none focus:border-[#3964ff]"
+                        />
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <input
+                          value={item.unitPrice}
+                          onChange={(event) =>
+                            updateItem(item.id, { unitPrice: event.target.value })
+                          }
+                          placeholder="0"
+                          inputMode="numeric"
+                          className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[12.5px] outline-none focus:border-[#3964ff]"
+                        />
+                      </td>
+                      <td className="px-3 py-1.5 text-right font-bold tabular-nums text-slate-800">
+                        {amount.toLocaleString("vi-VN")}đ
+                      </td>
+                      <td className="px-2 py-1.5 text-center">
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.id)}
+                          disabled={items.length <= 1}
+                          title="Xóa dòng"
+                          className="rounded-md px-1.5 py-1 text-[13px] text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          🗑
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-3 py-2.5">
+            <button
+              type="button"
+              onClick={addItem}
+              className="h-8 rounded-lg border border-dashed border-slate-300 bg-white px-3 text-[12.5px] font-bold text-slate-600 hover:border-[#3964ff] hover:text-[#3964ff]"
+            >
+              + Thêm dòng
+            </button>
+
+            <div className="flex items-baseline gap-3">
+              <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-slate-500">
+                Tổng tiền hàng
+              </span>
+              <span className="text-[17px] font-black tabular-nums text-slate-950">
+                {orderTotal.toLocaleString("vi-VN")}đ
+              </span>
+            </div>
+          </div>
+        </CompactSection>
+
+        <CompactSection
+          eyebrow="Giao hàng"
+          title="Địa chỉ & SĐT nhận hàng"
+          description="Mặc định lấy theo KOC, có thể sửa riêng cho đơn này mà không đổi thông tin gốc của KOC."
+        >
+          <div className="grid grid-cols-1 gap-px bg-slate-200 p-px xl:grid-cols-2">
+            <CompactField label="Địa chỉ gốc KOC">
+              <div className="min-h-8 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12.5px] font-semibold text-slate-500">
+                {selectedKoc?.address || "— (chọn KOC để xem)"}
+              </div>
+            </CompactField>
+
+            <CompactField label="SĐT gốc KOC">
+              <div className="min-h-8 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12.5px] font-semibold text-slate-500">
+                {selectedKoc?.phone || "— (chọn KOC để xem)"}
+              </div>
+            </CompactField>
+
+            <CompactField label="Địa chỉ giao hàng" full>
+              <textarea
+                name="delivery_address"
+                value={deliveryAddress}
+                onChange={(event) => setDeliveryAddress(event.target.value)}
+                placeholder="Địa chỉ nhận hàng cho đơn này"
+                className="min-h-[52px] w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[12.5px] leading-5 outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+
+            <CompactField label="SĐT nhận hàng">
+              <input
+                name="recipient_phone"
+                value={recipientPhone}
+                onChange={(event) => setRecipientPhone(event.target.value)}
+                placeholder="SĐT người nhận cho đơn này"
+                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
           </div>
         </CompactSection>
 
@@ -281,7 +508,7 @@ async function loadAllKocsForBookingForm() {
 
     const { data, error } = await supabase
       .from("koc")
-      .select("id, koc_code, Id_tiktok_Ten_fb, name, phone, tiktok_link")
+      .select("id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link")
       .order("created_at", { ascending: false })
       .range(from, to);
 

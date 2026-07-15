@@ -10,6 +10,7 @@ type KocSearchSelectProps = {
   defaultValue?: string | null;
   placeholder?: string;
   disabled?: boolean;
+  onChange?: (kocId: string) => void;
 };
 
 export default function KocSearchSelect({
@@ -18,12 +19,20 @@ export default function KocSearchSelect({
   defaultValue,
   placeholder = "Gõ ID TikTok/Tên FB để tìm KOC...",
   disabled,
+  onChange,
 }: KocSearchSelectProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedId, setSelectedId] = useState(String(defaultValue || ""));
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+
+  // Báo cho form cha khi KOC được chọn/đổi/xóa (kể cả lần đầu)
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  useEffect(() => {
+    onChangeRef.current?.(selectedId);
+  }, [selectedId]);
 
   const selectedKoc = useMemo(() => {
     if (!selectedId) return null;
