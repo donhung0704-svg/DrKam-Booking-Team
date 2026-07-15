@@ -1216,7 +1216,8 @@ function CellEditor({
         <select
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          style={getPicColorStyle(String(value || ""))}
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] font-semibold outline-none hover:border-slate-200 focus:border-[#3964ff]"
         >
           <option value="">Chưa có PIC</option>
           {employees.map((employee) => (
@@ -1546,6 +1547,41 @@ function MultiSelectDropdown({
       )}
     </div>
   );
+}
+
+// Bảng màu phân biệt PIC (pastel bg + chữ đậm), gán ổn định theo employee_id
+const picColorPalette: { bg: string; text: string; border: string }[] = [
+  { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" }, // blue
+  { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" }, // green
+  { bg: "#f3e8ff", text: "#7e22ce", border: "#e9d5ff" }, // purple
+  { bg: "#ffedd5", text: "#c2410c", border: "#fed7aa" }, // orange
+  { bg: "#fce7f3", text: "#be185d", border: "#fbcfe8" }, // pink
+  { bg: "#ccfbf1", text: "#0f766e", border: "#99f6e4" }, // teal
+  { bg: "#fef9c3", text: "#854d0e", border: "#fde68a" }, // amber
+  { bg: "#e0f2fe", text: "#0369a1", border: "#bae6fd" }, // sky
+  { bg: "#ffe4e6", text: "#be123c", border: "#fecdd3" }, // rose
+  { bg: "#ecfccb", text: "#4d7c0f", border: "#d9f99d" }, // lime
+  { bg: "#ede9fe", text: "#6d28d9", border: "#ddd6fe" }, // violet
+  { bg: "#cffafe", text: "#0e7490", border: "#a5f3fc" }, // cyan
+];
+
+function getPicColorStyle(value: string) {
+  const raw = String(value || "").trim();
+  if (!raw) return {}; // "Chưa có PIC" giữ mặc định
+
+  let hash = 0;
+  for (let i = 0; i < raw.length; i += 1) {
+    hash = (hash * 31 + raw.charCodeAt(i)) >>> 0;
+  }
+
+  const color = picColorPalette[hash % picColorPalette.length];
+
+  return {
+    backgroundColor: color.bg,
+    color: color.text,
+    borderColor: color.border,
+    fontWeight: 700,
+  };
 }
 
 function getSelectColorStyle(columnKey: string, value: unknown) {

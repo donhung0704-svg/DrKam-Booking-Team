@@ -1212,6 +1212,41 @@ function CellEditor({
 }
 
 
+// Bảng màu phân biệt PIC (pastel), gán ổn định theo employee_id
+const picColorPalette: { bg: string; text: string; border: string }[] = [
+  { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
+  { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },
+  { bg: "#f3e8ff", text: "#7e22ce", border: "#e9d5ff" },
+  { bg: "#ffedd5", text: "#c2410c", border: "#fed7aa" },
+  { bg: "#fce7f3", text: "#be185d", border: "#fbcfe8" },
+  { bg: "#ccfbf1", text: "#0f766e", border: "#99f6e4" },
+  { bg: "#fef9c3", text: "#854d0e", border: "#fde68a" },
+  { bg: "#e0f2fe", text: "#0369a1", border: "#bae6fd" },
+  { bg: "#ffe4e6", text: "#be123c", border: "#fecdd3" },
+  { bg: "#ecfccb", text: "#4d7c0f", border: "#d9f99d" },
+  { bg: "#ede9fe", text: "#6d28d9", border: "#ddd6fe" },
+  { bg: "#cffafe", text: "#0e7490", border: "#a5f3fc" },
+];
+
+function getPicColorStyle(value: string) {
+  const raw = String(value || "").trim();
+  if (!raw) return {};
+
+  let hash = 0;
+  for (let i = 0; i < raw.length; i += 1) {
+    hash = (hash * 31 + raw.charCodeAt(i)) >>> 0;
+  }
+
+  const color = picColorPalette[hash % picColorPalette.length];
+
+  return {
+    backgroundColor: color.bg,
+    color: color.text,
+    borderColor: color.border,
+    fontWeight: 700,
+  };
+}
+
 function getSelectColorStyle(columnKey: string, value: unknown) {
   const raw = String(value || "").trim();
 
@@ -1241,12 +1276,7 @@ function getSelectColorStyle(columnKey: string, value: unknown) {
   }
 
   if (columnKey === "employee_id") {
-    return {
-      backgroundColor: "#eef2ff",
-      color: "#3730a3",
-      borderColor: "#c7d2fe",
-      fontWeight: 800,
-    };
+    return getPicColorStyle(raw);
   }
 
   const color = colorMap[raw];
