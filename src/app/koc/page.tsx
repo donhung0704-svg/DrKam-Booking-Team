@@ -129,6 +129,11 @@ const defaultVisibleColumnKeys = columnOptions
   .filter((column) => column.defaultVisible)
   .map((column) => column.key);
 
+// Các trường cho phép sắp xếp tăng/giảm: chỉ số đếm và ngày
+const sortableFields = filterFields.filter(
+  (field) => field.type === "number" || field.type === "date"
+);
+
 export default function KocListPage() {
   const [kocs, setKocs] = useState<DbRow[]>([]);
   const [campaigns, setCampaigns] = useState<DbRow[]>([]);
@@ -146,6 +151,12 @@ export default function KocListPage() {
   const [filterValue, setFilterValue] = useState("");
   const [filterValue2, setFilterValue2] = useState("");
   const [activeFilters, setActiveFilters] = useState<FilterCondition[]>([]);
+
+  // Sắp xếp theo trường số/ngày (server-side). null = mặc định
+  const [sortState, setSortState] = useState<{
+    field: string;
+    ascending: boolean;
+  } | null>(null);
 
   const [showColumnPanel, setShowColumnPanel] = useState(false);
   const [visibleColumnKeys, setVisibleColumnKeys] = useState<string[]>(defaultVisibleColumnKeys);
@@ -215,12 +226,21 @@ export default function KocListPage() {
       const from = pageIndex * pageSize;
       const to = from + pageSize - 1;
 
-      let query = supabase
-        .from("koc")
-        .select("*", { count: "exact" })
-        .order("new_contact_date", { ascending: true, nullsFirst: true })
-        .order("created_at", { ascending: false })
-        .range(from, to);
+      let query = supabase.from("koc").select("*", { count: "exact" });
+
+      if (sortState) {
+        // Sắp xếp theo trường người dùng chọn (nulls xuống cuối)
+        query = query.order(sortState.field, {
+          ascending: sortState.ascending,
+          nullsFirst: false,
+        });
+      } else {
+        query = query
+          .order("new_contact_date", { ascending: true, nullsFirst: true })
+          .order("created_at", { ascending: false });
+      }
+
+      query = query.range(from, to);
 
       activeFilters.forEach((condition) => {
         query = applyConditionToQuery(query, condition);
@@ -241,7 +261,7 @@ export default function KocListPage() {
     }
 
     loadKocs();
-  }, [pageIndex, pageSize, activeFilters]);
+  }, [pageIndex, pageSize, activeFilters, sortState]);
 
   const campaignMap = useMemo(() => {
     const map = new Map<string, DbRow>();
@@ -311,6 +331,17 @@ export default function KocListPage() {
 
   function removeFilter(filterId: string) {
     setActiveFilters((current) => current.filter((item) => item.id !== filterId));
+    setPageIndex(0);
+  }
+
+  // Chọn/đảo sắp xếp: bấm lại cùng chiều -> tắt sắp xếp (về mặc định)
+  function toggleSort(field: string, ascending: boolean) {
+    setSortState((current) => {
+      if (current && current.field === field && current.ascending === ascending) {
+        return null;
+      }
+      return { field, ascending };
+    });
     setPageIndex(0);
   }
 
@@ -615,6 +646,60 @@ export default function KocListPage() {
               Xóa tất cả bộ lọc
             </button>
           </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-[12.5px] font-bold text-slate-600">
+            Sắp xếp:
+          </span>
+
+          <select
+            value={sortState?.field ?? ""}
+            onChange={(event) => {
+              const field = event.target.value;
+              if (!field) {
+                setSortState(null);
+              } else {
+                setSortState({ field, ascending: sortState?.ascending ?? false });
+              }
+              setPageIndex(0);
+            }}
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-semibold outline-none focus:border-[#3964ff]"
+          >
+            <option value="">Mặc định</option>
+            {sortableFields.map((field) => (
+              <option key={field.key} value={field.field}>
+                {field.label}
+              </option>
+            ))}
+          </select>
+
+          {sortState && (
+            <div className="flex overflow-hidden rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => toggleSort(sortState.field, true)}
+                className={`h-9 px-3 text-[12.5px] font-bold ${
+                  sortState.ascending
+                    ? "bg-[#3964ff] text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                ↑ Tăng
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleSort(sortState.field, false)}
+                className={`h-9 border-l border-slate-200 px-3 text-[12.5px] font-bold ${
+                  !sortState.ascending
+                    ? "bg-[#3964ff] text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                ↓ Giảm
+              </button>
+            </div>
+          )}
         </div>
 
         {activeFilters.length > 0 && (
