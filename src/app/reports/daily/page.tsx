@@ -217,7 +217,10 @@ export default function PicReportPage() {
         row.dailyVideoOld += dailyVideos;
       }
 
-      row.gmvNgay += parseNumber(koc.gmv);
+      // GMV ngày: chỉ tính KOC có Booking date KHÔNG trống
+      if (hasBookingDate(koc.booking_date)) {
+        row.gmvNgay += parseNumber(koc.gmv);
+      }
     });
 
     bookings.forEach((booking) => {
@@ -777,6 +780,12 @@ function parseNumber(value: unknown) {
   const numberValue = Number(raw);
 
   return Number.isNaN(numberValue) ? 0 : numberValue;
+}
+
+// Booking date được coi là "không trống" khi có giá trị thực (khác rỗng và "-")
+function hasBookingDate(value: unknown) {
+  const raw = String(value ?? "").trim();
+  return raw !== "" && raw !== "-";
 }
 
 function formatNumber(value: unknown) {

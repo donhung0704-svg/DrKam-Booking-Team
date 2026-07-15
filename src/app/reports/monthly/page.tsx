@@ -330,7 +330,10 @@ export default function MonthlyReportPage() {
         row.videoOther += monthlyVideos;
       }
 
-      row.gmvNgay += parseNumber(koc.gmv_thang);
+      // GMV tháng: chỉ tính KOC có Booking date KHÔNG trống
+      if (hasBookingDate(koc.booking_date)) {
+        row.gmvNgay += parseNumber(koc.gmv_thang);
+      }
 
       // KOC chốt mới = KOC có Booking đầu tiên trong tháng báo cáo + có video tháng
       const firstBookingKey = firstBookingByKoc.get(String(koc.id)) || "";
@@ -1155,6 +1158,12 @@ function parseNumber(value: unknown) {
   const numberValue = Number(raw);
 
   return Number.isNaN(numberValue) ? 0 : numberValue;
+}
+
+// Booking date được coi là "không trống" khi có giá trị thực (khác rỗng và "-")
+function hasBookingDate(value: unknown) {
+  const raw = String(value ?? "").trim();
+  return raw !== "" && raw !== "-";
 }
 
 function formatNumber(value: unknown) {
