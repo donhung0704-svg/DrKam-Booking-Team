@@ -45,6 +45,8 @@ const legacyContentBookingTypes = ["Booking mới"];
 const legacyGiftBookingTypes = ["Tặng quà"];
 
 const pageSizeOptions = [100, 200, 300];
+// Giữ bộ lọc/sắp xếp khi rời trang rồi quay lại (theo phiên tab)
+const filtersStorageKey = "drkam_booking_filters_v1";
 
 const filterFields = [
   { value: "koc", label: "KOC / ID TikTok" },
@@ -105,6 +107,35 @@ export default function BookingListPage() {
       value: "",
     },
   ]);
+
+  // Khôi phục bộ lọc/sắp xếp đã lưu khi quay lại danh sách
+  const [filtersHydrated, setFiltersHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = window.sessionStorage.getItem(filtersStorageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed.filters) && parsed.filters.length > 0) {
+          setFilters(parsed.filters);
+        }
+        if (parsed.sortState && parsed.sortState.field) {
+          setSortState(parsed.sortState);
+        }
+      }
+    } catch {
+      // bỏ qua dữ liệu hỏng
+    }
+    setFiltersHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!filtersHydrated) return;
+    window.sessionStorage.setItem(
+      filtersStorageKey,
+      JSON.stringify({ filters, sortState })
+    );
+  }, [filtersHydrated, filters, sortState]);
 
   useEffect(() => {
     async function loadData() {
