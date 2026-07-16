@@ -134,6 +134,13 @@ const defaultColumns: ColumnConfig[] = [
     width: 275,
   },
   {
+    key: "order_items",
+    label: "Chi tiết SP",
+    field: "order_items",
+    type: "readonly",
+    width: 260,
+  },
+  {
     key: "quantity",
     label: "Số lượng",
     field: "quantity",
@@ -1139,6 +1146,41 @@ function CellEditor({
   onSave: (value: unknown) => void;
 }) {
   const value = column.field ? booking[column.field] : "";
+
+  // Chi tiết đơn hàng: liệt kê từng sản phẩm kèm số lượng riêng
+  if (column.key === "order_items") {
+    const items = Array.isArray(booking.order_items) ? booking.order_items : [];
+
+    if (items.length === 0) {
+      // Booking cũ chỉ có chuỗi sản phẩm (không có số lượng từng loại)
+      const legacy = String(booking.product || "").trim();
+
+      return (
+        <div
+          className="whitespace-normal leading-4 text-slate-500"
+          title={legacy}
+        >
+          {legacy || "-"}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-0.5">
+        {items.map((item: any, index: number) => (
+          <div
+            key={index}
+            className="flex items-baseline justify-between gap-2 whitespace-normal leading-4"
+          >
+            <span className="text-slate-700">{item?.product || "—"}</span>
+            <span className="shrink-0 font-black tabular-nums text-slate-900">
+              ×{Number(item?.quantity) || 0}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   // Tài khoản bị hạn chế: hiển thị chỉ đọc cho các trường không được sửa
   if (forceReadonly) {
