@@ -20,11 +20,18 @@ const navItems: NavItem[] = [
   { label: "Báo cáo tháng", href: "/reports/monthly", icon: "📆" },
 ];
 
-export default function AppNav() {
+export default function AppNav({
+  collapsed = false,
+  onToggle,
+}: {
+  collapsed?: boolean;
+  onToggle?: () => void;
+}) {
   const pathname = usePathname();
 
   return (
     <>
+      {!collapsed && (
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[280px] border-r border-slate-200 bg-white lg:block">
         <div className="flex h-[92px] items-center gap-3 border-b border-slate-200 px-8">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-2xl">
@@ -61,10 +68,27 @@ export default function AppNav() {
           </nav>
         </div>
       </aside>
+      )}
 
-      <header className="fixed left-0 right-0 top-0 z-30 h-[92px] border-b border-slate-200 bg-white/95 backdrop-blur lg:left-[280px]">
+      <header
+        className={`fixed left-0 right-0 top-0 z-30 h-[92px] border-b border-slate-200 bg-white/95 backdrop-blur ${
+          collapsed ? "" : "lg:left-[280px]"
+        }`}
+      >
         <div className="flex h-full items-center justify-between gap-5 px-5 md:px-8">
-          <div className="flex items-center gap-3 lg:hidden">
+          <button
+            type="button"
+            onClick={onToggle}
+            title={collapsed ? "Hiện menu" : "Ẩn menu"}
+            aria-label={collapsed ? "Hiện menu" : "Ẩn menu"}
+            className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl text-slate-500 hover:bg-slate-50 lg:flex"
+          >
+            ☰
+          </button>
+
+          <div
+            className={`flex items-center gap-3 ${collapsed ? "" : "lg:hidden"}`}
+          >
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-xl">
               🧰
             </div>
