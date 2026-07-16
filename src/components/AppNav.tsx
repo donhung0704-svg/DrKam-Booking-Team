@@ -31,6 +31,19 @@ export default function AppNav({
 
   return (
     <>
+      {/* Mũi tên nhỏ ở rìa: thu gọn / mở lại menu trái */}
+      <button
+        type="button"
+        onClick={onToggle}
+        title={collapsed ? "Mở menu" : "Thu gọn menu"}
+        aria-label={collapsed ? "Mở menu" : "Thu gọn menu"}
+        className={`fixed top-1/2 z-50 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[13px] font-black text-slate-400 shadow-md transition hover:border-red-200 hover:text-red-600 lg:flex ${
+          collapsed ? "left-2" : "left-[280px] -translate-x-1/2"
+        }`}
+      >
+        {collapsed ? "›" : "‹"}
+      </button>
+
       {!collapsed && (
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[280px] border-r border-slate-200 bg-white lg:block">
         <div className="flex h-[92px] items-center gap-3 border-b border-slate-200 px-8">
@@ -76,16 +89,6 @@ export default function AppNav({
         }`}
       >
         <div className="flex h-full items-center justify-between gap-5 px-5 md:px-8">
-          <button
-            type="button"
-            onClick={onToggle}
-            title={collapsed ? "Hiện menu" : "Ẩn menu"}
-            aria-label={collapsed ? "Hiện menu" : "Ẩn menu"}
-            className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl text-slate-500 hover:bg-slate-50 lg:flex"
-          >
-            ☰
-          </button>
-
           <div
             className={`flex items-center gap-3 ${collapsed ? "" : "lg:hidden"}`}
           >
