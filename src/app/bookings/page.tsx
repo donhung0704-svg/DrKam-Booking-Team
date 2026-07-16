@@ -3,6 +3,7 @@
 import { supabase } from "@/lib/supabase/client";
 import BookingAdvancedTable from "@/components/BookingAdvancedTable";
 import DatePickerInput from "@/components/DatePickerInput";
+import { useUserRole } from "@/lib/useUserRole";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
@@ -83,6 +84,8 @@ const filterOperators = [
 ];
 
 export default function BookingListPage() {
+  const { isShipper } = useUserRole();
+
   const [bookings, setBookings] = useState<DbRow[]>([]);
   const [kocs, setKocs] = useState<DbRow[]>([]);
   const [employees, setEmployees] = useState<DbRow[]>([]);
@@ -382,6 +385,7 @@ export default function BookingListPage() {
         "Ngày dự kiến đăng": formatDate(booking.expected_post_date),
         "Ngày đăng thực tế": formatDate(booking.actual_post_date),
         "Sản phẩm": booking.product || "",
+        "Chi tiết SP": formatOrderItems(booking.order_items),
         "Số lượng": booking.quantity ? Number(booking.quantity) : "",
         "Giá trị đơn": booking.order_value ? Number(booking.order_value) : "",
         "Địa chỉ giao hàng": booking.delivery_address || "",
@@ -414,6 +418,7 @@ export default function BookingListPage() {
       { wch: 18 },
       { wch: 18 },
       { wch: 48 },
+      { wch: 46 },
       { wch: 10 },
       { wch: 14 },
       { wch: 42 },
@@ -470,19 +475,23 @@ export default function BookingListPage() {
               Xuất Excel
             </button>
 
-            <Link
-              href="/bookings/new"
-              className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-            >
-              + Tạo Booking
-            </Link>
+            {!isShipper && (
+              <>
+                <Link
+                  href="/bookings/new"
+                  className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
+                >
+                  + Tạo Booking
+                </Link>
 
-            <Link
-              href="/import/bookings"
-              className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              Import Booking
-            </Link>
+                <Link
+                  href="/import/bookings"
+                  className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+                >
+                  Import Booking
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -724,6 +733,7 @@ export default function BookingListPage() {
         kocs={kocs}
         employees={employees}
         loading={loading}
+        restricted={isShipper}
         resetLayoutSignal={resetColumnSignal}
         onBookingUpdated={(id, patch) => {
           setBookings((prev) =>
@@ -1024,6 +1034,21 @@ function getTodayForFileName() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(new Date());
+}
+
+// "Nước súc miệng CYK x2; Xịt miệng Plus x1" cho file Excel
+function formatOrderItems(value: unknown) {
+  if (!Array.isArray(value) || value.length === 0) return "";
+
+  return value
+    .map((item: any) => {
+      const product = String(item?.product || "").trim();
+      const quantity = Number(item?.quantity) || 0;
+      if (!product) return "";
+      return `${product} x${quantity}`;
+    })
+    .filter(Boolean)
+    .join("; ");
 }
 
 function sortNumber(value: unknown) {
