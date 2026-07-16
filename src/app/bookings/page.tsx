@@ -2,9 +2,17 @@
 
 import { supabase } from "@/lib/supabase/client";
 import BookingAdvancedTable from "@/components/BookingAdvancedTable";
+import DatePickerInput from "@/components/DatePickerInput";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
+
+// Các trường lọc dạng ngày -> dùng lịch chọn ngày thay vì ô nhập text
+const dateFilterFields = new Set([
+  "created_at",
+  "expected_post_date",
+  "actual_post_date",
+]);
 
 type DbRow = Record<string, any>;
 
@@ -566,17 +574,31 @@ export default function BookingListPage() {
                     </label>
                   )}
 
-                  <input
-                    value={condition.value}
-                    disabled={!showValueInput}
-                    onChange={(event) =>
-                      updateFilter(condition.id, {
-                        value: event.target.value,
-                      })
-                    }
-                    placeholder={showValueInput ? "Nhập từ khóa..." : "Không cần nhập"}
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10 disabled:bg-slate-100 disabled:text-slate-400"
-                  />
+                  {dateFilterFields.has(condition.field) && showValueInput ? (
+                    <DatePickerInput
+                      name={`filter_date_${condition.id}`}
+                      value={condition.value}
+                      onChange={(next) =>
+                        updateFilter(condition.id, { value: next })
+                      }
+                      placeholder="dd/mm/yyyy"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10"
+                    />
+                  ) : (
+                    <input
+                      value={condition.value}
+                      disabled={!showValueInput}
+                      onChange={(event) =>
+                        updateFilter(condition.id, {
+                          value: event.target.value,
+                        })
+                      }
+                      placeholder={
+                        showValueInput ? "Nhập từ khóa..." : "Không cần nhập"
+                      }
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10 disabled:bg-slate-100 disabled:text-slate-400"
+                    />
+                  )}
                 </div>
 
                 {index === 0 ? (
