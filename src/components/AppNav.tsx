@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
+import { useUserRole } from "@/lib/useUserRole";
 
 type NavItem = {
   label: string;
@@ -28,6 +29,12 @@ export default function AppNav({
   onToggle?: () => void;
 }) {
   const pathname = usePathname();
+  const { isShipper } = useUserRole();
+
+  // Shipper chỉ thấy mục Danh sách Booking
+  const items = isShipper
+    ? navItems.filter((item) => item.href === "/bookings")
+    : navItems;
 
   return (
     <>
@@ -69,7 +76,7 @@ export default function AppNav({
 
         <div className="portal-sidebar-scroll h-[calc(100vh-92px)] overflow-y-auto px-4 py-4">
           <nav className="space-y-1">
-            {navItems.map((item) => (
+            {items.map((item) => (
               <MainNavLink
                 key={item.href}
                 href={item.href}
@@ -130,14 +137,16 @@ export default function AppNav({
 
             <div className="flex items-center gap-3">
               <div className="hidden text-right md:block">
-                <p className="text-sm font-black text-slate-950">admin</p>
+                <p className="text-sm font-black text-slate-950">
+                  {isShipper ? "shipper" : "admin"}
+                </p>
                 <p className="text-[12px] font-black uppercase tracking-[0.12em] text-red-600">
-                  Admin
+                  {isShipper ? "Giao hàng" : "Admin"}
                 </p>
               </div>
 
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-sm font-black text-white ring-4 ring-slate-100">
-                AD
+                {isShipper ? "GH" : "AD"}
               </div>
             </div>
 

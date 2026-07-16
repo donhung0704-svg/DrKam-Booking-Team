@@ -3,6 +3,7 @@
 import { supabase } from "@/lib/supabase/client";
 import BookingAdvancedTable from "@/components/BookingAdvancedTable";
 import DatePickerInput from "@/components/DatePickerInput";
+import { useUserRole } from "@/lib/useUserRole";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
@@ -83,6 +84,8 @@ const filterOperators = [
 ];
 
 export default function BookingListPage() {
+  const { isShipper } = useUserRole();
+
   const [bookings, setBookings] = useState<DbRow[]>([]);
   const [kocs, setKocs] = useState<DbRow[]>([]);
   const [employees, setEmployees] = useState<DbRow[]>([]);
@@ -470,19 +473,23 @@ export default function BookingListPage() {
               Xuất Excel
             </button>
 
-            <Link
-              href="/bookings/new"
-              className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-            >
-              + Tạo Booking
-            </Link>
+            {!isShipper && (
+              <>
+                <Link
+                  href="/bookings/new"
+                  className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
+                >
+                  + Tạo Booking
+                </Link>
 
-            <Link
-              href="/import/bookings"
-              className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              Import Booking
-            </Link>
+                <Link
+                  href="/import/bookings"
+                  className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+                >
+                  Import Booking
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -724,6 +731,7 @@ export default function BookingListPage() {
         kocs={kocs}
         employees={employees}
         loading={loading}
+        restricted={isShipper}
         resetLayoutSignal={resetColumnSignal}
         onBookingUpdated={(id, patch) => {
           setBookings((prev) =>
