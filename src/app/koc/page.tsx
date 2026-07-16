@@ -64,6 +64,8 @@ const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 const pageSizeOptions = [100, 200, 300];
 const visibleColumnsStorageKey = "drkam_koc_visible_columns_v5";
+// Giữ bộ lọc/sắp xếp/trang khi rời trang rồi quay lại (theo phiên tab)
+const filtersStorageKey = "drkam_koc_filters_v1";
 
 const filterFields: FilterField[] = [
   { key: "Id_tiktok_Ten_fb", label: "ID TikTok/Tên FB", field: "Id_tiktok_Ten_fb", type: "text" },
@@ -162,6 +164,43 @@ export default function KocListPage() {
   const [visibleColumnKeys, setVisibleColumnKeys] = useState<string[]>(defaultVisibleColumnKeys);
   const [resetColumnSignal, setResetColumnSignal] = useState(0);
 
+  // Đã khôi phục bộ lọc từ sessionStorage chưa (để không tải KOC trước khi khôi phục)
+  const [filtersHydrated, setFiltersHydrated] = useState(false);
+
+  // Khôi phục bộ lọc/sắp xếp/trang đã lưu khi quay lại danh sách
+  useEffect(() => {
+    try {
+      const saved = window.sessionStorage.getItem(filtersStorageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed.activeFilters)) {
+          setActiveFilters(parsed.activeFilters);
+        }
+        if (parsed.sortState && parsed.sortState.field) {
+          setSortState(parsed.sortState);
+        }
+        if (typeof parsed.pageIndex === "number") {
+          setPageIndex(parsed.pageIndex);
+        }
+        if (typeof parsed.pageSize === "number") {
+          setPageSize(parsed.pageSize);
+        }
+      }
+    } catch {
+      // bỏ qua dữ liệu hỏng
+    }
+    setFiltersHydrated(true);
+  }, []);
+
+  // Lưu lại mỗi khi bộ lọc/sắp xếp/trang thay đổi (sau khi đã khôi phục)
+  useEffect(() => {
+    if (!filtersHydrated) return;
+    window.sessionStorage.setItem(
+      filtersStorageKey,
+      JSON.stringify({ activeFilters, sortState, pageIndex, pageSize })
+    );
+  }, [filtersHydrated, activeFilters, sortState, pageIndex, pageSize]);
+
   useEffect(() => {
     const savedColumns = window.localStorage.getItem(visibleColumnsStorageKey);
 
@@ -219,6 +258,9 @@ export default function KocListPage() {
   }, []);
 
   useEffect(() => {
+    // Chờ khôi phục bộ lọc đã lưu rồi mới tải (tránh tải nhầm dữ liệu chưa lọc)
+    if (!filtersHydrated) return;
+
     async function loadKocs() {
       setLoading(true);
       setMessage("");
@@ -261,7 +303,7 @@ export default function KocListPage() {
     }
 
     loadKocs();
-  }, [pageIndex, pageSize, activeFilters, sortState]);
+  }, [filtersHydrated, pageIndex, pageSize, activeFilters, sortState]);
 
   const campaignMap = useMemo(() => {
     const map = new Map<string, DbRow>();
