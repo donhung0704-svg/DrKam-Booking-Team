@@ -1707,7 +1707,8 @@ function getSelectColorStyle(columnKey: string, value: unknown) {
     "Tiềm năng": { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
     "Chăm chỉ": { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },
     "Mới hoạt động": { bg: "#ffedd5", text: "#c2410c", border: "#fed7aa" },
-    "Ngủ đông": { bg: "#e5e7eb", text: "#374151", border: "#d1d5db" },
+    // Nhạt hơn hẳn "Dừng CS" (#e2e8f0) để phân biệt rõ
+    "Ngủ đông": { bg: "#f8fafc", text: "#64748b", border: "#e2e8f0" },
     "Mất cast": { bg: "#fee2e2", text: "#b91c1c", border: "#fecaca" },
     "Trùng KOC": { bg: "#fef3c7", text: "#92400e", border: "#fde68a" },
     "Dừng CS": { bg: "#e2e8f0", text: "#334155", border: "#cbd5e1" },
