@@ -383,15 +383,19 @@ export default function BookingAdvancedTable({
     );
   }, [bulkClearField, editableColumns]);
 
+  // Chế độ hạn chế (shipper) ẩn cột checkbox -> không được cộng bề rộng của nó,
+  // nếu không cột ghim sẽ lệch 52px và che mất nội dung.
+  const leadingWidth = restricted ? 0 : selectColumnWidth;
+
   const tableWidth = useMemo(() => {
     return (
-      selectColumnWidth +
+      leadingWidth +
       orderedColumns.reduce(
         (sum, column) => sum + (columnWidths[column.key] ?? column.width),
         0
       )
     );
-  }, [orderedColumns, columnWidths]);
+  }, [leadingWidth, orderedColumns, columnWidths]);
 
   function saveColumnOrder(nextOrder: string[]) {
     setColumnOrder(nextOrder);
@@ -452,7 +456,7 @@ export default function BookingAdvancedTable({
     const index = pinnedOrdered.findIndex((item) => item.key === column.key);
 
     const left =
-      selectColumnWidth +
+      leadingWidth +
       pinnedOrdered
         .slice(0, index)
         .reduce((sum, item) => sum + getColumnWidth(item), 0);
