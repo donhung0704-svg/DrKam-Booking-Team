@@ -48,6 +48,36 @@ const legacyGiftBookingTypes = ["Tặng quà"];
 const pageSizeOptions = [100, 200, 300];
 // Giữ bộ lọc/sắp xếp khi rời trang rồi quay lại (theo phiên tab)
 const filtersStorageKey = "drkam_booking_filters_v1";
+// Ẩn/hiện cột (lưu theo trình duyệt của từng tài khoản)
+const visibleColumnsStorageKey = "drkam_booking_visible_columns_v1";
+
+// Danh sách cột của bảng Booking (khớp defaultColumns trong BookingAdvancedTable)
+const columnOptions = [
+  { key: "koc_id", label: "ID TikTok/Tên FB" },
+  { key: "koc_name", label: "Tên KOC" },
+  { key: "koc_address", label: "Địa chỉ" },
+  { key: "koc_phone", label: "SĐT/Zalo" },
+  { key: "employee_id", label: "PIC phụ trách" },
+  { key: "booking_type", label: "Loại booking" },
+  { key: "status_booking", label: "Status booking" },
+  { key: "cast_price", label: "Giá cast" },
+  { key: "created_at", label: "Ngày tạo booking" },
+  { key: "expected_post_date", label: "Ngày dự kiến đăng" },
+  { key: "actual_post_date", label: "Ngày đăng thực tế" },
+  { key: "product", label: "Sản phẩm" },
+  { key: "order_items", label: "Chi tiết SP" },
+  { key: "quantity", label: "Số lượng" },
+  { key: "order_value", label: "Giá trị đơn" },
+  { key: "delivery_address", label: "Địa chỉ giao hàng" },
+  { key: "recipient_phone", label: "SĐT nhận hàng" },
+  { key: "ship_date", label: "Ngày gửi" },
+  { key: "tracking_code", label: "Mã vận đơn" },
+  { key: "order_status", label: "Tình trạng đơn hàng" },
+  { key: "note", label: "Ghi chú" },
+];
+
+// Mặc định hiện tất cả (giữ nguyên như trước khi có tính năng này)
+const allColumnKeys = columnOptions.map((column) => column.key);
 
 const filterFields = [
   { value: "koc", label: "KOC / ID TikTok" },
@@ -110,6 +140,47 @@ export default function BookingListPage() {
       value: "",
     },
   ]);
+
+  // Ẩn/hiện cột
+  const [showColumnPanel, setShowColumnPanel] = useState(false);
+  const [visibleColumnKeys, setVisibleColumnKeys] =
+    useState<string[]>(allColumnKeys);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(visibleColumnsStorageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Bỏ key lạ (khi danh sách cột thay đổi)
+          const valid = parsed.filter((key) => allColumnKeys.includes(key));
+          if (valid.length > 0) setVisibleColumnKeys(valid);
+        }
+      }
+    } catch {
+      // bỏ qua dữ liệu hỏng
+    }
+  }, []);
+
+  function saveVisibleColumns(nextKeys: string[]) {
+    setVisibleColumnKeys(nextKeys);
+    window.localStorage.setItem(
+      visibleColumnsStorageKey,
+      JSON.stringify(nextKeys)
+    );
+  }
+
+  function toggleColumn(columnKey: string) {
+    const exists = visibleColumnKeys.includes(columnKey);
+    // Luôn giữ tối thiểu 1 cột
+    if (exists && visibleColumnKeys.length <= 1) return;
+
+    saveVisibleColumns(
+      exists
+        ? visibleColumnKeys.filter((key) => key !== columnKey)
+        : [...visibleColumnKeys, columnKey]
+    );
+  }
 
   // Khôi phục bộ lọc/sắp xếp đã lưu khi quay lại danh sách
   const [filtersHydrated, setFiltersHydrated] = useState(false);
@@ -461,6 +532,18 @@ export default function BookingListPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
+              onClick={() => setShowColumnPanel((open) => !open)}
+              className={`h-10 rounded-xl border px-4 text-[13px] font-bold shadow-sm ${
+                showColumnPanel
+                  ? "border-[#3964ff] bg-[#eef3ff] text-[#3964ff]"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              Ẩn/hiện cột ({visibleColumnKeys.length}/{allColumnKeys.length})
+            </button>
+
+            <button
+              type="button"
               onClick={() => setResetColumnSignal((current) => current + 1)}
               className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
             >
@@ -673,6 +756,57 @@ export default function BookingListPage() {
           })}
         </div>
 
+        {showColumnPanel && (
+          <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-[12px] font-black uppercase tracking-[0.18em] text-red-600">
+                  Hiển thị cột
+                </p>
+                <p className="mt-1 text-[13px] font-semibold text-slate-500">
+                  Bỏ tick các cột không cần để bảng gọn hơn. Cài đặt được lưu
+                  riêng cho tài khoản của bạn.
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => saveVisibleColumns(allColumnKeys)}
+                  className="h-8 rounded-lg bg-slate-900 px-3 text-[12px] font-bold text-white"
+                >
+                  Hiện tất cả
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+              {columnOptions.map((column) => {
+                const checked = visibleColumnKeys.includes(column.key);
+
+                return (
+                  <label
+                    key={column.key}
+                    className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-bold transition ${
+                      checked
+                        ? "border-slate-200 bg-white text-slate-800"
+                        : "border-transparent bg-slate-100 text-slate-400"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleColumn(column.key)}
+                      className="h-4 w-4 shrink-0 accent-red-600"
+                    />
+                    {column.label}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
           <span className="text-[12.5px] font-bold text-slate-600">
             Sắp xếp:
@@ -734,6 +868,7 @@ export default function BookingListPage() {
         employees={employees}
         loading={loading}
         restricted={isShipper}
+        visibleColumnKeys={visibleColumnKeys}
         resetLayoutSignal={resetColumnSignal}
         onBookingUpdated={(id, patch) => {
           setBookings((prev) =>

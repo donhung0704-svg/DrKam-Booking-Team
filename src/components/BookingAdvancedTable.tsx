@@ -214,6 +214,7 @@ export default function BookingAdvancedTable({
   loading,
   resetLayoutSignal,
   restricted = false,
+  visibleColumnKeys,
   onBookingUpdated,
   onBookingDeleted,
 }: {
@@ -223,6 +224,7 @@ export default function BookingAdvancedTable({
   loading: boolean;
   resetLayoutSignal?: number;
   restricted?: boolean;
+  visibleColumnKeys?: string[];
   onBookingUpdated: (id: string, patch: DbRow) => void;
   onBookingDeleted?: (ids: string[]) => void;
 }) {
@@ -332,11 +334,20 @@ export default function BookingAdvancedTable({
     return new Map(defaultColumns.map((column) => [column.key, column]));
   }, []);
 
+  // Không truyền visibleColumnKeys -> hiện tất cả cột (giữ hành vi cũ)
+  const visibleColumnKeySet = useMemo(() => {
+    return visibleColumnKeys ? new Set(visibleColumnKeys) : null;
+  }, [visibleColumnKeys]);
+
   const orderedColumns = useMemo(() => {
-    return columnOrder
-      .map((key) => columnMap.get(key))
-      .filter(Boolean) as ColumnConfig[];
-  }, [columnOrder, columnMap]);
+    return (
+      columnOrder
+        .map((key) => columnMap.get(key))
+        .filter(Boolean) as ColumnConfig[]
+    ).filter(
+      (column) => !visibleColumnKeySet || visibleColumnKeySet.has(column.key)
+    );
+  }, [columnOrder, columnMap, visibleColumnKeySet]);
 
   const editableColumns = useMemo(() => {
     return defaultColumns.filter((column) => {
