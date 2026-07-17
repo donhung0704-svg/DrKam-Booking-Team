@@ -1182,18 +1182,8 @@ function CellEditor({
     );
   }
 
-  // Tài khoản bị hạn chế: hiển thị chỉ đọc cho các trường không được sửa
-  if (forceReadonly) {
-    return (
-      <div
-        className="truncate font-semibold text-slate-600"
-        title={formatCellDisplay(column, value, kocMap, employeeMap)}
-      >
-        {formatCellDisplay(column, value, kocMap, employeeMap)}
-      </div>
-    );
-  }
-
+  // Tên KOC / Địa chỉ / SĐT lấy từ bảng koc (cột không có field riêng).
+  // Phải xử lý TRƯỚC forceReadonly, nếu không tài khoản shipper sẽ thấy trống.
   if (
     column.key === "koc_name" ||
     column.key === "koc_address" ||
@@ -1216,6 +1206,18 @@ function CellEditor({
         title={displayValue}
       >
         {displayValue}
+      </div>
+    );
+  }
+
+  // Tài khoản bị hạn chế: các trường không được sửa -> hiển thị chỉ đọc
+  if (forceReadonly) {
+    return (
+      <div
+        className="truncate font-semibold text-slate-600"
+        title={formatCellDisplay(column, value, kocMap, employeeMap)}
+      >
+        {formatCellDisplay(column, value, kocMap, employeeMap)}
       </div>
     );
   }
