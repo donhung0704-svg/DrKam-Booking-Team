@@ -214,6 +214,7 @@ export default function BookingAdvancedTable({
   loading,
   resetLayoutSignal,
   restricted = false,
+  visibleColumnKeys,
   onBookingUpdated,
   onBookingDeleted,
 }: {
@@ -223,6 +224,7 @@ export default function BookingAdvancedTable({
   loading: boolean;
   resetLayoutSignal?: number;
   restricted?: boolean;
+  visibleColumnKeys?: string[];
   onBookingUpdated: (id: string, patch: DbRow) => void;
   onBookingDeleted?: (ids: string[]) => void;
 }) {
@@ -332,11 +334,20 @@ export default function BookingAdvancedTable({
     return new Map(defaultColumns.map((column) => [column.key, column]));
   }, []);
 
+  // Không truyền visibleColumnKeys -> hiện tất cả cột (giữ hành vi cũ)
+  const visibleColumnKeySet = useMemo(() => {
+    return visibleColumnKeys ? new Set(visibleColumnKeys) : null;
+  }, [visibleColumnKeys]);
+
   const orderedColumns = useMemo(() => {
-    return columnOrder
-      .map((key) => columnMap.get(key))
-      .filter(Boolean) as ColumnConfig[];
-  }, [columnOrder, columnMap]);
+    return (
+      columnOrder
+        .map((key) => columnMap.get(key))
+        .filter(Boolean) as ColumnConfig[]
+    ).filter(
+      (column) => !visibleColumnKeySet || visibleColumnKeySet.has(column.key)
+    );
+  }, [columnOrder, columnMap, visibleColumnKeySet]);
 
   const editableColumns = useMemo(() => {
     return defaultColumns.filter((column) => {
@@ -372,15 +383,19 @@ export default function BookingAdvancedTable({
     );
   }, [bulkClearField, editableColumns]);
 
+  // Chế độ hạn chế (shipper) ẩn cột checkbox -> không được cộng bề rộng của nó,
+  // nếu không cột ghim sẽ lệch 52px và che mất nội dung.
+  const leadingWidth = restricted ? 0 : selectColumnWidth;
+
   const tableWidth = useMemo(() => {
     return (
-      selectColumnWidth +
+      leadingWidth +
       orderedColumns.reduce(
         (sum, column) => sum + (columnWidths[column.key] ?? column.width),
         0
       )
     );
-  }, [orderedColumns, columnWidths]);
+  }, [leadingWidth, orderedColumns, columnWidths]);
 
   function saveColumnOrder(nextOrder: string[]) {
     setColumnOrder(nextOrder);
@@ -441,7 +456,7 @@ export default function BookingAdvancedTable({
     const index = pinnedOrdered.findIndex((item) => item.key === column.key);
 
     const left =
-      selectColumnWidth +
+      leadingWidth +
       pinnedOrdered
         .slice(0, index)
         .reduce((sum, item) => sum + getColumnWidth(item), 0);
@@ -1182,18 +1197,8 @@ function CellEditor({
     );
   }
 
-  // Tài khoản bị hạn chế: hiển thị chỉ đọc cho các trường không được sửa
-  if (forceReadonly) {
-    return (
-      <div
-        className="truncate font-semibold text-slate-600"
-        title={formatCellDisplay(column, value, kocMap, employeeMap)}
-      >
-        {formatCellDisplay(column, value, kocMap, employeeMap)}
-      </div>
-    );
-  }
-
+  // Tên KOC / Địa chỉ / SĐT lấy từ bảng koc (cột không có field riêng).
+  // Phải xử lý TRƯỚC forceReadonly, nếu không tài khoản shipper sẽ thấy trống.
   if (
     column.key === "koc_name" ||
     column.key === "koc_address" ||
@@ -1216,6 +1221,18 @@ function CellEditor({
         title={displayValue}
       >
         {displayValue}
+      </div>
+    );
+  }
+
+  // Tài khoản bị hạn chế: các trường không được sửa -> hiển thị chỉ đọc
+  if (forceReadonly) {
+    return (
+      <div
+        className="truncate font-semibold text-slate-600"
+        title={formatCellDisplay(column, value, kocMap, employeeMap)}
+      >
+        {formatCellDisplay(column, value, kocMap, employeeMap)}
       </div>
     );
   }
