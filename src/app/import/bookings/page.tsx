@@ -24,6 +24,12 @@ const statusBookingOptions = [
   "Đã thanh toán",
 ];
 
+const orderStatusOptions = [
+  "Đã gửi",
+  "Giao thành công",
+  "Giao không thành công",
+];
+
 // Danh sách sản phẩm có sẵn (đồng bộ với BookingAdvancedTable).
 // Dùng để tự tách ô "Sản phẩm" trong Excel thành nhiều SP đã chọn.
 const productOptions = [
@@ -122,6 +128,14 @@ function downloadBookingTemplate() {
       "Ngày dự kiến đăng": "25/06/2026",
       "Ngày đăng thực tế": "",
       "Sản phẩm": "Nước súc miệng CYK, Gel cạo lưỡi bạc hà",
+      "Chi tiết SP": "Nước súc miệng CYK x2; Gel cạo lưỡi bạc hà x1",
+      "Số lượng": 3,
+      "Giá trị đơn": 500000,
+      "Địa chỉ giao hàng": "96 Trần Não, P. An Khánh, TP. Thủ Đức",
+      "SĐT nhận hàng": "0901234567",
+      "Ngày gửi": "26/06/2026",
+      "Mã vận đơn": "GHN123456789",
+      "Tình trạng đơn hàng": "Đã gửi",
       "Ghi chú": "Booking mẫu",
     },
   ];
@@ -129,16 +143,24 @@ function downloadBookingTemplate() {
   const worksheet = XLSX.utils.json_to_sheet(templateRows);
 
   worksheet["!cols"] = [
-    { wch: 28 },
-    { wch: 22 },
-    { wch: 16 },
-    { wch: 20 },
-    { wch: 14 },
-    { wch: 18 },
-    { wch: 18 },
-    { wch: 18 },
-    { wch: 48 },
-    { wch: 48 },
+    { wch: 28 }, // ID TikTok/Tên FB
+    { wch: 22 }, // PIC phụ trách
+    { wch: 16 }, // Loại booking
+    { wch: 20 }, // Status booking
+    { wch: 14 }, // Giá cast
+    { wch: 18 }, // Ngày tạo booking
+    { wch: 18 }, // Ngày dự kiến đăng
+    { wch: 18 }, // Ngày đăng thực tế
+    { wch: 48 }, // Sản phẩm
+    { wch: 46 }, // Chi tiết SP
+    { wch: 10 }, // Số lượng
+    { wch: 14 }, // Giá trị đơn
+    { wch: 42 }, // Địa chỉ giao hàng
+    { wch: 16 }, // SĐT nhận hàng
+    { wch: 14 }, // Ngày gửi
+    { wch: 20 }, // Mã vận đơn
+    { wch: 20 }, // Tình trạng đơn hàng
+    { wch: 48 }, // Ghi chú
   ];
 
   const workbook = XLSX.utils.book_new();
@@ -170,6 +192,11 @@ function downloadBookingTemplate() {
         errors.push(`Dòng ${index + 2}: Không tìm thấy KOC theo ID TikTok/Tên FB`);
         continue;
       }
+
+      // "Nước súc miệng CYK x2; Gel cạo lưỡi bạc hà x1" -> dòng hàng của đơn
+      const orderItems = parseOrderItems(
+        pick(row, ["Chi tiết SP", "Chi tiết sản phẩm", "order_items"])
+      );
 
       const payload = cleanUndefined({
         koc_id: kocId,
@@ -205,7 +232,37 @@ function downloadBookingTemplate() {
           ]),
           preferMonthFirst
         ),
-        product: resolveProducts(pick(row, ["Sản phẩm", "Product", "product"])),
+        product:
+          resolveProducts(pick(row, ["Sản phẩm", "Product", "product"])) ??
+          // Không có cột Sản phẩm -> lấy tên từ Chi tiết SP
+          (orderItems
+            ? orderItems.map((item) => item.product).filter(Boolean).join(", ")
+            : undefined),
+        order_items: orderItems,
+        quantity:
+          optionalNumber(pick(row, ["Số lượng", "quantity"])) ??
+          // Không có cột Số lượng -> cộng tổng từ Chi tiết SP
+          (orderItems
+            ? orderItems.reduce((sum, item) => sum + item.quantity, 0)
+            : undefined),
+        order_value: optionalNumber(
+          pick(row, ["Giá trị đơn", "Giá trị đơn hàng", "order_value"])
+        ),
+        delivery_address: optionalText(
+          pick(row, ["Địa chỉ giao hàng", "delivery_address"])
+        ),
+        recipient_phone: optionalText(
+          pick(row, ["SĐT nhận hàng", "recipient_phone"])
+        ),
+        ship_date: optionalDate(
+          pick(row, ["Ngày gửi", "ship_date"]),
+          preferMonthFirst
+        ),
+        tracking_code: optionalText(pick(row, ["Mã vận đơn", "tracking_code"])),
+        order_status: matchOption(
+          pick(row, ["Tình trạng đơn hàng", "order_status"]),
+          orderStatusOptions
+        ),
         note: optionalText(pick(row, ["Ghi chú", "Note", "note"])),
       });
 
@@ -367,6 +424,14 @@ function downloadBookingTemplate() {
             "Ngày dự kiến đăng",
             "Ngày đăng thực tế",
             "Sản phẩm",
+            "Chi tiết SP",
+            "Số lượng",
+            "Giá trị đơn",
+            "Địa chỉ giao hàng",
+            "SĐT nhận hàng",
+            "Ngày gửi",
+            "Mã vận đơn",
+            "Tình trạng đơn hàng",
             "Ghi chú",
           ].map((item) => (
             <div
@@ -676,6 +741,41 @@ function resolveProducts(value: any) {
   );
 
   return matched.length > 0 ? matched.join(", ") : raw;
+}
+
+// Tách "Nước súc miệng CYK x2; Gel cạo lưỡi bạc hà x1" thành dòng hàng của đơn.
+// Đây đúng là định dạng cột "Chi tiết SP" khi xuất Excel -> xuất ra rồi import
+// lại vẫn khớp. Không có đơn giá trong chuỗi nên unit_price/amount = 0.
+function parseOrderItems(value: any) {
+  const raw = text(value);
+  if (!raw) return undefined;
+
+  const items = raw
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const matched = part.match(/^(.*?)\s*[x×]\s*(\d+(?:[.,]\d+)?)$/i);
+      const productRaw = matched ? matched[1].trim() : part;
+      const quantity = matched ? Number(String(matched[2]).replace(",", ".")) : 0;
+
+      // Chuẩn hóa tên về đúng sản phẩm có sẵn (bỏ dấu, không phân biệt hoa thường)
+      const canonical =
+        productOptions.find(
+          (option) =>
+            normalizeProductText(option) === normalizeProductText(productRaw)
+        ) || productRaw;
+
+      return {
+        product: canonical,
+        quantity: Number.isNaN(quantity) ? 0 : quantity,
+        unit_price: 0,
+        amount: 0,
+      };
+    })
+    .filter((item) => item.product);
+
+  return items.length > 0 ? items : undefined;
 }
 
 function normalizeProductText(value: string) {
