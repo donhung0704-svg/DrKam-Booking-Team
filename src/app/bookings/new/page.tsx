@@ -166,6 +166,8 @@ export default function NewBookingPage() {
       koc_id: getText(formData, "koc_id") || null,
       employee_id: getText(formData, "employee_id") || null,
       booking_type: getText(formData, "booking_type") || "Booking vid",
+      // Đặt sẵn status chuẩn (tránh lấy DB default viết thường "Chờ nhận sp")
+      status_booking: "Chờ nhận SP",
       cast_price: getNumber(formData, "cast_price"),
       expected_post_date: parseVietnameseDateInput(
         formData.get("expected_post_date")
