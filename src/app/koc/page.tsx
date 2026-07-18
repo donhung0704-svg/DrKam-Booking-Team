@@ -684,8 +684,8 @@ export default function KocListPage() {
       </section>
 
       <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_0.9fr_1.2fr_1.2fr_auto] xl:items-end">
-          <div>
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="w-full sm:w-[180px]">
             <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Trường cần lọc</label>
             <select
               value={filterFieldKey}
@@ -698,7 +698,7 @@ export default function KocListPage() {
             </select>
           </div>
 
-          <div>
+          <div className="w-full sm:w-[150px]">
             <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Điều kiện</label>
             <select
               value={filterOperator}
@@ -715,44 +715,38 @@ export default function KocListPage() {
             </select>
           </div>
 
-          <FilterValueInput
-            label="Giá trị"
-            field={selectedField}
-            operator={filterOperator}
-            value={filterValue}
-            employees={employees}
-            campaigns={campaigns}
-            onChange={setFilterValue}
-          />
+          <div className="w-full sm:w-[220px]">
+            <FilterValueInput
+              label="Giá trị"
+              field={selectedField}
+              operator={filterOperator}
+              value={filterValue}
+              employees={employees}
+              campaigns={campaigns}
+              onChange={setFilterValue}
+              onEnter={addFilter}
+            />
+          </div>
 
           <FilterSecondValueInput
             field={selectedField}
             operator={filterOperator}
             value={filterValue2}
             onChange={setFilterValue2}
+            onEnter={addFilter}
           />
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={addFilter}
-              className="h-10 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-            >
-              + Thêm điều kiện
-            </button>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+          >
+            Xóa tất cả bộ lọc
+          </button>
 
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
-            >
-              Xóa tất cả bộ lọc
-            </button>
-          </div>
-        </div>
+          <div className="mx-1 hidden h-8 w-px self-center bg-slate-200 md:block" />
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="text-[12.5px] font-bold text-slate-600">
+          <span className="pb-2.5 text-[12.5px] font-bold text-slate-600">
             Sắp xếp:
           </span>
 
@@ -956,6 +950,7 @@ function FilterValueInput({
   employees,
   campaigns,
   onChange,
+  onEnter,
 }: {
   label: string;
   field: FilterField;
@@ -964,6 +959,7 @@ function FilterValueInput({
   employees: DbRow[];
   campaigns: DbRow[];
   onChange: (value: string) => void;
+  onEnter?: () => void;
 }) {
   const noValueNeeded = ["is_empty", "is_not_empty"].includes(operator);
 
@@ -1001,7 +997,14 @@ function FilterValueInput({
     return (
       <div>
         <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">{label}</label>
-        <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]">
+        <select
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onEnter?.();
+          }}
+          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+        >
           <option value="">Chọn giá trị</option>
           {getSelectOptions(field, employees, campaigns).map((option) => (
             <option key={option.value} value={option.value}>{option.label}</option>
@@ -1018,7 +1021,13 @@ function FilterValueInput({
         type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={field.type === "text" ? "Nhập từ khóa..." : "Nhập giá trị..."}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onEnter?.();
+          }
+        }}
+        placeholder={field.type === "text" ? "Nhập từ khóa (Enter để thêm)..." : "Nhập giá trị (Enter)..."}
         className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
       />
     </div>
@@ -1030,25 +1039,33 @@ function FilterSecondValueInput({
   operator,
   value,
   onChange,
+  onEnter,
 }: {
   field: FilterField;
   operator: FilterOperator;
   value: string;
   onChange: (value: string) => void;
+  onEnter?: () => void;
 }) {
   const needsSecondValue = ["between", "date_between"].includes(operator);
 
   if (!needsSecondValue) {
-    return <div className="hidden xl:block" />;
+    return null;
   }
 
   return (
-    <div>
+    <div className="w-[150px]">
       <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Giá trị đến</label>
       <input
         type={field.type === "date" ? "date" : "number"}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onEnter?.();
+          }
+        }}
         className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
       />
     </div>
