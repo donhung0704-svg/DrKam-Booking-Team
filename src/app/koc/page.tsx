@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import KocAdvancedTable from "@/components/KocAdvancedTable";
+import SavedFiltersDropdown from "@/components/SavedFiltersDropdown";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
@@ -66,6 +67,15 @@ const pageSizeOptions = [100, 200, 300];
 const visibleColumnsStorageKey = "drkam_koc_visible_columns_v5";
 // Giữ bộ lọc/sắp xếp/trang khi rời trang rồi quay lại (theo phiên tab)
 const filtersStorageKey = "drkam_koc_filters_v1";
+// Danh sách bộ lọc đã lưu (bền qua đăng nhập lại, lưu theo trình duyệt)
+const filterPresetsStorageKey = "drkam_koc_filter_presets_v1";
+
+type FilterPreset = {
+  id: string;
+  name: string;
+  filters: FilterCondition[];
+  sort: { field: string; ascending: boolean } | null;
+};
 
 const filterFields: FilterField[] = [
   { key: "Id_tiktok_Ten_fb", label: "ID TikTok/Tên FB", field: "Id_tiktok_Ten_fb", type: "text" },
@@ -166,6 +176,58 @@ export default function KocListPage() {
 
   // Đã khôi phục bộ lọc từ sessionStorage chưa (để không tải KOC trước khi khôi phục)
   const [filtersHydrated, setFiltersHydrated] = useState(false);
+
+  // Danh sách bộ lọc đã lưu
+  const [presets, setPresets] = useState<FilterPreset[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(filterPresetsStorageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setPresets(parsed);
+      }
+    } catch {
+      // bỏ qua dữ liệu hỏng
+    }
+  }, []);
+
+  function savePresets(next: FilterPreset[]) {
+    setPresets(next);
+    window.localStorage.setItem(filterPresetsStorageKey, JSON.stringify(next));
+  }
+
+  function saveCurrentAsPreset() {
+    if (activeFilters.length === 0) {
+      setMessage("Chưa có điều kiện lọc nào để lưu.");
+      return;
+    }
+
+    const name = window.prompt("Đặt tên cho bộ lọc:")?.trim();
+    if (!name) return;
+
+    savePresets([
+      ...presets.filter((preset) => preset.name !== name),
+      {
+        id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        name,
+        filters: activeFilters,
+        sort: sortState,
+      },
+    ]);
+    setMessage("");
+  }
+
+  function applyPreset(preset: FilterPreset) {
+    setActiveFilters(preset.filters || []);
+    setSortState(preset.sort ?? null);
+    setPageIndex(0);
+    setMessage("");
+  }
+
+  function deletePreset(id: string) {
+    savePresets(presets.filter((preset) => preset.id !== id));
+  }
 
   // Khôi phục bộ lọc/sắp xếp/trang đã lưu khi quay lại danh sách
   useEffect(() => {
@@ -537,14 +599,6 @@ export default function KocListPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setResetColumnSignal((current) => current + 1)}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              Reset cột
-            </button>
-
-            <button
-              type="button"
               onClick={exportKocExcel}
               disabled={exporting}
               className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700 disabled:opacity-60"
@@ -553,26 +607,11 @@ export default function KocListPage() {
             </button>
 
             <Link
-              href="/koc/new"
-              className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-            >
-              + Thêm KOC mới
-            </Link>
-
-            <Link
               href="/import/koc"
               className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
             >
               Import KOC
             </Link>
-
-            <button
-              type="button"
-              onClick={() => setShowColumnPanel((current) => !current)}
-              className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              Ẩn/hiện cột
-            </button>
           </div>
         </div>
       </header>
@@ -583,48 +622,10 @@ export default function KocListPage() {
         </div>
       )}
 
-      <section className="mb-4 rounded-[18px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-[13px] font-bold text-slate-600">
-          <div className="flex flex-wrap items-center gap-3">
-            <span>
-              Đang xem:{" "}
-              <b className="text-slate-950">{currentPageCount}</b> KOC
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Tổng theo bộ lọc:{" "}
-              <b className="text-slate-950">{totalKocCount}</b> KOC
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Trang:{" "}
-              <b className="text-slate-950">
-                {pageIndex + 1}/{totalPages}
-              </b>
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <span>
-              Đã chốt: <b className="text-emerald-600">{closedCount}</b>
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Đã phản hồi: <b className="text-orange-600">{repliedCount}</b>
-            </span>
-          </div>
-        </div>
-      </section>
 
       <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_0.9fr_1.2fr_1.2fr_auto] xl:items-end">
-          <div>
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="w-full sm:w-[180px]">
             <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Trường cần lọc</label>
             <select
               value={filterFieldKey}
@@ -637,7 +638,7 @@ export default function KocListPage() {
             </select>
           </div>
 
-          <div>
+          <div className="w-full sm:w-[150px]">
             <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Điều kiện</label>
             <select
               value={filterOperator}
@@ -654,44 +655,38 @@ export default function KocListPage() {
             </select>
           </div>
 
-          <FilterValueInput
-            label="Giá trị"
-            field={selectedField}
-            operator={filterOperator}
-            value={filterValue}
-            employees={employees}
-            campaigns={campaigns}
-            onChange={setFilterValue}
-          />
+          <div className="w-full sm:w-[220px]">
+            <FilterValueInput
+              label="Giá trị"
+              field={selectedField}
+              operator={filterOperator}
+              value={filterValue}
+              employees={employees}
+              campaigns={campaigns}
+              onChange={setFilterValue}
+              onEnter={addFilter}
+            />
+          </div>
 
           <FilterSecondValueInput
             field={selectedField}
             operator={filterOperator}
             value={filterValue2}
             onChange={setFilterValue2}
+            onEnter={addFilter}
           />
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={addFilter}
-              className="h-10 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-            >
-              + Thêm điều kiện
-            </button>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+          >
+            Xóa tất cả bộ lọc
+          </button>
 
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
-            >
-              Xóa tất cả bộ lọc
-            </button>
-          </div>
-        </div>
+          <div className="mx-1 hidden h-8 w-px self-center bg-slate-200 md:block" />
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="text-[12.5px] font-bold text-slate-600">
+          <span className="pb-2.5 text-[12.5px] font-bold text-slate-600">
             Sắp xếp:
           </span>
 
@@ -742,6 +737,18 @@ export default function KocListPage() {
               </button>
             </div>
           )}
+
+          <div className="mx-1 hidden h-8 w-px self-center bg-slate-200 md:block" />
+
+          <SavedFiltersDropdown
+            presets={presets}
+            onApply={(id) => {
+              const preset = presets.find((item) => item.id === id);
+              if (preset) applyPreset(preset);
+            }}
+            onDelete={deletePreset}
+            onSaveCurrent={saveCurrentAsPreset}
+          />
         </div>
 
         {activeFilters.length > 0 && (
@@ -803,6 +810,63 @@ export default function KocListPage() {
         visibleColumnKeys={visibleColumnKeys}
         resetLayoutSignal={resetColumnSignal}
         loading={loading}
+        leadingActions={
+          <Link
+            href="/koc/new"
+            className="flex h-8 items-center rounded-lg bg-[#3964ff] px-3 text-[12px] font-bold text-white shadow-sm hover:bg-[#2f55df]"
+          >
+            + Thêm KOC mới
+          </Link>
+        }
+        trailingActions={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowColumnPanel((current) => !current)}
+              className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Ẩn/hiện cột
+            </button>
+            <button
+              type="button"
+              onClick={() => setResetColumnSignal((current) => current + 1)}
+              className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Reset cột
+            </button>
+          </>
+        }
+        statsInfo={
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[12.5px] font-bold text-slate-600">
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                Đang xem: <b className="text-slate-950">{currentPageCount}</b> KOC
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Tổng theo bộ lọc:{" "}
+                <b className="text-slate-950">{totalKocCount}</b> KOC
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Trang:{" "}
+                <b className="text-slate-950">
+                  {pageIndex + 1}/{totalPages}
+                </b>
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                Đã chốt: <b className="text-emerald-600">{closedCount}</b>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Đã phản hồi: <b className="text-orange-600">{repliedCount}</b>
+              </span>
+            </div>
+          </div>
+        }
         onExport={exportKocExcel}
         onKocUpdated={(id, patch) => {
           setKocs((prev) =>
@@ -851,6 +915,7 @@ function FilterValueInput({
   employees,
   campaigns,
   onChange,
+  onEnter,
 }: {
   label: string;
   field: FilterField;
@@ -859,6 +924,7 @@ function FilterValueInput({
   employees: DbRow[];
   campaigns: DbRow[];
   onChange: (value: string) => void;
+  onEnter?: () => void;
 }) {
   const noValueNeeded = ["is_empty", "is_not_empty"].includes(operator);
 
@@ -896,7 +962,14 @@ function FilterValueInput({
     return (
       <div>
         <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">{label}</label>
-        <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]">
+        <select
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onEnter?.();
+          }}
+          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+        >
           <option value="">Chọn giá trị</option>
           {getSelectOptions(field, employees, campaigns).map((option) => (
             <option key={option.value} value={option.value}>{option.label}</option>
@@ -913,7 +986,13 @@ function FilterValueInput({
         type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={field.type === "text" ? "Nhập từ khóa..." : "Nhập giá trị..."}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onEnter?.();
+          }
+        }}
+        placeholder={field.type === "text" ? "Nhập từ khóa (Enter để thêm)..." : "Nhập giá trị (Enter)..."}
         className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
       />
     </div>
@@ -925,25 +1004,33 @@ function FilterSecondValueInput({
   operator,
   value,
   onChange,
+  onEnter,
 }: {
   field: FilterField;
   operator: FilterOperator;
   value: string;
   onChange: (value: string) => void;
+  onEnter?: () => void;
 }) {
   const needsSecondValue = ["between", "date_between"].includes(operator);
 
   if (!needsSecondValue) {
-    return <div className="hidden xl:block" />;
+    return null;
   }
 
   return (
-    <div>
+    <div className="w-[150px]">
       <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Giá trị đến</label>
       <input
         type={field.type === "date" ? "date" : "number"}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onEnter?.();
+          }
+        }}
         className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
       />
     </div>
