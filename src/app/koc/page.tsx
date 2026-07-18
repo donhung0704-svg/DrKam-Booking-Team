@@ -803,29 +803,9 @@ export default function KocListPage() {
               </button>
             </div>
           )}
-        </div>
 
-        {activeFilters.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {activeFilters.map((filter) => (
-              <div
-                key={filter.id}
-                className="flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[12px] font-bold text-blue-700"
-              >
-                <span>{getFilterSummary(filter, employees, campaigns)}</span>
-                <button
-                  type="button"
-                  onClick={() => removeFilter(filter.id)}
-                  className="rounded-full bg-white px-2 py-0.5 text-blue-700 hover:bg-blue-100"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+          <div className="mx-1 hidden h-6 w-px bg-slate-200 md:block" />
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
           <span className="text-[12.5px] font-bold text-slate-600">
             Bộ lọc đã lưu:
           </span>
@@ -868,6 +848,26 @@ export default function KocListPage() {
             + Lưu bộ lọc
           </button>
         </div>
+
+        {activeFilters.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {activeFilters.map((filter) => (
+              <div
+                key={filter.id}
+                className="flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[12px] font-bold text-blue-700"
+              >
+                <span>{getFilterSummary(filter, employees, campaigns)}</span>
+                <button
+                  type="button"
+                  onClick={() => removeFilter(filter.id)}
+                  className="rounded-full bg-white px-2 py-0.5 text-blue-700 hover:bg-blue-100"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {showColumnPanel && (
           <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">

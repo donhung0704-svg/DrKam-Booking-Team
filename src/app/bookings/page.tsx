@@ -929,9 +929,9 @@ export default function BookingListPage() {
               </button>
             </div>
           )}
-        </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+          <div className="mx-1 hidden h-6 w-px bg-slate-200 md:block" />
+
           <span className="text-[12.5px] font-bold text-slate-600">
             Bộ lọc đã lưu:
           </span>
