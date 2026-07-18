@@ -279,6 +279,7 @@ export default function KocAdvancedTable({
   loading,
   leadingActions,
   trailingActions,
+  statsInfo,
   onExport,
   onKocUpdated,
   onKocDeleted,
@@ -291,6 +292,7 @@ export default function KocAdvancedTable({
   loading: boolean;
   leadingActions?: ReactNode;
   trailingActions?: ReactNode;
+  statsInfo?: ReactNode;
   onExport: () => void;
   onKocUpdated: (id: string, patch: DbRow) => void;
   onKocDeleted?: (ids: string[]) => void;
@@ -806,10 +808,7 @@ const orderedColumns = useMemo(() => {
           )}
         </div>
 
-        <p className="mb-3 text-[12px] font-semibold text-slate-500">
-          Chọn 1 KOC để Tạo Booking / Sửa KOC; chọn từ 2 KOC trở lên để thao
-          tác hàng loạt.
-        </p>
+        {statsInfo && <div className="mb-3">{statsInfo}</div>}
 
         {selectedCount === 1 && (
           <div className="flex flex-wrap gap-2">

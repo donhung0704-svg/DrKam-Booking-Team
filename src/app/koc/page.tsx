@@ -622,44 +622,6 @@ export default function KocListPage() {
         </div>
       )}
 
-      <section className="mb-4 rounded-[18px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-[13px] font-bold text-slate-600">
-          <div className="flex flex-wrap items-center gap-3">
-            <span>
-              Đang xem:{" "}
-              <b className="text-slate-950">{currentPageCount}</b> KOC
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Tổng theo bộ lọc:{" "}
-              <b className="text-slate-950">{totalKocCount}</b> KOC
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Trang:{" "}
-              <b className="text-slate-950">
-                {pageIndex + 1}/{totalPages}
-              </b>
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <span>
-              Đã chốt: <b className="text-emerald-600">{closedCount}</b>
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Đã phản hồi: <b className="text-orange-600">{repliedCount}</b>
-            </span>
-          </div>
-        </div>
-      </section>
 
       <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="flex flex-wrap items-end gap-2">
@@ -873,6 +835,37 @@ export default function KocListPage() {
               Reset cột
             </button>
           </>
+        }
+        statsInfo={
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[12.5px] font-bold text-slate-600">
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                Đang xem: <b className="text-slate-950">{currentPageCount}</b> KOC
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Tổng theo bộ lọc:{" "}
+                <b className="text-slate-950">{totalKocCount}</b> KOC
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Trang:{" "}
+                <b className="text-slate-950">
+                  {pageIndex + 1}/{totalPages}
+                </b>
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                Đã chốt: <b className="text-emerald-600">{closedCount}</b>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Đã phản hồi: <b className="text-orange-600">{repliedCount}</b>
+              </span>
+            </div>
+          </div>
         }
         onExport={exportKocExcel}
         onKocUpdated={(id, patch) => {
