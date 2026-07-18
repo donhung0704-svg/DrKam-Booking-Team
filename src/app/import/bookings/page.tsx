@@ -206,10 +206,11 @@ function downloadBookingTemplate() {
             pick(row, ["Loại booking", "Booking type", "booking_type"]),
             bookingTypeOptions
           ) || "Booking vid",
-        status_booking: matchOption(
-          pick(row, ["Status booking", "status_booking"]),
-          statusBookingOptions
-        ),
+        status_booking:
+          matchOption(
+            pick(row, ["Status booking", "status_booking"]),
+            statusBookingOptions
+          ) || "Chờ nhận SP",
         cast_price: optionalNumber(pick(row, ["Giá cast", "Cast price", "cast_price"])),
         created_at:
           optionalDate(
