@@ -48,6 +48,15 @@ const legacyGiftBookingTypes = ["Tặng quà"];
 const pageSizeOptions = [100, 200, 300];
 // Giữ bộ lọc/sắp xếp khi rời trang rồi quay lại (theo phiên tab)
 const filtersStorageKey = "drkam_booking_filters_v1";
+// Danh sách bộ lọc đã lưu (bền qua đăng nhập lại, lưu theo trình duyệt)
+const filterPresetsStorageKey = "drkam_booking_filter_presets_v1";
+
+type FilterPreset = {
+  id: string;
+  name: string;
+  filters: FilterCondition[];
+  sort: { field: string; ascending: boolean } | null;
+};
 // Ẩn/hiện cột (lưu theo trình duyệt của từng tài khoản)
 const visibleColumnsStorageKey = "drkam_booking_visible_columns_v1";
 
@@ -359,6 +368,67 @@ export default function BookingListPage() {
       return { field, ascending };
     });
     setPageIndex(0);
+  }
+
+  // Danh sách bộ lọc đã lưu
+  const [presets, setPresets] = useState<FilterPreset[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(filterPresetsStorageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setPresets(parsed);
+      }
+    } catch {
+      // bỏ qua dữ liệu hỏng
+    }
+  }, []);
+
+  function savePresets(next: FilterPreset[]) {
+    setPresets(next);
+    window.localStorage.setItem(filterPresetsStorageKey, JSON.stringify(next));
+  }
+
+  function saveCurrentAsPreset() {
+    const hasCondition = filters.some(
+      (condition) =>
+        condition.value.trim() !== "" ||
+        ["empty", "not_empty"].includes(condition.operator)
+    );
+    if (!hasCondition) {
+      setMessage("Chưa có điều kiện lọc nào để lưu.");
+      return;
+    }
+
+    const name = window.prompt("Đặt tên cho bộ lọc:")?.trim();
+    if (!name) return;
+
+    savePresets([
+      ...presets.filter((preset) => preset.name !== name),
+      {
+        id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        name,
+        filters,
+        sort: sortState,
+      },
+    ]);
+    setMessage("");
+  }
+
+  function applyPreset(preset: FilterPreset) {
+    setFilters(
+      preset.filters && preset.filters.length > 0
+        ? preset.filters
+        : [{ id: createFilterId(), field: "koc", operator: "contains", value: "" }]
+    );
+    setSortState(preset.sort ?? null);
+    setPageIndex(0);
+    setMessage("");
+  }
+
+  function deletePreset(id: string) {
+    savePresets(presets.filter((preset) => preset.id !== id));
   }
 
   const currentPageCount = currentPageBookings.length;
@@ -859,6 +929,50 @@ export default function BookingListPage() {
               </button>
             </div>
           )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+          <span className="text-[12.5px] font-bold text-slate-600">
+            Bộ lọc đã lưu:
+          </span>
+
+          {presets.length === 0 && (
+            <span className="text-[12px] font-semibold text-slate-400">
+              Chưa có. Lọc xong bấm “+ Lưu bộ lọc”.
+            </span>
+          )}
+
+          {presets.map((preset) => (
+            <div
+              key={preset.id}
+              className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 pl-1 text-[12px] font-bold text-emerald-700"
+            >
+              <button
+                type="button"
+                onClick={() => applyPreset(preset)}
+                title="Áp dụng bộ lọc này"
+                className="rounded-full px-3 py-1.5 hover:bg-emerald-100"
+              >
+                ★ {preset.name}
+              </button>
+              <button
+                type="button"
+                onClick={() => deletePreset(preset.id)}
+                title="Xóa bộ lọc đã lưu"
+                className="mr-1 rounded-full bg-white px-1.5 py-0.5 text-emerald-700 hover:bg-red-50 hover:text-red-600"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={saveCurrentAsPreset}
+            className="h-8 rounded-lg border border-dashed border-slate-300 bg-white px-3 text-[12px] font-bold text-slate-600 hover:border-[#3964ff] hover:text-[#3964ff]"
+          >
+            + Lưu bộ lọc
+          </button>
         </div>
       </section>
 
