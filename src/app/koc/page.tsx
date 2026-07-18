@@ -599,14 +599,6 @@ export default function KocListPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setResetColumnSignal((current) => current + 1)}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              Reset cột
-            </button>
-
-            <button
-              type="button"
               onClick={exportKocExcel}
               disabled={exporting}
               className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700 disabled:opacity-60"
@@ -615,26 +607,11 @@ export default function KocListPage() {
             </button>
 
             <Link
-              href="/koc/new"
-              className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-            >
-              + Thêm KOC mới
-            </Link>
-
-            <Link
               href="/import/koc"
               className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
             >
               Import KOC
             </Link>
-
-            <button
-              type="button"
-              onClick={() => setShowColumnPanel((current) => !current)}
-              className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              Ẩn/hiện cột
-            </button>
           </div>
         </div>
       </header>
@@ -871,6 +848,32 @@ export default function KocListPage() {
         visibleColumnKeys={visibleColumnKeys}
         resetLayoutSignal={resetColumnSignal}
         loading={loading}
+        leadingActions={
+          <Link
+            href="/koc/new"
+            className="flex h-8 items-center rounded-lg bg-[#3964ff] px-3 text-[12px] font-bold text-white shadow-sm hover:bg-[#2f55df]"
+          >
+            + Thêm KOC mới
+          </Link>
+        }
+        trailingActions={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowColumnPanel((current) => !current)}
+              className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Ẩn/hiện cột
+            </button>
+            <button
+              type="button"
+              onClick={() => setResetColumnSignal((current) => current + 1)}
+              className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Reset cột
+            </button>
+          </>
+        }
         onExport={exportKocExcel}
         onKocUpdated={(id, patch) => {
           setKocs((prev) =>
