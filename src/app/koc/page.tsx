@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import KocAdvancedTable from "@/components/KocAdvancedTable";
+import SavedFiltersDropdown from "@/components/SavedFiltersDropdown";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
@@ -798,49 +799,17 @@ export default function KocListPage() {
             </div>
           )}
 
-          <div className="mx-1 hidden h-6 w-px bg-slate-200 md:block" />
+          <div className="mx-1 hidden h-8 w-px self-center bg-slate-200 md:block" />
 
-          <span className="text-[12.5px] font-bold text-slate-600">
-            Bộ lọc đã lưu:
-          </span>
-
-          {presets.length === 0 && (
-            <span className="text-[12px] font-semibold text-slate-400">
-              Chưa có. Lọc xong bấm “+ Lưu bộ lọc”.
-            </span>
-          )}
-
-          {presets.map((preset) => (
-            <div
-              key={preset.id}
-              className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 pl-1 text-[12px] font-bold text-emerald-700"
-            >
-              <button
-                type="button"
-                onClick={() => applyPreset(preset)}
-                title="Áp dụng bộ lọc này"
-                className="rounded-full px-3 py-1.5 hover:bg-emerald-100"
-              >
-                ★ {preset.name}
-              </button>
-              <button
-                type="button"
-                onClick={() => deletePreset(preset.id)}
-                title="Xóa bộ lọc đã lưu"
-                className="mr-1 rounded-full bg-white px-1.5 py-0.5 text-emerald-700 hover:bg-red-50 hover:text-red-600"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-
-          <button
-            type="button"
-            onClick={saveCurrentAsPreset}
-            className="h-8 rounded-lg border border-dashed border-slate-300 bg-white px-3 text-[12px] font-bold text-slate-600 hover:border-[#3964ff] hover:text-[#3964ff]"
-          >
-            + Lưu bộ lọc
-          </button>
+          <SavedFiltersDropdown
+            presets={presets}
+            onApply={(id) => {
+              const preset = presets.find((item) => item.id === id);
+              if (preset) applyPreset(preset);
+            }}
+            onDelete={deletePreset}
+            onSaveCurrent={saveCurrentAsPreset}
+          />
         </div>
 
         {activeFilters.length > 0 && (
