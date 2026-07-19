@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DatePickerInput from "@/components/DatePickerInput";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 type DbRow = Record<string, any>;
 
@@ -215,6 +216,9 @@ export default function BookingAdvancedTable({
   resetLayoutSignal,
   restricted = false,
   visibleColumnKeys,
+  leadingActions,
+  trailingActions,
+  statsInfo,
   onBookingUpdated,
   onBookingDeleted,
 }: {
@@ -225,6 +229,9 @@ export default function BookingAdvancedTable({
   resetLayoutSignal?: number;
   restricted?: boolean;
   visibleColumnKeys?: string[];
+  leadingActions?: ReactNode;
+  trailingActions?: ReactNode;
+  statsInfo?: ReactNode;
   onBookingUpdated: (id: string, patch: DbRow) => void;
   onBookingDeleted?: (ids: string[]) => void;
 }) {
@@ -663,33 +670,37 @@ export default function BookingAdvancedTable({
             Tài khoản Giao hàng: chỉ xem và sửa 3 trường Ngày gửi, Mã vận đơn,
             Tình trạng đơn hàng.
           </p>
+          {statsInfo && <div className="mt-2">{statsInfo}</div>}
         </div>
       )}
 
       {!restricted && (
       <div className="border-b border-slate-200 bg-slate-50 px-5 py-3">
-        <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-black text-slate-700">
-              Đã chọn: {selectedCount} booking
-            </span>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-black text-slate-700">
+            Đã chọn: {selectedCount} booking
+          </span>
 
-            {selectedCount > 0 && (
-              <button
-                type="button"
-                onClick={clearSelection}
-                className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600 hover:bg-slate-100"
-              >
-                Bỏ chọn
-              </button>
-            )}
-          </div>
+          {leadingActions}
 
-          <p className="text-[12px] font-semibold text-slate-500">
-            Chọn 1 booking để Sửa / Xóa; chọn từ 2 booking trở lên để thao tác
-            hàng loạt.
-          </p>
+          {selectedCount > 0 && (
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600 hover:bg-slate-100"
+            >
+              Bỏ chọn
+            </button>
+          )}
+
+          {trailingActions && (
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              {trailingActions}
+            </div>
+          )}
         </div>
+
+        {statsInfo && <div className="mb-3">{statsInfo}</div>}
 
         {selectedCount === 1 && (
           <div className="flex flex-wrap gap-2">

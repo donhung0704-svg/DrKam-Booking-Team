@@ -603,26 +603,6 @@ export default function BookingListPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setShowColumnPanel((open) => !open)}
-              className={`h-10 rounded-xl border px-4 text-[13px] font-bold shadow-sm ${
-                showColumnPanel
-                  ? "border-[#3964ff] bg-[#eef3ff] text-[#3964ff]"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              Ẩn/hiện cột ({visibleColumnKeys.length}/{allColumnKeys.length})
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setResetColumnSignal((current) => current + 1)}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              Reset cột
-            </button>
-
-            <button
-              type="button"
               onClick={exportBookingExcel}
               className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
             >
@@ -630,21 +610,12 @@ export default function BookingListPage() {
             </button>
 
             {!isShipper && (
-              <>
-                <Link
-                  href="/bookings/new"
-                  className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-                >
-                  + Tạo Booking
-                </Link>
-
-                <Link
-                  href="/import/bookings"
-                  className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-                >
-                  Import Booking
-                </Link>
-              </>
+              <Link
+                href="/import/bookings"
+                className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                Import Booking
+              </Link>
             )}
           </div>
         </div>
@@ -655,49 +626,6 @@ export default function BookingListPage() {
           {message}
         </div>
       )}
-
-      <section className="mb-4 rounded-[18px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-[13px] font-bold text-slate-600">
-          <div className="flex flex-wrap items-center gap-3">
-            <span>
-              Booking đang hiển thị:{" "}
-              <b className="text-slate-950">{currentPageCount}</b>
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Tổng Booking theo bộ lọc:{" "}
-              <b className="text-slate-950">{totalBookingCount}</b>
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Trang:{" "}
-              <b className="text-slate-950">
-                {safePageIndex + 1}/{totalPages}
-              </b>
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <span>
-              Booking nội dung:{" "}
-              <b className="text-emerald-600">{contentBookingCount}</b>
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Booking quà: <b className="text-orange-600">{giftBookingCount}</b>{" "}
-              <span className="font-semibold text-slate-400">
-                (Đã thanh toán: {paidCount})
-              </span>
-            </span>
-          </div>
-        </div>
-      </section>
 
       <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="space-y-3">
@@ -953,6 +881,75 @@ export default function BookingListPage() {
         restricted={isShipper}
         visibleColumnKeys={visibleColumnKeys}
         resetLayoutSignal={resetColumnSignal}
+        leadingActions={
+          isShipper ? undefined : (
+            <Link
+              href="/bookings/new"
+              className="flex h-8 items-center rounded-lg bg-[#3964ff] px-3 text-[12px] font-bold text-white shadow-sm hover:bg-[#2f55df]"
+            >
+              + Tạo Booking
+            </Link>
+          )
+        }
+        trailingActions={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowColumnPanel((open) => !open)}
+              className={`h-8 rounded-lg border px-3 text-[12px] font-bold ${
+                showColumnPanel
+                  ? "border-[#3964ff] bg-[#eef3ff] text-[#3964ff]"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              Ẩn/hiện cột ({visibleColumnKeys.length}/{allColumnKeys.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setResetColumnSignal((current) => current + 1)}
+              className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Reset cột
+            </button>
+          </>
+        }
+        statsInfo={
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[12.5px] font-bold text-slate-600">
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                Đang hiển thị:{" "}
+                <b className="text-slate-950">{currentPageCount}</b>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Tổng theo bộ lọc:{" "}
+                <b className="text-slate-950">{totalBookingCount}</b>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Trang:{" "}
+                <b className="text-slate-950">
+                  {safePageIndex + 1}/{totalPages}
+                </b>
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                Booking nội dung:{" "}
+                <b className="text-emerald-600">{contentBookingCount}</b>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Booking quà:{" "}
+                <b className="text-orange-600">{giftBookingCount}</b>{" "}
+                <span className="font-semibold text-slate-400">
+                  (Đã thanh toán: {paidCount})
+                </span>
+              </span>
+            </div>
+          </div>
+        }
         onBookingUpdated={(id, patch) => {
           setBookings((prev) =>
             prev.map((item) =>
