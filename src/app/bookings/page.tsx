@@ -142,14 +142,13 @@ export default function BookingListPage() {
     ascending: boolean;
   } | null>(null);
 
-  const [filters, setFilters] = useState<FilterCondition[]>([
-    {
-      id: createFilterId(),
-      field: "koc",
-      operator: "contains",
-      value: "",
-    },
-  ]);
+  // Bộ điều kiện đã áp dụng (giống KOC: chip); mặc định rỗng = xem tất cả
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
+
+  // Điều kiện đang soạn (1 hàng); nhấn Enter để thêm vào danh sách áp dụng
+  const [draftField, setDraftField] = useState(filterFields[0].value);
+  const [draftOperator, setDraftOperator] = useState<FilterOperator>("contains");
+  const [draftValue, setDraftValue] = useState("");
 
   // Ẩn/hiện cột
   const [showColumnPanel, setShowColumnPanel] = useState(false);
@@ -200,7 +199,7 @@ export default function BookingListPage() {
       const saved = window.sessionStorage.getItem(filtersStorageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed.filters) && parsed.filters.length > 0) {
+        if (Array.isArray(parsed.filters)) {
           setFilters(parsed.filters);
         }
         if (parsed.sortState && parsed.sortState.field) {
@@ -392,12 +391,7 @@ export default function BookingListPage() {
   }
 
   function saveCurrentAsPreset() {
-    const hasCondition = filters.some(
-      (condition) =>
-        condition.value.trim() !== "" ||
-        ["empty", "not_empty"].includes(condition.operator)
-    );
-    if (!hasCondition) {
+    if (filters.length === 0) {
       setMessage("Chưa có điều kiện lọc nào để lưu.");
       return;
     }
@@ -418,11 +412,7 @@ export default function BookingListPage() {
   }
 
   function applyPreset(preset: FilterPreset) {
-    setFilters(
-      preset.filters && preset.filters.length > 0
-        ? preset.filters
-        : [{ id: createFilterId(), field: "koc", operator: "contains", value: "" }]
-    );
+    setFilters(preset.filters ?? []);
     setSortState(preset.sort ?? null);
     setPageIndex(0);
     setMessage("");
@@ -448,52 +438,32 @@ export default function BookingListPage() {
     (booking) => booking.status_booking === "Đã thanh toán"
   ).length;
 
-  function updateFilter(id: string, patch: Partial<FilterCondition>) {
-    setFilters((current) =>
-      current.map((condition) =>
-        condition.id === id ? { ...condition, ...patch } : condition
-      )
-    );
-  }
-
+  // Thêm điều kiện đang soạn vào danh sách áp dụng (Enter hoặc chọn xong)
   function addFilter() {
+    const needsValue = !["empty", "not_empty"].includes(draftOperator);
+    if (needsValue && !draftValue.trim()) return;
+
     setFilters((current) => [
       ...current,
       {
         id: createFilterId(),
-        field: "koc",
-        operator: "contains",
-        value: "",
+        field: draftField,
+        operator: draftOperator,
+        value: draftValue.trim(),
       },
     ]);
+    setDraftValue("");
+    setPageIndex(0);
   }
 
   function removeFilter(id: string) {
-    setFilters((current) => {
-      if (current.length === 1) {
-        return [
-          {
-            id: createFilterId(),
-            field: "koc",
-            operator: "contains",
-            value: "",
-          },
-        ];
-      }
-
-      return current.filter((condition) => condition.id !== id);
-    });
+    setFilters((current) => current.filter((condition) => condition.id !== id));
+    setPageIndex(0);
   }
 
   function clearFilters() {
-    setFilters([
-      {
-        id: createFilterId(),
-        field: "koc",
-        operator: "contains",
-        value: "",
-      },
-    ]);
+    setFilters([]);
+    setDraftValue("");
     setPageIndex(0);
   }
 
@@ -603,26 +573,6 @@ export default function BookingListPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setShowColumnPanel((open) => !open)}
-              className={`h-10 rounded-xl border px-4 text-[13px] font-bold shadow-sm ${
-                showColumnPanel
-                  ? "border-[#3964ff] bg-[#eef3ff] text-[#3964ff]"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              Ẩn/hiện cột ({visibleColumnKeys.length}/{allColumnKeys.length})
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setResetColumnSignal((current) => current + 1)}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              Reset cột
-            </button>
-
-            <button
-              type="button"
               onClick={exportBookingExcel}
               className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
             >
@@ -630,21 +580,12 @@ export default function BookingListPage() {
             </button>
 
             {!isShipper && (
-              <>
-                <Link
-                  href="/bookings/new"
-                  className="flex h-10 items-center rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-                >
-                  + Tạo Booking
-                </Link>
-
-                <Link
-                  href="/import/bookings"
-                  className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
-                >
-                  Import Booking
-                </Link>
-              </>
+              <Link
+                href="/import/bookings"
+                className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                Import Booking
+              </Link>
             )}
           </div>
         </div>
@@ -656,176 +597,183 @@ export default function BookingListPage() {
         </div>
       )}
 
-      <section className="mb-4 rounded-[18px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-[13px] font-bold text-slate-600">
-          <div className="flex flex-wrap items-center gap-3">
-            <span>
-              Booking đang hiển thị:{" "}
-              <b className="text-slate-950">{currentPageCount}</b>
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Tổng Booking theo bộ lọc:{" "}
-              <b className="text-slate-950">{totalBookingCount}</b>
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Trang:{" "}
-              <b className="text-slate-950">
-                {safePageIndex + 1}/{totalPages}
-              </b>
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <span>
-              Booking nội dung:{" "}
-              <b className="text-emerald-600">{contentBookingCount}</b>
-            </span>
-
-            <span className="text-slate-300">|</span>
-
-            <span>
-              Booking quà: <b className="text-orange-600">{giftBookingCount}</b>{" "}
-              <span className="font-semibold text-slate-400">
-                (Đã thanh toán: {paidCount})
-              </span>
-            </span>
-          </div>
-        </div>
-      </section>
-
       <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="space-y-3">
-          {filters.map((condition, index) => {
-            const showValueInput = !["empty", "not_empty"].includes(
-              condition.operator
-            );
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="w-full sm:w-[190px]">
+            <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
+              Trường cần lọc
+            </label>
+            <select
+              value={draftField}
+              onChange={(event) => {
+                setDraftField(event.target.value);
+                setDraftValue("");
+              }}
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+            >
+              {filterFields.map((field) => (
+                <option key={field.value} value={field.value}>
+                  {field.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            return (
+          <div className="w-full sm:w-[150px]">
+            <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
+              Điều kiện
+            </label>
+            <select
+              value={draftOperator}
+              onChange={(event) => {
+                setDraftOperator(event.target.value as FilterOperator);
+                setDraftValue("");
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") addFilter();
+              }}
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+            >
+              {filterOperators.map((operator) => (
+                <option key={operator.value} value={operator.value}>
+                  {operator.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="w-full sm:w-[220px]">
+            <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
+              Giá trị
+            </label>
+            {["empty", "not_empty"].includes(draftOperator) ? (
+              <input
+                disabled
+                value="Không cần nhập"
+                onChange={() => undefined}
+                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-100 px-3 text-[13px] font-semibold text-slate-400"
+              />
+            ) : dateFilterFields.has(draftField) ? (
+              <DatePickerInput
+                name="filter_draft_date"
+                value={draftValue}
+                onChange={setDraftValue}
+                placeholder="dd/mm/yyyy"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff]"
+              />
+            ) : (
+              <input
+                value={draftValue}
+                onChange={(event) => setDraftValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addFilter();
+                  }
+                }}
+                placeholder="Nhập từ khóa (Enter để thêm)..."
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+              />
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+          >
+            Xóa tất cả bộ lọc
+          </button>
+
+          <div className="mx-1 hidden h-8 w-px self-center bg-slate-200 md:block" />
+
+          <span className="pb-2.5 text-[12.5px] font-bold text-slate-600">
+            Sắp xếp:
+          </span>
+
+          <select
+            value={sortState?.field ?? ""}
+            onChange={(event) => {
+              const field = event.target.value;
+              if (!field) {
+                setSortState(null);
+              } else {
+                setSortState({
+                  field,
+                  ascending: sortState?.ascending ?? false,
+                });
+              }
+              setPageIndex(0);
+            }}
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-semibold outline-none focus:border-[#3964ff]"
+          >
+            <option value="">Mặc định</option>
+            {sortableFields.map((field) => (
+              <option key={field.field} value={field.field}>
+                {field.label}
+              </option>
+            ))}
+          </select>
+
+          {sortState && (
+            <div className="flex overflow-hidden rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => toggleSort(sortState.field, true)}
+                className={`h-9 px-3 text-[12.5px] font-bold ${
+                  sortState.ascending
+                    ? "bg-[#3964ff] text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                ↑ Tăng
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleSort(sortState.field, false)}
+                className={`h-9 border-l border-slate-200 px-3 text-[12.5px] font-bold ${
+                  !sortState.ascending
+                    ? "bg-[#3964ff] text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                ↓ Giảm
+              </button>
+            </div>
+          )}
+
+          <div className="mx-1 hidden h-8 w-px self-center bg-slate-200 md:block" />
+
+          <SavedFiltersDropdown
+            presets={presets}
+            onApply={(id) => {
+              const preset = presets.find((item) => item.id === id);
+              if (preset) applyPreset(preset);
+            }}
+            onDelete={deletePreset}
+            onSaveCurrent={saveCurrentAsPreset}
+          />
+        </div>
+
+        {filters.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {filters.map((condition) => (
               <div
                 key={condition.id}
-                className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_0.85fr_1.35fr_auto] xl:items-end"
+                className="flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[12px] font-bold text-blue-700"
               >
-                <div>
-                  {index === 0 && (
-                    <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
-                      Trường cần lọc
-                    </label>
-                  )}
-
-                  <select
-                    value={condition.field}
-                    onChange={(event) =>
-                      updateFilter(condition.id, {
-                        field: event.target.value,
-                        value: "",
-                      })
-                    }
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10"
-                  >
-                    {filterFields.map((field) => (
-                      <option key={field.value} value={field.value}>
-                        {field.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  {index === 0 && (
-                    <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
-                      Điều kiện
-                    </label>
-                  )}
-
-                  <select
-                    value={condition.operator}
-                    onChange={(event) =>
-                      updateFilter(condition.id, {
-                        operator: event.target.value as FilterOperator,
-                        value: "",
-                      })
-                    }
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10"
-                  >
-                    {filterOperators.map((operator) => (
-                      <option key={operator.value} value={operator.value}>
-                        {operator.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  {index === 0 && (
-                    <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
-                      Giá trị
-                    </label>
-                  )}
-
-                  {dateFilterFields.has(condition.field) && showValueInput ? (
-                    <DatePickerInput
-                      name={`filter_date_${condition.id}`}
-                      value={condition.value}
-                      onChange={(next) =>
-                        updateFilter(condition.id, { value: next })
-                      }
-                      placeholder="dd/mm/yyyy"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10"
-                    />
-                  ) : (
-                    <input
-                      value={condition.value}
-                      disabled={!showValueInput}
-                      onChange={(event) =>
-                        updateFilter(condition.id, {
-                          value: event.target.value,
-                        })
-                      }
-                      placeholder={
-                        showValueInput ? "Nhập từ khóa..." : "Không cần nhập"
-                      }
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10 disabled:bg-slate-100 disabled:text-slate-400"
-                    />
-                  )}
-                </div>
-
-                {index === 0 ? (
-                  <div className="flex items-end gap-2">
-                    <button
-                      type="button"
-                      onClick={addFilter}
-                      className="h-10 shrink-0 rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-md hover:bg-[#2f55df]"
-                    >
-                      + Thêm điều kiện
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="h-10 shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
-                    >
-                      Xóa tất cả bộ lọc
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => removeFilter(condition.id)}
-                    className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-50"
-                  >
-                    Xóa
-                  </button>
-                )}
+                <span>{getBookingFilterSummary(condition)}</span>
+                <button
+                  type="button"
+                  onClick={() => removeFilter(condition.id)}
+                  className="rounded-full bg-white px-2 py-0.5 text-blue-700 hover:bg-blue-100"
+                >
+                  ×
+                </button>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
 
         {showColumnPanel && (
           <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -878,71 +826,6 @@ export default function BookingListPage() {
           </div>
         )}
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-[12.5px] font-bold text-slate-600">
-            Sắp xếp:
-          </span>
-
-          <select
-            value={sortState?.field ?? ""}
-            onChange={(event) => {
-              const field = event.target.value;
-              if (!field) {
-                setSortState(null);
-              } else {
-                setSortState({ field, ascending: sortState?.ascending ?? false });
-              }
-              setPageIndex(0);
-            }}
-            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-semibold outline-none focus:border-[#3964ff]"
-          >
-            <option value="">Mặc định</option>
-            {sortableFields.map((field) => (
-              <option key={field.field} value={field.field}>
-                {field.label}
-              </option>
-            ))}
-          </select>
-
-          {sortState && (
-            <div className="flex overflow-hidden rounded-xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => toggleSort(sortState.field, true)}
-                className={`h-9 px-3 text-[12.5px] font-bold ${
-                  sortState.ascending
-                    ? "bg-[#3964ff] text-white"
-                    : "bg-white text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                ↑ Tăng
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleSort(sortState.field, false)}
-                className={`h-9 border-l border-slate-200 px-3 text-[12.5px] font-bold ${
-                  !sortState.ascending
-                    ? "bg-[#3964ff] text-white"
-                    : "bg-white text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                ↓ Giảm
-              </button>
-            </div>
-          )}
-
-          <div className="mx-1 hidden h-6 w-px bg-slate-200 md:block" />
-
-          <SavedFiltersDropdown
-            presets={presets}
-            onApply={(id) => {
-              const preset = presets.find((item) => item.id === id);
-              if (preset) applyPreset(preset);
-            }}
-            onDelete={deletePreset}
-            onSaveCurrent={saveCurrentAsPreset}
-          />
-        </div>
       </section>
 
       <BookingAdvancedTable
@@ -953,6 +836,75 @@ export default function BookingListPage() {
         restricted={isShipper}
         visibleColumnKeys={visibleColumnKeys}
         resetLayoutSignal={resetColumnSignal}
+        leadingActions={
+          isShipper ? undefined : (
+            <Link
+              href="/bookings/new"
+              className="flex h-8 items-center rounded-lg bg-[#3964ff] px-3 text-[12px] font-bold text-white shadow-sm hover:bg-[#2f55df]"
+            >
+              + Tạo Booking
+            </Link>
+          )
+        }
+        trailingActions={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowColumnPanel((open) => !open)}
+              className={`h-8 rounded-lg border px-3 text-[12px] font-bold ${
+                showColumnPanel
+                  ? "border-[#3964ff] bg-[#eef3ff] text-[#3964ff]"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              Ẩn/hiện cột ({visibleColumnKeys.length}/{allColumnKeys.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setResetColumnSignal((current) => current + 1)}
+              className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              Reset cột
+            </button>
+          </>
+        }
+        statsInfo={
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[12.5px] font-bold text-slate-600">
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                Đang hiển thị:{" "}
+                <b className="text-slate-950">{currentPageCount}</b>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Tổng theo bộ lọc:{" "}
+                <b className="text-slate-950">{totalBookingCount}</b>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Trang:{" "}
+                <b className="text-slate-950">
+                  {safePageIndex + 1}/{totalPages}
+                </b>
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                Booking nội dung:{" "}
+                <b className="text-emerald-600">{contentBookingCount}</b>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>
+                Booking quà:{" "}
+                <b className="text-orange-600">{giftBookingCount}</b>{" "}
+                <span className="font-semibold text-slate-400">
+                  (Đã thanh toán: {paidCount})
+                </span>
+              </span>
+            </div>
+          </div>
+        }
         onBookingUpdated={(id, patch) => {
           setBookings((prev) =>
             prev.map((item) =>
@@ -1072,6 +1024,22 @@ async function loadKocsByIds(kocIds: string[]) {
     rows,
     error: "",
   };
+}
+
+// Tóm tắt điều kiện lọc để hiển thị chip (vd: "Loại booking Bằng: Booking vid")
+function getBookingFilterSummary(condition: FilterCondition) {
+  const field = filterFields.find((item) => item.value === condition.field);
+  const operator = filterOperators.find(
+    (item) => item.value === condition.operator
+  );
+  const fieldLabel = field?.label ?? condition.field;
+  const operatorLabel = operator?.label ?? condition.operator;
+
+  if (["empty", "not_empty"].includes(condition.operator)) {
+    return `${fieldLabel}: ${operatorLabel}`;
+  }
+
+  return `${fieldLabel} ${operatorLabel}: ${condition.value}`;
 }
 
 function matchBookingCondition(
