@@ -1720,7 +1720,8 @@ function getSelectColorStyle(columnKey: string, value: unknown) {
     // Nhạt hơn hẳn "Dừng CS" (#e2e8f0) để phân biệt rõ
     "Ngủ đông": { bg: "#f8fafc", text: "#64748b", border: "#e2e8f0" },
     "Mất cast": { bg: "#fee2e2", text: "#b91c1c", border: "#fecaca" },
-    "Trùng KOC": { bg: "#fef3c7", text: "#92400e", border: "#fde68a" },
+    // Tím: khác hẳn "Chờ phản hồi" (vàng) và các status còn lại
+    "Trùng KOC": { bg: "#ede9fe", text: "#6d28d9", border: "#ddd6fe" },
     "Dừng CS": { bg: "#e2e8f0", text: "#334155", border: "#cbd5e1" },
     "Hoạt động lâu": { bg: "#cffafe", text: "#0e7490", border: "#a5f3fc" },
 
