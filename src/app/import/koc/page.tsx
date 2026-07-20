@@ -30,6 +30,10 @@ export default function ImportKocPage() {
   const [fileName, setFileName] = useState("");
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState("");
+  // Tiến độ import theo lô (null = không chạy)
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(
+    null
+  );
 
   useEffect(() => {
     async function loadData() {
@@ -170,23 +174,27 @@ function downloadKocTemplate() {
       return;
     }
 
+    // Khóa so khớp KHÔNG phân biệt hoa/thường: "Kawachan81" và "kawachan81"
+    // là cùng một KOC (trước đây bị coi là 2 -> sinh bản ghi trùng).
     const existingMap = new Map<string, string>();
 
     (existingKocs || []).forEach((koc) => {
-      const key = normalizeKocIdText(koc.Id_tiktok_Ten_fb);
-      if (key) existingMap.set(key, String(koc.id));
+      const key = matchKeyFromIdText(normalizeKocIdText(koc.Id_tiktok_Ten_fb));
+      if (key && !existingMap.has(key)) existingMap.set(key, String(koc.id));
     });
 
     const campaignMap = createCampaignMap(campaigns);
     const employeeMap = createEmployeeMap(employees);
 
-    let inserted = 0;
-    let updated = 0;
     let skipped = 0;
     const errors: string[] = [];
 
-    for (let index = 0; index < rows.length; index++) {
-      const row = rows[index];
+    // ---- Bước 1: dựng toàn bộ payload trước (không gọi mạng) ----
+    type Job = { excelRow: number; payload: DbRow; existingId?: string };
+    // Trùng ID ngay trong file: chỉ giữ dòng CUỐI cùng
+    const seenInFile = new Map<string, Job>();
+
+    rows.forEach((row, index) => {
       const idText = normalizeKocIdText(
         pick(row, [
           "ID TikTok/Tên FB",
@@ -199,17 +207,20 @@ function downloadKocTemplate() {
 
       if (!idText) {
         skipped += 1;
-        continue;
+        return;
       }
 
-      const existingId = existingMap.get(idText);
+      const key = matchKeyFromIdText(idText);
+      const existingId = existingMap.get(key);
 
       const createdAtFromExcel = optionalCreatedAt(
         pick(row, ["Ngày tạo", "Ngày tạo KOC", "Created at", "created_at"])
       );
 
-      const rawPayload = buildKocPayload(row, idText, campaignMap, employeeMap);
-      const payload = cleanUndefined(rawPayload);
+      // Giữ nguyên hoa/thường gốc khi LƯU, chỉ hạ chữ khi SO KHỚP
+      const payload = cleanUndefined(
+        buildKocPayload(row, idText, campaignMap, employeeMap)
+      );
 
       if (existingId && !createdAtFromExcel) {
         delete payload.created_at;
@@ -219,46 +230,127 @@ function downloadKocTemplate() {
         payload.created_at = getVietnamTodayCreatedAt();
       }
 
-      if (existingId) {
-        const { error } = await supabase
-          .from("koc")
-          .update(payload)
-          .eq("id", existingId);
+      const job: Job = { excelRow: index + 2, payload, existingId };
 
-        if (error) {
-          errors.push(`Dòng ${index + 2}: ${error.message}`);
-        } else {
-          updated += 1;
-          existingMap.set(idText, existingId);
-        }
+      const earlier = seenInFile.get(key);
+
+      if (earlier) {
+        // Dòng sau đè dòng trước -> thay thế tại chỗ
+        Object.assign(earlier, job);
+        return;
+      }
+
+      seenInFile.set(key, job);
+    });
+
+    // Chia việc sau khi đã khử trùng trong file
+    const updateJobs: Job[] = [];
+    const insertJobs: Job[] = [];
+
+    seenInFile.forEach((job) => {
+      if (job.existingId) {
+        updateJobs.push({ ...job, payload: { ...job.payload, id: job.existingId } });
       } else {
-        const { data, error } = await supabase
-          .from("koc")
-          .insert(payload)
-          .select("id, Id_tiktok_Ten_fb")
-          .single();
+        insertJobs.push(job);
+      }
+    });
 
-        if (error) {
-          errors.push(`Dòng ${index + 2}: ${error.message}`);
-        } else {
-          inserted += 1;
+    const totalJobs = updateJobs.length + insertJobs.length;
+    let done = 0;
+    let inserted = 0;
+    let updated = 0;
 
-          if (data?.id) {
-            existingMap.set(idText, String(data.id));
+    // ---- Bước 2: gom thành lô ----
+    // PostgREST bắt buộc mọi dòng trong 1 lô phải có CÙNG bộ cột,
+    // nên gom theo "chữ ký cột" để ô trống không vô tình ghi đè thành null.
+    function groupBySignature(jobs: Job[]) {
+      const groups = new Map<string, Job[]>();
+
+      jobs.forEach((job) => {
+        const signature = Object.keys(job.payload).sort().join("|");
+        if (!groups.has(signature)) groups.set(signature, []);
+        groups.get(signature)!.push(job);
+      });
+
+      const batches: Job[][] = [];
+      const batchSize = 500;
+
+      groups.forEach((group) => {
+        for (let from = 0; from < group.length; from += batchSize) {
+          batches.push(group.slice(from, from + batchSize));
+        }
+      });
+
+      return batches;
+    }
+
+    async function runBatch(batch: Job[], mode: "update" | "insert") {
+      const payloads = batch.map((job) => job.payload);
+
+      const { error } =
+        mode === "update"
+          ? await supabase.from("koc").upsert(payloads, { onConflict: "id" })
+          : await supabase.from("koc").insert(payloads);
+
+      if (error) {
+        // Lô lỗi -> chạy lại từng dòng để biết chính xác dòng nào hỏng
+        for (const job of batch) {
+          const single =
+            mode === "update"
+              ? await supabase.from("koc").upsert(job.payload, { onConflict: "id" })
+              : await supabase.from("koc").insert(job.payload);
+
+          if (single.error) {
+            errors.push(`Dòng ${job.excelRow}: ${single.error.message}`);
+          } else if (mode === "update") {
+            updated += 1;
+          } else {
+            inserted += 1;
           }
         }
+      } else if (mode === "update") {
+        updated += batch.length;
+      } else {
+        inserted += batch.length;
       }
+
+      done += batch.length;
+      setProgress({ done, total: totalJobs });
+    }
+
+    // ---- Bước 3: chạy các lô, tối đa 6 lô song song ----
+    const allBatches: Array<{ batch: Job[]; mode: "update" | "insert" }> = [
+      ...groupBySignature(updateJobs).map((batch) => ({ batch, mode: "update" as const })),
+      ...groupBySignature(insertJobs).map((batch) => ({ batch, mode: "insert" as const })),
+    ];
+
+    setProgress({ done: 0, total: totalJobs });
+
+    const concurrency = 6;
+
+    for (let from = 0; from < allBatches.length; from += concurrency) {
+      await Promise.all(
+        allBatches
+          .slice(from, from + concurrency)
+          .map((item) => runBatch(item.batch, item.mode))
+      );
     }
 
     setImporting(false);
+    setProgress(null);
 
     const errorText =
       errors.length > 0
         ? ` Lỗi ${errors.length} dòng: ${errors.slice(0, 3).join(" | ")}`
         : "";
 
+    const dupText =
+      rows.length - skipped - totalJobs > 0
+        ? ` Trùng ID trong file (chỉ giữ dòng cuối): ${rows.length - skipped - totalJobs}.`
+        : "";
+
     setMessage(
-      `Import xong: thêm mới ${inserted}, cập nhật ${updated}, bỏ qua ${skipped}.${errorText}`
+      `Import xong: thêm mới ${inserted}, cập nhật ${updated}, bỏ qua ${skipped}.${dupText}${errorText}`
     );
   }
 
@@ -324,7 +416,11 @@ function downloadKocTemplate() {
             disabled={importing || rows.length === 0}
             className="rounded-2xl bg-[#3964ff] px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2f55df] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {importing ? "Đang import..." : "Import KOC"}
+            {importing
+              ? progress
+                ? `Đang import ${progress.done}/${progress.total}...`
+                : "Đang chuẩn bị..."
+              : "Import KOC"}
           </button>
 <button
   type="button"
@@ -334,6 +430,25 @@ function downloadKocTemplate() {
   Tải mẫu Excel
 </button>
         </div>
+
+        {progress && progress.total > 0 && (
+          <div className="mt-4">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+              <div
+                className="h-full rounded-full bg-[#3964ff] transition-all"
+                style={{
+                  width: `${Math.round((progress.done / progress.total) * 100)}%`,
+                }}
+              />
+            </div>
+            <p className="mt-2 text-[12.5px] font-bold text-slate-600">
+              Đã xử lý {progress.done.toLocaleString("vi-VN")} /{" "}
+              {progress.total.toLocaleString("vi-VN")} dòng (
+              {Math.round((progress.done / progress.total) * 100)}%) — vui lòng
+              không đóng tab cho tới khi xong.
+            </p>
+          </div>
+        )}
 
         {fileName && (
           <p className="mt-4 text-sm font-semibold text-slate-600">
@@ -715,6 +830,13 @@ function cleanUndefined(payload: DbRow) {
 
 function normalizeKocIdText(value: any) {
   return text(value).trim();
+}
+
+// Khóa so khớp KOC: bỏ hoa/thường và gộp khoảng trắng thừa.
+// Phải khớp với unique index trong supabase/dedupe-koc.sql:
+//   CREATE UNIQUE INDEX ... ON koc (lower(btrim("Id_tiktok_Ten_fb")))
+function matchKeyFromIdText(idText: string) {
+  return idText.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function text(value: any) {
