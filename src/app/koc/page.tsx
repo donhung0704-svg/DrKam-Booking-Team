@@ -647,6 +647,9 @@ export default function KocListPage() {
                 setFilterValue("");
                 setFilterValue2("");
               }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") addFilter();
+              }}
               className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
             >
               {availableOperators.map((operator) => (
@@ -928,11 +931,19 @@ function FilterValueInput({
 }) {
   const noValueNeeded = ["is_empty", "is_not_empty"].includes(operator);
 
+  // Điều kiện Trống/Không trống không cần giá trị -> không gõ Enter được,
+  // nên hiện nút bấm để thêm điều kiện.
   if (noValueNeeded) {
     return (
       <div>
         <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">{label}</label>
-        <input disabled value="Không cần nhập" className="h-10 w-full rounded-xl border border-slate-200 bg-slate-100 px-3 text-[13px] font-semibold text-slate-400" onChange={() => undefined} />
+        <button
+          type="button"
+          onClick={() => onEnter?.()}
+          className="h-10 w-full rounded-xl border border-dashed border-[#3964ff] bg-blue-50 px-3 text-[13px] font-bold text-[#3964ff] hover:bg-blue-100"
+        >
+          + Thêm điều kiện
+        </button>
       </div>
     );
   }

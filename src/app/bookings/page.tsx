@@ -647,12 +647,14 @@ export default function BookingListPage() {
               Giá trị
             </label>
             {["empty", "not_empty"].includes(draftOperator) ? (
-              <input
-                disabled
-                value="Không cần nhập"
-                onChange={() => undefined}
-                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-100 px-3 text-[13px] font-semibold text-slate-400"
-              />
+              // Không cần giá trị -> không gõ Enter được, nên hiện nút bấm
+              <button
+                type="button"
+                onClick={addFilter}
+                className="h-10 w-full rounded-xl border border-dashed border-[#3964ff] bg-blue-50 px-3 text-[13px] font-bold text-[#3964ff] hover:bg-blue-100"
+              >
+                + Thêm điều kiện
+              </button>
             ) : dateFilterFields.has(draftField) ? (
               <DatePickerInput
                 name="filter_draft_date"
