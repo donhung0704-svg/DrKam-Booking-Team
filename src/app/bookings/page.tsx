@@ -359,6 +359,60 @@ export default function BookingListPage() {
   const pageEnd = pageStart + pageSize;
   const currentPageBookings = sortedBookings.slice(pageStart, pageEnd);
 
+  const filteredIdSet = useMemo(() => {
+    return new Set(sortedBookings.map((booking) => String(booking.id)));
+  }, [sortedBookings]);
+
+  // Sửa / xóa TẤT CẢ booking khớp bộ lọc (mọi trang, không chỉ trang đang xem).
+  // Booking lọc phía client nên gửi theo id, cắt thành từng lô để không quá dài URL.
+  async function runOnAllFiltered(
+    run: (ids: string[]) => Promise<{ error: { message: string } | null }>
+  ) {
+    const ids = sortedBookings.map((booking) => String(booking.id)).filter(Boolean);
+
+    if (ids.length === 0) return "Bộ lọc hiện tại không có booking nào.";
+
+    const chunkSize = 200;
+
+    for (let from = 0; from < ids.length; from += chunkSize) {
+      const { error } = await run(ids.slice(from, from + chunkSize));
+      if (error) return error.message;
+    }
+
+    return null;
+  }
+
+  async function bulkUpdateAllFiltered(patch: DbRow) {
+    const errorMessage = await runOnAllFiltered(async (ids) =>
+      supabase.from("bookings").update(patch).in("id", ids)
+    );
+
+    if (errorMessage) return errorMessage;
+
+    setBookings((current) =>
+      current.map((booking) =>
+        filteredIdSet.has(String(booking.id)) ? { ...booking, ...patch } : booking
+      )
+    );
+
+    return null;
+  }
+
+  async function bulkDeleteAllFiltered() {
+    const errorMessage = await runOnAllFiltered(async (ids) =>
+      supabase.from("bookings").delete().in("id", ids)
+    );
+
+    if (errorMessage) return errorMessage;
+
+    setBookings((current) =>
+      current.filter((booking) => !filteredIdSet.has(String(booking.id)))
+    );
+    setPageIndex(0);
+
+    return null;
+  }
+
   // Chọn/đảo sắp xếp: bấm lại cùng chiều -> tắt sắp xếp (về mặc định)
   function toggleSort(field: string, ascending: boolean) {
     setSortState((current) => {
@@ -838,6 +892,9 @@ export default function BookingListPage() {
         restricted={isShipper}
         visibleColumnKeys={visibleColumnKeys}
         resetLayoutSignal={resetColumnSignal}
+        totalFilteredCount={totalBookingCount}
+        onBulkUpdateAllFiltered={isShipper ? undefined : bulkUpdateAllFiltered}
+        onBulkDeleteAllFiltered={isShipper ? undefined : bulkDeleteAllFiltered}
         leadingActions={
           isShipper ? undefined : (
             <Link

@@ -219,6 +219,9 @@ export default function BookingAdvancedTable({
   leadingActions,
   trailingActions,
   statsInfo,
+  totalFilteredCount = 0,
+  onBulkUpdateAllFiltered,
+  onBulkDeleteAllFiltered,
   onBookingUpdated,
   onBookingDeleted,
 }: {
@@ -232,6 +235,11 @@ export default function BookingAdvancedTable({
   leadingActions?: ReactNode;
   trailingActions?: ReactNode;
   statsInfo?: ReactNode;
+  // Tổng số booking khớp bộ lọc hiện tại (tất cả các trang)
+  totalFilteredCount?: number;
+  // Sửa / xóa toàn bộ booking khớp bộ lọc (không chỉ trang hiện tại)
+  onBulkUpdateAllFiltered?: (patch: DbRow) => Promise<string | null>;
+  onBulkDeleteAllFiltered?: () => Promise<string | null>;
   onBookingUpdated: (id: string, patch: DbRow) => void;
   onBookingDeleted?: (ids: string[]) => void;
 }) {
@@ -251,6 +259,9 @@ export default function BookingAdvancedTable({
   const [bulkClearField, setBulkClearField] = useState("");
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  // Phạm vi thao tác hàng loạt: "page" = booking đã tick ở trang này,
+  // "all" = TẤT CẢ booking khớp bộ lọc (mọi trang)
+  const [bulkScope, setBulkScope] = useState<"page" | "all">("page");
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
 
   const firstResetSignalRef = useRef(resetLayoutSignal);
@@ -379,6 +390,20 @@ export default function BookingAdvancedTable({
 
   const allVisibleSelected =
     visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+
+  // Chỉ cho chọn phạm vi "tất cả theo bộ lọc" khi bộ lọc còn booking ở trang khác
+  const canScopeAll =
+    Boolean(onBulkUpdateAllFiltered) && totalFilteredCount > bookings.length;
+  const scopeAll = bulkScope === "all" && canScopeAll;
+  const targetCount = scopeAll ? totalFilteredCount : selectedCount;
+  const scopeLabel = scopeAll
+    ? `${totalFilteredCount.toLocaleString("vi-VN")} booking theo bộ lọc (tất cả các trang)`
+    : `${selectedCount} booking đã chọn ở trang này`;
+
+  // Đổi bộ lọc / đổi trang thì trả phạm vi về mặc định cho an toàn
+  useEffect(() => {
+    setBulkScope("page");
+  }, [totalFilteredCount, bookings]);
 
   const bulkColumn = useMemo(() => {
     return editableColumns.find((column) => column.field === bulkField) || null;
@@ -536,7 +561,7 @@ export default function BookingAdvancedTable({
   }
 
   async function bulkUpdateSelected() {
-    if (selectedCount === 0) {
+    if (targetCount === 0) {
       setError("Chưa chọn booking nào để cập nhật hàng loạt.");
       return;
     }
@@ -553,12 +578,29 @@ export default function BookingAdvancedTable({
       return;
     }
 
-    const confirmMessage = `Cập nhật trường "${bulkColumn.label}" cho ${selectedCount} booking đã chọn?`;
+    const confirmMessage = `Cập nhật trường "${bulkColumn.label}" cho ${scopeLabel}?`;
 
     if (!window.confirm(confirmMessage)) return;
 
     setBulkSaving(true);
     setError("");
+
+    if (scopeAll && onBulkUpdateAllFiltered) {
+      const errorMessage = await onBulkUpdateAllFiltered({
+        [bulkColumn.field]: nextValue,
+      });
+
+      if (errorMessage) {
+        setError(`Lỗi cập nhật hàng loạt: ${errorMessage}`);
+        setBulkSaving(false);
+        return;
+      }
+
+      setBulkValue("");
+      setBulkScope("page");
+      setBulkSaving(false);
+      return;
+    }
 
     const { error: updateError } = await supabase
       .from("bookings")
@@ -580,7 +622,7 @@ export default function BookingAdvancedTable({
   }
 
   async function bulkClearSelectedField() {
-    if (selectedCount === 0) {
+    if (targetCount === 0) {
       setError("Chưa chọn booking nào để xóa trắng trường.");
       return;
     }
@@ -590,12 +632,29 @@ export default function BookingAdvancedTable({
       return;
     }
 
-    const confirmMessage = `Xóa trắng trường "${bulkClearColumn.label}" của ${selectedCount} booking đã chọn?`;
+    const confirmMessage = `Xóa trắng trường "${bulkClearColumn.label}" của ${scopeLabel}?`;
 
     if (!window.confirm(confirmMessage)) return;
 
     setBulkSaving(true);
     setError("");
+
+    if (scopeAll && onBulkUpdateAllFiltered) {
+      const errorMessage = await onBulkUpdateAllFiltered({
+        [bulkClearColumn.field]: null,
+      });
+
+      if (errorMessage) {
+        setError(`Lỗi xóa trắng hàng loạt: ${errorMessage}`);
+        setBulkSaving(false);
+        return;
+      }
+
+      setBulkClearField("");
+      setBulkScope("page");
+      setBulkSaving(false);
+      return;
+    }
 
     const { error: updateError } = await supabase
       .from("bookings")
@@ -617,12 +676,12 @@ export default function BookingAdvancedTable({
   }
 
   async function bulkDeleteSelectedRows() {
-    if (selectedCount === 0) {
+    if (targetCount === 0) {
       setError("Chưa chọn booking nào để xóa.");
       return;
     }
 
-    const confirmMessage = `XÓA VĨNH VIỄN ${selectedCount} booking đã chọn? Thao tác này không hoàn tác được.`;
+    const confirmMessage = `XÓA VĨNH VIỄN ${scopeLabel}? Thao tác này không hoàn tác được.`;
 
     if (!window.confirm(confirmMessage)) return;
 
@@ -631,6 +690,36 @@ export default function BookingAdvancedTable({
     );
 
     if (!secondConfirm) return;
+
+    if (scopeAll && onBulkDeleteAllFiltered) {
+      // Xóa cả bộ lọc là cực kỳ nguy hiểm -> bắt gõ tay để xác nhận lần 3
+      const typed = window.prompt(
+        `Sắp xóa ${totalFilteredCount.toLocaleString(
+          "vi-VN"
+        )} booking trên TẤT CẢ các trang của bộ lọc.\n\nGõ chính xác XOA rồi bấm OK để tiếp tục:`
+      );
+
+      if ((typed || "").trim().toUpperCase() !== "XOA") {
+        setError("Đã hủy xóa hàng loạt (chưa gõ đúng XOA).");
+        return;
+      }
+
+      setBulkDeleting(true);
+      setError("");
+
+      const errorMessage = await onBulkDeleteAllFiltered();
+
+      if (errorMessage) {
+        setError(`Lỗi xóa booking hàng loạt: ${errorMessage}`);
+        setBulkDeleting(false);
+        return;
+      }
+
+      setSelectedIds([]);
+      setBulkScope("page");
+      setBulkDeleting(false);
+      return;
+    }
 
     setBulkDeleting(true);
     setError("");
@@ -702,6 +791,51 @@ export default function BookingAdvancedTable({
 
         {statsInfo && <div className="mb-3">{statsInfo}</div>}
 
+        {selectedCount > 0 && canScopeAll && (
+          <div
+            className={`mb-2 flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 ${
+              scopeAll
+                ? "border-amber-300 bg-amber-50"
+                : "border-slate-200 bg-white"
+            }`}
+          >
+            <span className="text-[12px] font-black text-slate-600">
+              Áp dụng sửa / xóa cho:
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setBulkScope("page")}
+              className={`h-8 rounded-lg border px-3 text-[12px] font-bold ${
+                scopeAll
+                  ? "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                  : "border-[#3964ff] bg-[#3964ff] text-white"
+              }`}
+            >
+              {selectedCount} booking đã chọn (trang này)
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setBulkScope("all")}
+              className={`h-8 rounded-lg border px-3 text-[12px] font-bold ${
+                scopeAll
+                  ? "border-amber-500 bg-amber-500 text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              Tất cả {totalFilteredCount.toLocaleString("vi-VN")} booking theo bộ
+              lọc
+            </button>
+
+            {scopeAll && (
+              <span className="text-[11.5px] font-bold text-amber-700">
+                ⚠ Thao tác sẽ chạy trên TẤT CẢ các trang của bộ lọc hiện tại.
+              </span>
+            )}
+          </div>
+        )}
+
         {selectedCount === 1 && (
           <div className="flex flex-wrap gap-2">
             <Link
@@ -750,7 +884,7 @@ export default function BookingAdvancedTable({
 
           <button
             type="button"
-            disabled={bulkSaving || selectedCount === 0}
+            disabled={bulkSaving || targetCount === 0}
             onClick={bulkUpdateSelected}
             className="h-9 rounded-xl bg-[#3964ff] px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-[#2f55df] disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -773,7 +907,7 @@ export default function BookingAdvancedTable({
           <div className="flex gap-2">
             <button
               type="button"
-              disabled={bulkSaving || selectedCount === 0}
+              disabled={bulkSaving || targetCount === 0}
               onClick={bulkClearSelectedField}
               className="h-9 rounded-xl border border-orange-200 bg-orange-50 px-4 text-[12.5px] font-black text-orange-700 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -782,7 +916,7 @@ export default function BookingAdvancedTable({
 
             <button
               type="button"
-              disabled={bulkDeleting || selectedCount === 0}
+              disabled={bulkDeleting || targetCount === 0}
               onClick={bulkDeleteSelectedRows}
               className="h-9 rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
             >

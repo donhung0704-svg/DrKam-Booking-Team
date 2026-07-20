@@ -280,6 +280,9 @@ export default function KocAdvancedTable({
   leadingActions,
   trailingActions,
   statsInfo,
+  totalFilteredCount = 0,
+  onBulkUpdateAllFiltered,
+  onBulkDeleteAllFiltered,
   onExport,
   onKocUpdated,
   onKocDeleted,
@@ -293,6 +296,11 @@ export default function KocAdvancedTable({
   leadingActions?: ReactNode;
   trailingActions?: ReactNode;
   statsInfo?: ReactNode;
+  // Tổng số KOC khớp bộ lọc hiện tại (tất cả các trang)
+  totalFilteredCount?: number;
+  // Sửa / xóa toàn bộ KOC khớp bộ lọc (không chỉ trang hiện tại)
+  onBulkUpdateAllFiltered?: (patch: DbRow) => Promise<string | null>;
+  onBulkDeleteAllFiltered?: () => Promise<string | null>;
   onExport: () => void;
   onKocUpdated: (id: string, patch: DbRow) => void;
   onKocDeleted?: (ids: string[]) => void;
@@ -320,6 +328,9 @@ export default function KocAdvancedTable({
   >({});
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  // Phạm vi thao tác hàng loạt: "page" = KOC đã tick ở trang này,
+  // "all" = TẤT CẢ KOC khớp bộ lọc (mọi trang)
+  const [bulkScope, setBulkScope] = useState<"page" | "all">("page");
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
 
   const firstResetSignalRef = useRef(resetLayoutSignal);
@@ -482,6 +493,21 @@ const orderedColumns = useMemo(() => {
 
   const selectedCount = selectedIds.length;
 
+  // Chỉ cho chọn phạm vi "tất cả theo bộ lọc" khi trang cha có hỗ trợ
+  // và khi bộ lọc còn KOC ở các trang khác
+  const canScopeAll =
+    Boolean(onBulkUpdateAllFiltered) && totalFilteredCount > kocs.length;
+  const scopeAll = bulkScope === "all" && canScopeAll;
+  const targetCount = scopeAll ? totalFilteredCount : selectedCount;
+  const scopeLabel = scopeAll
+    ? `${totalFilteredCount.toLocaleString("vi-VN")} KOC theo bộ lọc (tất cả các trang)`
+    : `${selectedCount} KOC đã chọn ở trang này`;
+
+  // Đổi bộ lọc / đổi trang thì trả phạm vi về mặc định cho an toàn
+  useEffect(() => {
+    setBulkScope("page");
+  }, [totalFilteredCount, kocs]);
+
   const visibleIds = useMemo(() => {
     return kocs.map((koc) => String(koc.id)).filter(Boolean);
   }, [kocs]);
@@ -640,7 +666,7 @@ const orderedColumns = useMemo(() => {
   }
 
   async function bulkUpdateSelected() {
-    if (selectedCount === 0) {
+    if (targetCount === 0) {
       setError("Chưa chọn KOC nào để cập nhật hàng loạt.");
       return;
     }
@@ -659,16 +685,34 @@ const orderedColumns = useMemo(() => {
       return;
     }
 
-    const confirmMessage = `Cập nhật trường "${bulkColumn.label}" cho ${selectedCount} KOC đã chọn?`;
+    const confirmMessage = `Cập nhật trường "${bulkColumn.label}" cho ${scopeLabel}?`;
 
     if (!window.confirm(confirmMessage)) return;
 
     setBulkSaving(true);
     setError("");
 
+    const patch = { [bulkColumn.field]: nextValue };
+
+    if (scopeAll && onBulkUpdateAllFiltered) {
+      // Cập nhật thẳng theo điều kiện lọc -> chạm tới mọi trang, không cần liệt kê id
+      const errorMessage = await onBulkUpdateAllFiltered(patch);
+
+      if (errorMessage) {
+        setError(`Lỗi cập nhật hàng loạt: ${errorMessage}`);
+        setBulkSaving(false);
+        return;
+      }
+
+      setBulkValue("");
+      setBulkScope("page");
+      setBulkSaving(false);
+      return;
+    }
+
     const { error: updateError } = await supabase
       .from("koc")
-      .update({ [bulkColumn.field]: nextValue })
+      .update(patch)
       .in("id", selectedIds);
 
     if (updateError) {
@@ -686,7 +730,7 @@ const orderedColumns = useMemo(() => {
   }
 
   async function bulkClearSelectedField() {
-    if (selectedCount === 0) {
+    if (targetCount === 0) {
       setError("Chưa chọn KOC nào để xóa trắng trường.");
       return;
     }
@@ -702,7 +746,7 @@ const orderedColumns = useMemo(() => {
 
     const confirmMessage = `Xóa trắng ${bulkClearFields.length} trường (${labels.join(
       ", "
-    )}) của ${selectedCount} KOC đã chọn?`;
+    )}) của ${scopeLabel}?`;
 
     if (!window.confirm(confirmMessage)) return;
 
@@ -714,6 +758,22 @@ const orderedColumns = useMemo(() => {
     bulkClearFields.forEach((field) => {
       patch[field] = null;
     });
+
+    if (scopeAll && onBulkUpdateAllFiltered) {
+      const errorMessage = await onBulkUpdateAllFiltered(patch);
+
+      if (errorMessage) {
+        setError(`Lỗi xóa trắng hàng loạt: ${errorMessage}`);
+        setBulkSaving(false);
+        return;
+      }
+
+      setBulkClearFields([]);
+      setBulkClearOpen(false);
+      setBulkScope("page");
+      setBulkSaving(false);
+      return;
+    }
 
     const { error: updateError } = await supabase
       .from("koc")
@@ -736,12 +796,12 @@ const orderedColumns = useMemo(() => {
   }
 
   async function bulkDeleteSelectedRows() {
-    if (selectedCount === 0) {
+    if (targetCount === 0) {
       setError("Chưa chọn KOC nào để xóa.");
       return;
     }
 
-    const confirmMessage = `XÓA VĨNH VIỄN ${selectedCount} KOC đã chọn? Thao tác này không hoàn tác được.`;
+    const confirmMessage = `XÓA VĨNH VIỄN ${scopeLabel}? Thao tác này không hoàn tác được.`;
 
     if (!window.confirm(confirmMessage)) return;
 
@@ -750,6 +810,36 @@ const orderedColumns = useMemo(() => {
     );
 
     if (!secondConfirm) return;
+
+    if (scopeAll && onBulkDeleteAllFiltered) {
+      // Xóa cả bộ lọc là cực kỳ nguy hiểm -> bắt gõ tay để xác nhận lần 3
+      const typed = window.prompt(
+        `Sắp xóa ${totalFilteredCount.toLocaleString(
+          "vi-VN"
+        )} KOC trên TẤT CẢ các trang của bộ lọc.\n\nGõ chính xác XOA rồi bấm OK để tiếp tục:`
+      );
+
+      if ((typed || "").trim().toUpperCase() !== "XOA") {
+        setError("Đã hủy xóa hàng loạt (chưa gõ đúng XOA).");
+        return;
+      }
+
+      setBulkDeleting(true);
+      setError("");
+
+      const errorMessage = await onBulkDeleteAllFiltered();
+
+      if (errorMessage) {
+        setError(`Lỗi xóa KOC hàng loạt: ${errorMessage}`);
+        setBulkDeleting(false);
+        return;
+      }
+
+      setSelectedIds([]);
+      setBulkScope("page");
+      setBulkDeleting(false);
+      return;
+    }
 
     setBulkDeleting(true);
     setError("");
@@ -810,6 +900,50 @@ const orderedColumns = useMemo(() => {
 
         {statsInfo && <div className="mb-3">{statsInfo}</div>}
 
+        {selectedCount > 0 && canScopeAll && (
+          <div
+            className={`mb-2 flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 ${
+              scopeAll
+                ? "border-amber-300 bg-amber-50"
+                : "border-slate-200 bg-white"
+            }`}
+          >
+            <span className="text-[12px] font-black text-slate-600">
+              Áp dụng sửa / xóa cho:
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setBulkScope("page")}
+              className={`h-8 rounded-lg border px-3 text-[12px] font-bold ${
+                scopeAll
+                  ? "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                  : "border-[#3964ff] bg-[#3964ff] text-white"
+              }`}
+            >
+              {selectedCount} KOC đã chọn (trang này)
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setBulkScope("all")}
+              className={`h-8 rounded-lg border px-3 text-[12px] font-bold ${
+                scopeAll
+                  ? "border-amber-500 bg-amber-500 text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              Tất cả {totalFilteredCount.toLocaleString("vi-VN")} KOC theo bộ lọc
+            </button>
+
+            {scopeAll && (
+              <span className="text-[11.5px] font-bold text-amber-700">
+                ⚠ Thao tác sẽ chạy trên TẤT CẢ các trang của bộ lọc hiện tại.
+              </span>
+            )}
+          </div>
+        )}
+
         {selectedCount === 1 && (
           <div className="flex flex-wrap gap-2">
             <Link
@@ -865,7 +999,7 @@ const orderedColumns = useMemo(() => {
 
           <button
             type="button"
-            disabled={bulkSaving || selectedCount === 0}
+            disabled={bulkSaving || targetCount === 0}
             onClick={bulkUpdateSelected}
             className="h-9 rounded-xl bg-[#3964ff] px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-[#2f55df] disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -944,7 +1078,7 @@ const orderedColumns = useMemo(() => {
             <button
               type="button"
               disabled={
-                bulkSaving || selectedCount === 0 || bulkClearFields.length === 0
+                bulkSaving || targetCount === 0 || bulkClearFields.length === 0
               }
               onClick={bulkClearSelectedField}
               className="h-9 rounded-xl border border-orange-200 bg-orange-50 px-4 text-[12.5px] font-black text-orange-700 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
@@ -956,11 +1090,15 @@ const orderedColumns = useMemo(() => {
 
             <button
               type="button"
-              disabled={bulkDeleting || selectedCount === 0}
+              disabled={bulkDeleting || targetCount === 0}
               onClick={bulkDeleteSelectedRows}
               className="h-9 rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {bulkDeleting ? "Đang xóa..." : "Xóa KOC đã chọn"}
+              {bulkDeleting
+                ? "Đang xóa..."
+                : scopeAll
+                  ? `Xóa ${totalFilteredCount.toLocaleString("vi-VN")} KOC theo bộ lọc`
+                  : "Xóa KOC đã chọn"}
             </button>
           </div>
           </div>

@@ -177,6 +177,9 @@ export default function KocListPage() {
   // Đã khôi phục bộ lọc từ sessionStorage chưa (để không tải KOC trước khi khôi phục)
   const [filtersHydrated, setFiltersHydrated] = useState(false);
 
+  // Tăng lên để tải lại danh sách sau khi sửa / xóa toàn bộ theo bộ lọc
+  const [reloadSignal, setReloadSignal] = useState(0);
+
   // Danh sách bộ lọc đã lưu
   const [presets, setPresets] = useState<FilterPreset[]>([]);
 
@@ -365,7 +368,41 @@ export default function KocListPage() {
     }
 
     loadKocs();
-  }, [filtersHydrated, pageIndex, pageSize, activeFilters, sortState]);
+  }, [filtersHydrated, pageIndex, pageSize, activeFilters, sortState, reloadSignal]);
+
+  // Cập nhật TẤT CẢ KOC khớp bộ lọc hiện tại (mọi trang, không chỉ trang đang xem).
+  // Chạy thẳng bằng điều kiện lọc nên không cần liệt kê id -> không vướng
+  // giới hạn 1000 dòng của Supabase.
+  async function bulkUpdateAllFiltered(patch: DbRow) {
+    let query = supabase.from("koc").update(patch).not("id", "is", null);
+
+    activeFilters.forEach((condition) => {
+      query = applyConditionToQuery(query, condition);
+    });
+
+    const { error } = await query;
+
+    if (error) return error.message;
+
+    setReloadSignal((current) => current + 1);
+    return null;
+  }
+
+  async function bulkDeleteAllFiltered() {
+    let query = supabase.from("koc").delete().not("id", "is", null);
+
+    activeFilters.forEach((condition) => {
+      query = applyConditionToQuery(query, condition);
+    });
+
+    const { error } = await query;
+
+    if (error) return error.message;
+
+    setPageIndex(0);
+    setReloadSignal((current) => current + 1);
+    return null;
+  }
 
   const campaignMap = useMemo(() => {
     const map = new Map<string, DbRow>();
@@ -813,6 +850,9 @@ export default function KocListPage() {
         visibleColumnKeys={visibleColumnKeys}
         resetLayoutSignal={resetColumnSignal}
         loading={loading}
+        totalFilteredCount={totalKocCount}
+        onBulkUpdateAllFiltered={bulkUpdateAllFiltered}
+        onBulkDeleteAllFiltered={bulkDeleteAllFiltered}
         leadingActions={
           <Link
             href="/koc/new"
