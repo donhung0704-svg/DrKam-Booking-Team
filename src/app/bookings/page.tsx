@@ -46,6 +46,17 @@ const bookingTypeOptions = [
 const legacyContentBookingTypes = ["Booking mới"];
 const legacyGiftBookingTypes = ["Tặng quà"];
 
+// Các trường lọc theo danh sách cố định -> hiện ô chọn thay vì gõ tay
+const statusBookingOptions = [
+  "Chờ nhận SP",
+  "Đang lên video",
+  "Đã đăng video",
+  "Đã thanh toán",
+];
+
+// Trường lọc chọn từ danh sách (không phải gõ tay)
+const selectFilterFields = new Set(["employee", "status_booking", "booking_type"]);
+
 const pageSizeOptions = [100, 200, 300];
 // Giữ bộ lọc/sắp xếp khi rời trang rồi quay lại (theo phiên tab)
 const filtersStorageKey = "drkam_booking_filters_v1";
@@ -302,6 +313,23 @@ export default function BookingListPage() {
 
     return map;
   }, [employees]);
+
+  // Danh sách lựa chọn cho ô "Giá trị" theo trường đang lọc.
+  // PIC so khớp theo tên hiển thị (getEmployeeDisplayName), nên option cũng
+  // dùng đúng tên đó để lọc ra kết quả.
+  const draftValueOptions = useMemo<string[] | null>(() => {
+    if (draftField === "employee") {
+      const names = employees
+        .map((employee) => getEmployeeDisplayName(employee))
+        .filter(Boolean);
+      return [...new Set(names)].sort((a, b) => a.localeCompare(b, "vi"));
+    }
+
+    if (draftField === "status_booking") return statusBookingOptions;
+    if (draftField === "booking_type") return bookingTypeOptions;
+
+    return null;
+  }, [draftField, employees]);
 
   const filteredBookings = useMemo(() => {
     return bookings.filter((booking) => {
@@ -717,6 +745,25 @@ export default function BookingListPage() {
                 placeholder="dd/mm/yyyy"
                 className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff]"
               />
+            ) : selectFilterFields.has(draftField) && draftValueOptions ? (
+              <select
+                value={draftValue}
+                onChange={(event) => setDraftValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addFilter();
+                  }
+                }}
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+              >
+                <option value="">-- Chọn --</option>
+                {draftValueOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             ) : (
               <input
                 value={draftValue}
