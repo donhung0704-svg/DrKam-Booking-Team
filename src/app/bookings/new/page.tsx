@@ -65,6 +65,8 @@ export default function NewBookingPage() {
 
   // KOC đang chọn + địa chỉ/SĐT giao hàng (mặc định lấy theo KOC, sửa được)
   const [selectedKocId, setSelectedKocId] = useState("");
+  // PIC phụ trách: mặc định lấy theo PIC của KOC, vẫn đổi tay được
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
   const prefilledKocRef = useRef("");
@@ -114,6 +116,10 @@ export default function NewBookingPage() {
     prefilledKocRef.current = selectedKocId;
     setDeliveryAddress(selectedKoc.address || "");
     setRecipientPhone(selectedKoc.phone || "");
+    // PIC phụ trách của Booking = PIC phụ trách của KOC đó
+    setSelectedEmployeeId(
+      selectedKoc.employee_id ? String(selectedKoc.employee_id) : ""
+    );
   }, [selectedKocId, selectedKoc]);
 
   // Nếu mở từ Hồ sơ KOC (?koc_id=...) thì chọn sẵn KOC đó
@@ -284,6 +290,8 @@ export default function NewBookingPage() {
             <CompactField label="PIC phụ trách">
               <select
                 name="employee_id"
+                value={selectedEmployeeId}
+                onChange={(event) => setSelectedEmployeeId(event.target.value)}
                 className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 <option value="">Không chọn PIC</option>
