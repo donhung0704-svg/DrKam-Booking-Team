@@ -230,6 +230,12 @@ function downloadKocTemplate() {
         payload.created_at = getVietnamTodayCreatedAt();
       }
 
+      // Chỉ KOC THÊM MỚI mới cần status mặc định. KOC đã có mà Excel bỏ trống
+      // ô Status thì giữ nguyên status hiện tại (không kéo về "Chờ phản hồi").
+      if (!existingId && !payload.status) {
+        payload.status = "Chờ phản hồi";
+      }
+
       const job: Job = { excelRow: index + 2, payload, existingId };
 
       const earlier = seenInFile.get(key);
@@ -676,9 +682,11 @@ function buildKocPayload(
     email: optionalText(pick(row, ["Email", "email"])),
     follower: optionalNumber(pick(row, ["Follower", "follower"])),
     tier: matchOption(pick(row, ["Tier", "tier"]), tierOptions),
-    status:
-      matchOption(pick(row, ["Status", "status"]), statusOptions) ||
-      "Chờ phản hồi",
+    // KHÔNG ép mặc định ở đây. Nếu ô Status trong Excel trống thì để undefined
+    // -> cleanUndefined loại bỏ -> KHÔNG ghi đè status đang có (tránh việc
+    // status sửa tay như "Đã chốt" bị import kéo về "Chờ phản hồi").
+    // Mặc định "Chờ phản hồi" chỉ áp cho KOC THÊM MỚI (xử lý ở handleImport).
+    status: matchOption(pick(row, ["Status", "status"]), statusOptions),
     channel_type: matchOption(
       pick(row, ["Channel type", "channel_type"]),
       channelTypeOptions
