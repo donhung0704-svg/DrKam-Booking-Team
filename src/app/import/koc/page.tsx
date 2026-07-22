@@ -83,11 +83,16 @@ export default function ImportKocPage() {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
 
-      // raw:true -> ô ngày thật là SERIAL NUMBER (tuyệt đối, không nhầm mm/dd);
-      // ô ngày dạng text vẫn là chuỗi -> parse dd/mm.
+      // raw:false -> đọc ĐÚNG CHUỖI Excel đang hiển thị (WYSIWYG).
+      // File thực tế trộn 2 kiểu ô Booking date / Ngày tạo:
+      //  - ô text "13/01/2026" (dd/mm) -> giữ nguyên.
+      //  - ô serial (vd 46357) mà Excel locale US đã hiểu "12/1" thành mm/dd
+      //    -> serial tuyệt đối = 01/12, NHƯNG vẫn HIỂN THỊ "12/1/26".
+      // Đọc chuỗi hiển thị rồi parse dd/mm sẽ khôi phục đúng ý người nhập
+      // (12/01) thay vì lấy serial tuyệt đối bị lộn ngày/tháng.
       const parsedRows = XLSX.utils.sheet_to_json<ExcelRow>(worksheet, {
         defval: "",
-        raw: true,
+        raw: false,
       });
 
       setRows(parsedRows);
@@ -905,6 +910,7 @@ function optionalDate(value: any) {
   const raw = text(value);
   if (!raw) return undefined;
 
+  // ddmmyyyy liền nhau
   if (/^\d{8}$/.test(raw)) {
     const day = raw.slice(0, 2);
     const month = raw.slice(2, 4);
@@ -913,13 +919,38 @@ function optionalDate(value: any) {
     return `${year}-${month}-${day}`;
   }
 
+  // yyyy-mm-dd (ISO)
   if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)) {
     const [year, month, day] = raw.split("-");
     return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
 
-  if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/.test(raw)) {
-    const [dayRaw, monthRaw, year] = raw.split(/[\/-]/);
+  // d/m/yy hoặc d/m/yyyy: MẶC ĐỊNH dd/mm (kiểu VN), tự dò khi có số > 12.
+  // Chấp nhận năm 2 chữ số vì ô serial hiển thị dạng "12/1/26".
+  if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}$/.test(raw)) {
+    const [p1, p2, yearRaw] = raw.split(/[\/-]/);
+    const n1 = Number(p1);
+    const n2 = Number(p2);
+
+    let dayRaw: string;
+    let monthRaw: string;
+
+    if (n1 > 12 && n2 <= 12) {
+      // Số đầu > 12 -> chắc chắn là NGÀY (dd/mm)
+      dayRaw = p1;
+      monthRaw = p2;
+    } else if (n2 > 12 && n1 <= 12) {
+      // Số sau > 12 -> chắc chắn là NGÀY (mm/dd)
+      dayRaw = p2;
+      monthRaw = p1;
+    } else {
+      // Mập mờ (cả 2 <= 12) -> mặc định kiểu VN dd/mm
+      dayRaw = p1;
+      monthRaw = p2;
+    }
+
+    const year =
+      yearRaw.length === 2 ? `20${yearRaw}` : yearRaw.padStart(4, "0");
     return `${year}-${monthRaw.padStart(2, "0")}-${dayRaw.padStart(2, "0")}`;
   }
 
