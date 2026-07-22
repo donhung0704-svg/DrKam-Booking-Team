@@ -177,6 +177,13 @@ const defaultColumns: ColumnConfig[] = [
     width: 145,
   },
   {
+    key: "videos_with_revenue",
+    label: "Video có DT",
+    field: "videos_with_revenue",
+    type: "number",
+    width: 130,
+  },
+  {
     key: "campaign_id",
     label: "Campaign name",
     field: "campaign_id",
@@ -264,6 +271,7 @@ const defaultVisibleColumnKeys = [
   "platform",
   "channel_type",
   "phone",
+  "videos_with_revenue",
   "created_at",
   "new_contact_date",
   "time_contact",

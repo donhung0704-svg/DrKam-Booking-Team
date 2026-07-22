@@ -117,6 +117,7 @@ function downloadKocTemplate() {
       "Date of birth": "01/01/2000",
       "Daily Videos(T-1)": 0,
       "Monthly Videos": 0,
+      "Video có DT": 0,
       "Campaign name": "",
       "GMV ngày": 0,
       "GMV tháng": 0,
@@ -486,6 +487,7 @@ function downloadKocTemplate() {
             "Date of birth",
             "Daily Videos(T-1)",
             "Monthly Videos",
+            "Video có DT",
             "Campaign name",
             "GMV ngày",
             "GMV tháng",
@@ -537,6 +539,7 @@ function downloadKocTemplate() {
                 <Th>SĐT/Zalo</Th>
                 <Th>Daily Videos(T-1)</Th>
                 <Th>Monthly Videos</Th>
+                <Th>Video có DT</Th>
                 <Th>Campaign</Th>
                 <Th>GMV ngày</Th>
                 <Th>GMV tháng</Th>
@@ -547,7 +550,7 @@ function downloadKocTemplate() {
               {previewRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={16}
+                    colSpan={17}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Chưa có dữ liệu preview.
@@ -597,6 +600,11 @@ function downloadKocTemplate() {
                   </Td>
                   <Td>
                     {text(pick(row, ["Monthly Videos", "monthly_videos"])) || "-"}
+                  </Td>
+                  <Td>
+                    {text(
+                      pick(row, ["Video có DT", "Video co DT", "videos_with_revenue"])
+                    ) || "-"}
                   </Td>
                   <Td>
                     {text(
@@ -709,6 +717,9 @@ function buildKocPayload(
     ),
     monthly_videos: optionalNumber(
       pick(row, ["Monthly Videos", "monthly_videos"])
+    ),
+    videos_with_revenue: optionalNumber(
+      pick(row, ["Video có DT", "Video co DT", "videos_with_revenue"])
     ),
     campaign_id: campaignId,
     gmv: optionalNumber(pick(row, ["GMV ngày", "GMV", "gmv"])),
