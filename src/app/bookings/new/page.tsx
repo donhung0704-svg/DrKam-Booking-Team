@@ -554,7 +554,9 @@ async function loadAllKocsForBookingForm() {
 
     const { data, error } = await supabase
       .from("koc")
-      .select("id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link")
+      .select(
+        "id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link, employee_id"
+      )
       .order("created_at", { ascending: false })
       .range(from, to);
 
