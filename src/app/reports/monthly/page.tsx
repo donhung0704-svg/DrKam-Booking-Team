@@ -100,6 +100,8 @@ type MetricConfig = {
   // ratio=true: "thực đạt" HIỂN THỊ chính giá trị % (Video DT / Monthly Videos),
   // không phải actual/kpi. Màu vẫn so với KPI mục tiêu.
   ratio?: boolean;
+  // narrow=true: cột hẹp (~1/2 độ rộng) cho các chỉ số giá trị ngắn
+  narrow?: boolean;
 };
 
 // Chỉ số "% Video có DT" dùng chung cho cả Hunter và Famer
@@ -108,6 +110,7 @@ const VIDEO_CO_DT_METRIC: MetricConfig = {
   label: "% Video có DT",
   actual: videoCoDtPercent,
   ratio: true,
+  narrow: true,
 };
 
 // Famer: Video trừ POV + Doanh thu + % Video có DT
@@ -124,11 +127,17 @@ const FAMER_METRICS: MetricConfig[] = [
 
 // Hunter dùng 4 chỉ số riêng + % Video có DT
 const HUNTER_METRICS: MetricConfig[] = [
-  { field: "kocMoi", label: "KOC chốt mới", actual: (r) => r.kocChotMoi },
+  {
+    field: "kocMoi",
+    label: "KOC chốt mới",
+    actual: (r) => r.kocChotMoi,
+    narrow: true,
+  },
   {
     field: "videoMoi",
     label: "Video KOC mới (trừ POV)",
     actual: (r) => r.videoKocMoiTruPov,
+    narrow: true,
   },
   { field: "gmv", label: "Doanh thu", actual: (r) => r.gmvNgay, money: true },
   {
@@ -930,9 +939,19 @@ function Th({ children }: { children: ReactNode }) {
   );
 }
 
-function Td({ children }: { children: ReactNode }) {
+function Td({
+  children,
+  narrow,
+}: {
+  children: ReactNode;
+  narrow?: boolean;
+}) {
   return (
-    <td className="border-b border-slate-100 px-2 py-3 align-middle text-[13px]">
+    <td
+      className={`border-b border-slate-100 py-3 align-middle text-[13px] ${
+        narrow ? "px-1" : "px-2"
+      }`}
+    >
       {children}
     </td>
   );
@@ -941,15 +960,17 @@ function Td({ children }: { children: ReactNode }) {
 function KpiTh({
   children,
   borderRight,
+  narrow,
 }: {
   children: ReactNode;
   borderRight?: boolean;
+  narrow?: boolean;
 }) {
   return (
     <th
-      className={`border-b border-slate-200 px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600 ${
-        borderRight ? "border-r" : ""
-      }`}
+      className={`border-b border-slate-200 py-2 text-center text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600 ${
+        narrow ? "px-1" : "px-4"
+      } ${borderRight ? "border-r" : ""}`}
     >
       {children}
     </th>
@@ -1018,12 +1039,15 @@ function KpiGroupTable({
                 <KpiTh
                   key={`kpi-head-${metric.field}`}
                   borderRight={index === metrics.length - 1}
+                  narrow={metric.narrow}
                 >
                   {metric.label}
                 </KpiTh>
               ))}
               {metrics.map((metric) => (
-                <KpiTh key={`pct-head-${metric.field}`}>{metric.label}</KpiTh>
+                <KpiTh key={`pct-head-${metric.field}`} narrow={metric.narrow}>
+                  {metric.label}
+                </KpiTh>
               ))}
             </tr>
           </thead>
@@ -1064,7 +1088,7 @@ function KpiGroupTable({
                   </Td>
 
                   {metrics.map((metric) => (
-                    <Td key={`kpi-${metric.field}`}>
+                    <Td key={`kpi-${metric.field}`} narrow={metric.narrow}>
                       <input
                         value={k[metric.field]}
                         onChange={(event) =>
@@ -1076,7 +1100,9 @@ function KpiGroupTable({
                         }
                         onBlur={() => onKpiBlur(row.employeeId, metric.field)}
                         placeholder="KPI"
-                        className="h-8 w-full min-w-[72px] rounded-lg border border-slate-200 bg-white px-2 text-right text-[12px] outline-none focus:border-[#3964ff]"
+                        className={`h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[12px] outline-none focus:border-[#3964ff] ${
+                          metric.narrow ? "min-w-[36px] px-1" : "min-w-[72px]"
+                        }`}
                       />
                     </Td>
                   ))}
@@ -1098,7 +1124,7 @@ function KpiGroupTable({
                             : "text-slate-700";
 
                       return (
-                        <Td key={`pct-${metric.field}`}>
+                        <Td key={`pct-${metric.field}`} narrow={metric.narrow}>
                           <span className={`font-bold ${ratioColor}`}>
                             {denom <= 0 ? "—" : formatRatioPercent(actual)}
                           </span>
@@ -1107,7 +1133,7 @@ function KpiGroupTable({
                     }
 
                     return (
-                      <Td key={`pct-${metric.field}`}>
+                      <Td key={`pct-${metric.field}`} narrow={metric.narrow}>
                         <span
                           className={`font-bold ${pctColor(
                             actual,
