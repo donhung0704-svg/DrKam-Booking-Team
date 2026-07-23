@@ -890,7 +890,9 @@ export default function MonthlyReportPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        {/* Xếp dọc (full chiều rộng) để bảng Hunter nhiều cột hiện đủ cột
+            "% thực đạt" cuối, không bị khuất sau thanh cuộn ngang */}
+        <div className="grid grid-cols-1 gap-4">
           <KpiGroupTable
             title="Hunter"
             accent="text-blue-700"
