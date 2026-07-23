@@ -26,6 +26,8 @@ type ReportRow = {
   videoReal: number;
   videoOther: number;
   gmvNgay: number;
+  // Video có DT (số video có doanh thu) của KOC có Booking date -> tính % Video có DT
+  videosWithRevenue: number;
   // Hunter KPI
   kocChotMoi: number; // KOC có booking đầu tiên trong tháng + có video tháng
   videoKocMoiTruPov: number; // tổng video của KOC chốt mới, trừ KOC channel POV
@@ -48,6 +50,7 @@ type KpiInput = {
   videoMoi: string;
   chiPhi: string;
   videoTruPov: string;
+  videoCoDt: string;
 };
 
 // KPI của từng chỉ tiêu lưu vào cột tương ứng trong bảng employees
@@ -60,6 +63,7 @@ const KPI_COLUMN: Record<keyof KpiInput, string> = {
   videoMoi: "kpi_thang_video_moi",
   chiPhi: "kpi_thang_chi_phi",
   videoTruPov: "kpi_thang_video_tru_pov",
+  videoCoDt: "kpi_thang_video_co_dt",
 };
 
 const EMPTY_KPI: KpiInput = {
@@ -71,7 +75,20 @@ const EMPTY_KPI: KpiInput = {
   videoMoi: "",
   chiPhi: "",
   videoTruPov: "",
+  videoCoDt: "",
 };
+
+// Tổng Monthly Videos của KOC có Booking date (mẫu số của % Video có DT)
+function monthlyVideoTotal(r: ReportRow) {
+  return r.dailyVideoNew + r.dailyVideoOld;
+}
+
+// % Video có DT = Tổng Video có DT / Tổng Monthly Videos (KOC có Booking date)
+function videoCoDtPercent(r: ReportRow) {
+  const denom = monthlyVideoTotal(r);
+  if (denom <= 0) return 0;
+  return (r.videosWithRevenue / denom) * 100;
+}
 
 type MetricConfig = {
   field: keyof KpiInput;
@@ -80,9 +97,20 @@ type MetricConfig = {
   money?: boolean;
   // cost=true: vượt mục tiêu là XẤU (đỏ khi >100%), ngược với chỉ số thường
   cost?: boolean;
+  // ratio=true: "thực đạt" HIỂN THỊ chính giá trị % (Video DT / Monthly Videos),
+  // không phải actual/kpi. Màu vẫn so với KPI mục tiêu.
+  ratio?: boolean;
 };
 
-// Famer: Video trừ POV + Doanh thu
+// Chỉ số "% Video có DT" dùng chung cho cả Hunter và Famer
+const VIDEO_CO_DT_METRIC: MetricConfig = {
+  field: "videoCoDt",
+  label: "% Video có DT",
+  actual: videoCoDtPercent,
+  ratio: true,
+};
+
+// Famer: Video trừ POV + Doanh thu + % Video có DT
 const FAMER_METRICS: MetricConfig[] = [
   {
     field: "videoTruPov",
@@ -91,9 +119,10 @@ const FAMER_METRICS: MetricConfig[] = [
     actual: (r) => r.videoUnbox + r.videoAi + r.videoReal + r.videoOther,
   },
   { field: "gmv", label: "Doanh thu", actual: (r) => r.gmvNgay, money: true },
+  VIDEO_CO_DT_METRIC,
 ];
 
-// Hunter dùng 4 chỉ số riêng
+// Hunter dùng 4 chỉ số riêng + % Video có DT
 const HUNTER_METRICS: MetricConfig[] = [
   { field: "kocMoi", label: "KOC chốt mới", actual: (r) => r.kocChotMoi },
   {
@@ -109,6 +138,7 @@ const HUNTER_METRICS: MetricConfig[] = [
     money: true,
     cost: true,
   },
+  VIDEO_CO_DT_METRIC,
 ];
 
 export default function MonthlyReportPage() {
@@ -172,6 +202,7 @@ export default function MonthlyReportPage() {
         videoMoi: toKpiInput(employee.kpi_thang_video_moi),
         chiPhi: toKpiInput(employee.kpi_thang_chi_phi),
         videoTruPov: toKpiInput(employee.kpi_thang_video_tru_pov),
+        videoCoDt: toKpiInput(employee.kpi_thang_video_co_dt),
       };
     });
 
@@ -248,6 +279,7 @@ export default function MonthlyReportPage() {
           videoReal: 0,
           videoOther: 0,
           gmvNgay: 0,
+          videosWithRevenue: 0,
           kocChotMoi: 0,
           videoKocMoiTruPov: 0,
           dongY: 0,
@@ -334,6 +366,8 @@ export default function MonthlyReportPage() {
       }
 
       videoRow.gmvNgay += parseNumber(koc.gmv_thang);
+      // Video có DT chỉ tính cho KOC có Booking date (videoRow = PIC khi có booking)
+      videoRow.videosWithRevenue += parseNumber(koc.videos_with_revenue);
 
       // KOC chốt mới = KOC có Booking đầu tiên trong tháng báo cáo + có video tháng
       const firstBookingKey = firstBookingByKoc.get(String(koc.id)) || "";
@@ -1051,6 +1085,27 @@ function KpiGroupTable({
                     const actual = metric.actual(row);
                     const kpi = parseNumber(k[metric.field]);
 
+                    // Metric ratio: cột thực đạt HIỂN THỊ chính tỉ lệ %
+                    // (Video DT / Monthly Videos), màu so với KPI mục tiêu.
+                    if (metric.ratio) {
+                      const denom = monthlyVideoTotal(row);
+
+                      const ratioColor =
+                        denom <= 0
+                          ? "text-slate-400"
+                          : kpi > 0
+                            ? pctColor(actual, kpi)
+                            : "text-slate-700";
+
+                      return (
+                        <Td key={`pct-${metric.field}`}>
+                          <span className={`font-bold ${ratioColor}`}>
+                            {denom <= 0 ? "—" : formatRatioPercent(actual)}
+                          </span>
+                        </Td>
+                      );
+                    }
+
                     return (
                       <Td key={`pct-${metric.field}`}>
                         <span
@@ -1086,6 +1141,11 @@ function formatPercent(actual: number, kpi: number) {
   const pct = (actual / kpi) * 100;
 
   return `${pct.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`;
+}
+
+// Metric ratio: hiển thị chính giá trị % (không chia cho KPI)
+function formatRatioPercent(value: number) {
+  return `${value.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`;
 }
 
 function pctColor(actual: number, kpi: number, cost = false) {
