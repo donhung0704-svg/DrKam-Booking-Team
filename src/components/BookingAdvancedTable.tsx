@@ -982,8 +982,9 @@ export default function BookingAdvancedTable({
                       background: "#f8fafc",
                     }}
                   >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="cursor-grab select-none whitespace-nowrap">
+                    <div className="flex items-start justify-between gap-1">
+                      {/* Cho tiêu đề xuống dòng khi cột hẹp thay vì cắt mất chữ */}
+                      <span className="min-w-0 flex-1 cursor-grab select-none whitespace-normal break-words leading-tight">
                         {column.label}
                       </span>
 
@@ -994,7 +995,7 @@ export default function BookingAdvancedTable({
                           togglePin(column.key);
                         }}
                         title={pinned ? "Bỏ cố định cột" : "Cố định cột"}
-                        className={`flex h-6 w-6 items-center justify-center rounded-md text-[12px] ${
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[12px] ${
                           pinned
                             ? "bg-red-50 text-red-600"
                             : "bg-white text-slate-400 hover:text-slate-700"
