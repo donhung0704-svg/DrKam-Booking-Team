@@ -28,8 +28,7 @@ type ReportRow = {
   // Video có DT (số video có doanh thu) của KOC có Booking date -> tính % Video có DT
   videosWithRevenue: number;
   // Hunter KPI
-  kocChotMoi: number; // KOC có booking đầu tiên trong tháng + có video tháng
-  videoKocMoiTruPov: number; // tổng video của KOC chốt mới, trừ KOC channel POV
+  kocChotMoi: number; // KOC có Booking date trong tháng báo cáo
   // Báo cáo tổng quát (KOC tạo mới trong tháng theo status)
   dongY: number; // status "Đã chốt"
   tuChoi: number; // status "Từ chối"
@@ -182,8 +181,9 @@ const HUNTER_METRICS: MetricConfig[] = [
   },
   {
     field: "videoMoi",
-    label: "Video KOC mới (trừ POV)",
-    actual: (r) => r.videoKocMoiTruPov,
+    label: "Video trừ POV",
+    // Tổng video KOC phụ trách không phải POV = Unbox + AI + Người thật + khác
+    actual: (r) => r.videoUnbox + r.videoAi + r.videoReal + r.videoOther,
     narrow: true,
   },
   { field: "gmv", label: "Doanh thu", actual: (r) => r.gmvNgay, money: true },
@@ -349,7 +349,6 @@ export default function MonthlyReportPage() {
           gmvNgay: 0,
           videosWithRevenue: 0,
           kocChotMoi: 0,
-          videoKocMoiTruPov: 0,
           dongY: 0,
           tuChoi: 0,
         });
@@ -361,21 +360,6 @@ export default function MonthlyReportPage() {
     // Luôn hiển thị mọi PIC đang hoạt động
     employees.forEach((employee) => {
       ensureRow(String(employee.id));
-    });
-
-    // Map: koc_id -> ngày tạo Booking ĐẦU TIÊN (nhỏ nhất) của KOC đó
-    const firstBookingByKoc = new Map<string, string>();
-    bookings.forEach((booking) => {
-      const kocId = String(booking.koc_id || "");
-      if (!kocId) return;
-
-      const key = toVietnamDateKey(booking.created_at);
-      if (!key) return;
-
-      const existing = firstBookingByKoc.get(kocId);
-      if (!existing || key < existing) {
-        firstBookingByKoc.set(kocId, key);
-      }
     });
 
     kocs.forEach((koc) => {
@@ -437,18 +421,9 @@ export default function MonthlyReportPage() {
       // Video có DT chỉ tính cho KOC có Booking date (videoRow = PIC khi có booking)
       videoRow.videosWithRevenue += parseNumber(koc.videos_with_revenue);
 
-      // KOC chốt mới = KOC có Booking đầu tiên trong tháng báo cáo + có video tháng
-      const firstBookingKey = firstBookingByKoc.get(String(koc.id)) || "";
-      const isChotMoi =
-        firstBookingKey.slice(0, 7) === monthKey && monthlyVideos > 0;
-
-      if (isChotMoi) {
+      // KOC chốt mới = KOC có Booking date (koc.booking_date) trong tháng báo cáo
+      if (monthKeyOfBookingDate(koc.booking_date) === monthKey) {
         row.kocChotMoi += 1;
-
-        // Video KOC mới (trừ POV): tổng video KOC chốt mới, không tính KOC POV
-        if (channelType !== "POV") {
-          videoRow.videoKocMoiTruPov += monthlyVideos;
-        }
       }
     });
 
@@ -1488,6 +1463,14 @@ function parseNumber(value: unknown) {
 function hasBookingDate(value: unknown) {
   const raw = String(value ?? "").trim();
   return raw !== "" && raw !== "-";
+}
+
+// Tháng (YYYY-MM) của cột Booking date. booking_date lưu dạng "YYYY-MM-DD".
+function monthKeyOfBookingDate(value: unknown) {
+  const raw = String(value ?? "").trim();
+  const match = raw.match(/^(\d{4})-(\d{2})/);
+  if (match) return `${match[1]}-${match[2]}`;
+  return toVietnamDateKey(value).slice(0, 7);
 }
 
 function formatNumber(value: unknown) {
