@@ -741,7 +741,7 @@ export default function MonthlyReportPage() {
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="report-table w-full table-fixed text-center text-sm">
+          <table className="report-table w-full table-fixed text-center text-[13px]">
             <thead>
               <tr className="bg-slate-50">
                 <Th>PIC</Th>
@@ -868,7 +868,7 @@ export default function MonthlyReportPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="report-table w-full table-fixed text-center text-sm">
+          <table className="report-table w-full table-fixed text-center text-[13px]">
             <thead>
               <tr className="bg-slate-50">
                 <Th>PIC</Th>
@@ -1041,7 +1041,7 @@ function Td({
 }) {
   return (
     <td
-      className={`border-b border-slate-100 py-3 align-middle text-[13px] ${
+      className={`border-b border-slate-100 py-3 align-middle ${
         narrow ? "px-1" : "px-2"
       }`}
     >
@@ -1110,7 +1110,7 @@ function KpiGroupTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="report-table w-full text-center text-sm">
+        <table className="report-table w-full text-center text-[11px]">
           <thead>
             <tr className="bg-slate-50">
               <th
@@ -1263,7 +1263,7 @@ function KpiGroupTable({
                         }
                         onBlur={() => onKpiBlur(row.employeeId, metric.field)}
                         placeholder="KPI"
-                        className={`h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[12px] outline-none focus:border-[#3964ff] ${
+                        className={`h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[11px] outline-none focus:border-[#3964ff] ${
                           metric.narrow ? "min-w-[36px] px-1" : "min-w-[72px]"
                         }`}
                       />
@@ -1349,7 +1349,7 @@ function KpiGroupTable({
                         }
                         onBlur={() => onWeightBlur(row.employeeId, metric.field)}
                         placeholder="TS"
-                        className={`h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[12px] outline-none focus:border-[#7c3aed] ${
+                        className={`h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[11px] outline-none focus:border-[#7c3aed] ${
                           metric.narrow ? "min-w-[36px] px-1" : "min-w-[60px]"
                         }`}
                       />
