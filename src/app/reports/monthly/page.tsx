@@ -90,20 +90,39 @@ const WEIGHT_COLUMN: Record<keyof KpiInput, string> = {
   videoCoDt: "ts_thang_video_co_dt",
 };
 
-// Ngưỡng: thực đạt/KPI < 70% -> trọng số thực tế = 0
+// Ngưỡng: thực đạt/KPI < 70% -> trọng số thực tế = 0 (KHÔNG áp cho Chi phí)
 const WEIGHT_MIN_ACHIEVEMENT = 0.7;
+// Trần tỉ lệ 120% cho các chỉ số thường (GMV không giới hạn)
+const WEIGHT_MAX_RATIO = 1.2;
 
-// Tỉ lệ đạt (thực đạt / KPI) dùng để tính trọng số thực tế
-function achievementRatio(actual: number, kpi: number) {
+// Tỉ lệ dùng để nhân với trọng số tiêu chuẩn, theo quy tắc riêng từng chỉ số:
+// - Chi phí (cost): KHÔNG áp sàn 70%; tỉ lệ NGƯỢC = KPI/Thực đạt; trần 120%.
+// - GMV: sàn 70%; KHÔNG giới hạn trên.
+// - Còn lại: sàn 70%; trần 120%.
+function weightRatio(metric: MetricConfig, actual: number, kpi: number) {
+  if (metric.cost) {
+    if (actual <= 0) return kpi > 0 ? WEIGHT_MAX_RATIO : 0;
+    if (kpi <= 0) return 0;
+    return Math.min(kpi / actual, WEIGHT_MAX_RATIO);
+  }
+
   if (!kpi || kpi <= 0) return 0;
-  return actual / kpi;
+
+  const ratio = actual / kpi;
+  if (ratio < WEIGHT_MIN_ACHIEVEMENT) return 0;
+
+  if (metric.field === "gmv") return ratio; // GMV không giới hạn
+  return Math.min(ratio, WEIGHT_MAX_RATIO);
 }
 
-// Trọng số thực tế = (thực đạt/KPI) × trọng số tiêu chuẩn; = 0 nếu đạt < 70%
-function actualWeight(actual: number, kpi: number, standardWeight: number) {
-  const ratio = achievementRatio(actual, kpi);
-  if (ratio < WEIGHT_MIN_ACHIEVEMENT) return 0;
-  return ratio * standardWeight;
+// Trọng số thực tế = tỉ lệ (theo quy tắc) × trọng số tiêu chuẩn
+function actualWeight(
+  metric: MetricConfig,
+  actual: number,
+  kpi: number,
+  standardWeight: number
+) {
+  return weightRatio(metric, actual, kpi) * standardWeight;
 }
 
 // Tổng Monthly Videos của KOC có Booking date (mẫu số của % Video có DT)
@@ -1208,7 +1227,7 @@ function KpiGroupTable({
                 const actual = metric.actual(row);
                 const kpi = parseNumber(k[metric.field]);
                 const std = parseNumber(w[metric.field]);
-                return sum + actualWeight(actual, kpi, std);
+                return sum + actualWeight(metric, actual, kpi, std);
               }, 0);
 
               return (
@@ -1342,7 +1361,7 @@ function KpiGroupTable({
                     const actual = metric.actual(row);
                     const kpi = parseNumber(k[metric.field]);
                     const std = parseNumber(w[metric.field]);
-                    const value = actualWeight(actual, kpi, std);
+                    const value = actualWeight(metric, actual, kpi, std);
 
                     return (
                       <Td key={`wact-${metric.field}`} narrow={metric.narrow}>
