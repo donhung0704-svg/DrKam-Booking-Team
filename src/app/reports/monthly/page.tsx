@@ -77,6 +77,35 @@ const EMPTY_KPI: KpiInput = {
   videoCoDt: "",
 };
 
+// Trọng số tiêu chuẩn (nhập tay) lưu vào cột ts_thang_* của employees
+const WEIGHT_COLUMN: Record<keyof KpiInput, string> = {
+  lienHe: "ts_thang_lien_he",
+  phanHoi: "ts_thang_phan_hoi",
+  bookingMoi: "ts_thang_booking_moi",
+  gmv: "ts_thang_gmv",
+  kocMoi: "ts_thang_koc_moi",
+  videoMoi: "ts_thang_video_moi",
+  chiPhi: "ts_thang_chi_phi",
+  videoTruPov: "ts_thang_video_tru_pov",
+  videoCoDt: "ts_thang_video_co_dt",
+};
+
+// Ngưỡng: thực đạt/KPI < 70% -> trọng số thực tế = 0
+const WEIGHT_MIN_ACHIEVEMENT = 0.7;
+
+// Tỉ lệ đạt (thực đạt / KPI) dùng để tính trọng số thực tế
+function achievementRatio(actual: number, kpi: number) {
+  if (!kpi || kpi <= 0) return 0;
+  return actual / kpi;
+}
+
+// Trọng số thực tế = (thực đạt/KPI) × trọng số tiêu chuẩn; = 0 nếu đạt < 70%
+function actualWeight(actual: number, kpi: number, standardWeight: number) {
+  const ratio = achievementRatio(actual, kpi);
+  if (ratio < WEIGHT_MIN_ACHIEVEMENT) return 0;
+  return ratio * standardWeight;
+}
+
 // Tổng Monthly Videos của KOC có Booking date (mẫu số của % Video có DT)
 function monthlyVideoTotal(r: ReportRow) {
   return r.dailyVideoNew + r.dailyVideoOld;
@@ -160,6 +189,7 @@ export default function MonthlyReportPage() {
 
   // KPI ngày nhập tay theo từng PIC (lưu vào employees.kpi_*)
   const [kpiInputs, setKpiInputs] = useState<Record<string, KpiInput>>({});
+  const [weightInputs, setWeightInputs] = useState<Record<string, KpiInput>>({});
   const [savingKpiId, setSavingKpiId] = useState("");
   const [teamTypeMap, setTeamTypeMap] = useState<Record<string, string>>({});
 
@@ -215,6 +245,17 @@ export default function MonthlyReportPage() {
     });
 
     setKpiInputs(map);
+
+    // Trọng số tiêu chuẩn theo từng chỉ số (ts_thang_*)
+    const wmap: Record<string, KpiInput> = {};
+    employees.forEach((employee) => {
+      const entry = { ...EMPTY_KPI };
+      (Object.keys(WEIGHT_COLUMN) as (keyof KpiInput)[]).forEach((field) => {
+        entry[field] = toKpiInput(employee[WEIGHT_COLUMN[field]]);
+      });
+      wmap[String(employee.id)] = entry;
+    });
+    setWeightInputs(wmap);
   }, [employees]);
 
   // Khởi tạo nhóm Hunter/Famer từ dữ liệu nhân sự
@@ -503,6 +544,37 @@ export default function MonthlyReportPage() {
 
     if (error) {
       setMessage(`Lỗi lưu KPI: ${error.message}`);
+    }
+  }
+
+  function updateWeightInput(
+    employeeId: string,
+    field: keyof KpiInput,
+    value: string
+  ) {
+    setWeightInputs((prev) => ({
+      ...prev,
+      [employeeId]: { ...(prev[employeeId] || EMPTY_KPI), [field]: value },
+    }));
+  }
+
+  async function saveWeight(employeeId: string, field: keyof KpiInput) {
+    if (!employeeId || employeeId === "no-pic") return;
+
+    const raw = (weightInputs[employeeId]?.[field] ?? "").trim();
+    const value = raw === "" ? null : parseNumber(raw);
+
+    setSavingKpiId(employeeId);
+
+    const { error } = await supabase
+      .from("employees")
+      .update({ [WEIGHT_COLUMN[field]]: value })
+      .eq("id", employeeId);
+
+    setSavingKpiId("");
+
+    if (error) {
+      setMessage(`Lỗi lưu trọng số: ${error.message}`);
     }
   }
 
@@ -903,9 +975,12 @@ export default function MonthlyReportPage() {
             rows={hunterRows}
             metrics={HUNTER_METRICS}
             kpiInputs={kpiInputs}
+            weightInputs={weightInputs}
             teamOf={teamOf}
             onKpiChange={updateKpiInput}
             onKpiBlur={saveKpi}
+            onWeightChange={updateWeightInput}
+            onWeightBlur={saveWeight}
             onTeamChange={saveTeam}
           />
 
@@ -916,9 +991,12 @@ export default function MonthlyReportPage() {
             rows={famerRows}
             metrics={FAMER_METRICS}
             kpiInputs={kpiInputs}
+            weightInputs={weightInputs}
             teamOf={teamOf}
             onKpiChange={updateKpiInput}
             onKpiBlur={saveKpi}
+            onWeightChange={updateWeightInput}
+            onWeightBlur={saveWeight}
             onTeamChange={saveTeam}
           />
         </div>
@@ -980,9 +1058,12 @@ function KpiGroupTable({
   rows,
   metrics,
   kpiInputs,
+  weightInputs,
   teamOf,
   onKpiChange,
   onKpiBlur,
+  onWeightChange,
+  onWeightBlur,
   onTeamChange,
 }: {
   title: string;
@@ -991,9 +1072,12 @@ function KpiGroupTable({
   rows: ReportRow[];
   metrics: MetricConfig[];
   kpiInputs: Record<string, KpiInput>;
+  weightInputs: Record<string, KpiInput>;
   teamOf: (id: string) => string;
   onKpiChange: (id: string, field: keyof KpiInput, value: string) => void;
   onKpiBlur: (id: string, field: keyof KpiInput) => void;
+  onWeightChange: (id: string, field: keyof KpiInput, value: string) => void;
+  onWeightBlur: (id: string, field: keyof KpiInput) => void;
   onTeamChange: (id: string, value: string) => void;
 }) {
   return (
@@ -1030,9 +1114,27 @@ function KpiGroupTable({
               </th>
               <th
                 colSpan={metrics.length}
-                className="border-b border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-emerald-700"
+                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-emerald-700"
               >
                 % thực đạt
+              </th>
+              <th
+                colSpan={metrics.length}
+                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-violet-700"
+              >
+                Trọng số tiêu chuẩn
+              </th>
+              <th
+                colSpan={metrics.length}
+                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-violet-700"
+              >
+                Trọng số thực tế
+              </th>
+              <th
+                rowSpan={2}
+                className="border-b border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.04em] text-violet-800"
+              >
+                Tổng trọng số
               </th>
             </tr>
 
@@ -1055,8 +1157,30 @@ function KpiGroupTable({
                   {metric.label}
                 </KpiTh>
               ))}
-              {metrics.map((metric) => (
-                <KpiTh key={`pct-head-${metric.field}`} narrow={metric.narrow}>
+              {metrics.map((metric, index) => (
+                <KpiTh
+                  key={`pct-head-${metric.field}`}
+                  borderRight={index === metrics.length - 1}
+                  narrow={metric.narrow}
+                >
+                  {metric.label}
+                </KpiTh>
+              ))}
+              {metrics.map((metric, index) => (
+                <KpiTh
+                  key={`wstd-head-${metric.field}`}
+                  borderRight={index === metrics.length - 1}
+                  narrow={metric.narrow}
+                >
+                  {metric.label}
+                </KpiTh>
+              ))}
+              {metrics.map((metric, index) => (
+                <KpiTh
+                  key={`wact-head-${metric.field}`}
+                  borderRight={index === metrics.length - 1}
+                  narrow={metric.narrow}
+                >
                   {metric.label}
                 </KpiTh>
               ))}
@@ -1067,7 +1191,7 @@ function KpiGroupTable({
             {!loading && rows.length === 0 && (
               <tr>
                 <td
-                  colSpan={1 + metrics.length * 3}
+                  colSpan={2 + metrics.length * 5}
                   className="px-4 py-6 text-center text-[12px] text-slate-400"
                 >
                   Chưa có PIC trong nhóm này.
@@ -1077,6 +1201,15 @@ function KpiGroupTable({
 
             {rows.map((row) => {
               const k = kpiInputs[row.employeeId] || EMPTY_KPI;
+              const w = weightInputs[row.employeeId] || EMPTY_KPI;
+
+              // Tổng trọng số = Σ trọng số thực tế của các chỉ số
+              const totalWeight = metrics.reduce((sum, metric) => {
+                const actual = metric.actual(row);
+                const kpi = parseNumber(k[metric.field]);
+                const std = parseNumber(w[metric.field]);
+                return sum + actualWeight(actual, kpi, std);
+              }, 0);
 
               return (
                 <tr key={row.employeeId} className="hover:bg-slate-50">
@@ -1182,6 +1315,56 @@ function KpiGroupTable({
                       </Td>
                     );
                   })}
+
+                  {/* TRỌNG SỐ TIÊU CHUẨN (nhập tay) */}
+                  {metrics.map((metric) => (
+                    <Td key={`wstd-${metric.field}`} narrow={metric.narrow}>
+                      <input
+                        value={w[metric.field]}
+                        onChange={(event) =>
+                          onWeightChange(
+                            row.employeeId,
+                            metric.field,
+                            event.target.value
+                          )
+                        }
+                        onBlur={() => onWeightBlur(row.employeeId, metric.field)}
+                        placeholder="TS"
+                        className={`h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[12px] outline-none focus:border-[#7c3aed] ${
+                          metric.narrow ? "min-w-[36px] px-1" : "min-w-[60px]"
+                        }`}
+                      />
+                    </Td>
+                  ))}
+
+                  {/* TRỌNG SỐ THỰC TẾ = (thực đạt/KPI) × TS tiêu chuẩn; 0 nếu đạt < 70% */}
+                  {metrics.map((metric) => {
+                    const actual = metric.actual(row);
+                    const kpi = parseNumber(k[metric.field]);
+                    const std = parseNumber(w[metric.field]);
+                    const value = actualWeight(actual, kpi, std);
+
+                    return (
+                      <Td key={`wact-${metric.field}`} narrow={metric.narrow}>
+                        <span className="font-bold text-violet-700">
+                          {value > 0
+                            ? value.toLocaleString("vi-VN", {
+                                maximumFractionDigits: 2,
+                              })
+                            : "0"}
+                        </span>
+                      </Td>
+                    );
+                  })}
+
+                  {/* TỔNG TRỌNG SỐ */}
+                  <Td>
+                    <span className="font-black text-violet-800">
+                      {totalWeight.toLocaleString("vi-VN", {
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </Td>
                 </tr>
               );
             })}
