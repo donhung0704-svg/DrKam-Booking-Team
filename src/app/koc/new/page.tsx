@@ -16,6 +16,7 @@ const tierOptions = [
   "Mới hoạt động",
   "Ngủ đông",
   "Mất cast",
+  "Hoàn cao",
   "Dừng CS",
 ];
 
