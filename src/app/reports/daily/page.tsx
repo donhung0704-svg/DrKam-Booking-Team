@@ -2,7 +2,6 @@
 
 import { supabase } from "@/lib/supabase/client";
 import DatePickerInput from "@/components/DatePickerInput";
-import KpiAchievement from "@/components/KpiAchievement";
 import PicFilter from "@/components/PicFilter";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -436,10 +435,6 @@ export default function PicReportPage() {
           </p>
         </div>
       </section>
-
-      {!loading && (
-        <KpiAchievement rows={reportRows} kpiInputs={kpiInputs} />
-      )}
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
