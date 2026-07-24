@@ -1024,6 +1024,12 @@ function KpiGroupTable({
               </th>
               <th
                 colSpan={metrics.length}
+                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-slate-700"
+              >
+                Thực đạt
+              </th>
+              <th
+                colSpan={metrics.length}
                 className="border-b border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-emerald-700"
               >
                 % thực đạt
@@ -1034,6 +1040,15 @@ function KpiGroupTable({
               {metrics.map((metric, index) => (
                 <KpiTh
                   key={`kpi-head-${metric.field}`}
+                  borderRight={index === metrics.length - 1}
+                  narrow={metric.narrow}
+                >
+                  {metric.label}
+                </KpiTh>
+              ))}
+              {metrics.map((metric, index) => (
+                <KpiTh
+                  key={`actual-head-${metric.field}`}
                   borderRight={index === metrics.length - 1}
                   narrow={metric.narrow}
                 >
@@ -1052,7 +1067,7 @@ function KpiGroupTable({
             {!loading && rows.length === 0 && (
               <tr>
                 <td
-                  colSpan={1 + metrics.length * 2}
+                  colSpan={1 + metrics.length * 3}
                   className="px-4 py-6 text-center text-[12px] text-slate-400"
                 >
                   Chưa có PIC trong nhóm này.
@@ -1102,6 +1117,31 @@ function KpiGroupTable({
                       />
                     </Td>
                   ))}
+
+                  {/* Nhóm giữa: THỰC ĐẠT (số thực tế) */}
+                  {metrics.map((metric) => {
+                    const actual = metric.actual(row);
+                    let display: string;
+
+                    if (metric.ratio) {
+                      display =
+                        monthlyVideoTotal(row) <= 0
+                          ? "—"
+                          : formatRatioPercent(actual);
+                    } else if (metric.money) {
+                      display = formatMoney(actual);
+                    } else {
+                      display = actual.toLocaleString("vi-VN");
+                    }
+
+                    return (
+                      <Td key={`actual-${metric.field}`} narrow={metric.narrow}>
+                        <span className="font-bold text-slate-800">
+                          {display}
+                        </span>
+                      </Td>
+                    );
+                  })}
 
                   {metrics.map((metric) => {
                     const actual = metric.actual(row);
