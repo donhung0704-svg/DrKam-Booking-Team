@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { label: "Nhân sự", href: "/employees", icon: "👤" },
   { label: "Báo cáo ngày", href: "/reports/daily", icon: "📊" },
   { label: "Báo cáo tháng", href: "/reports/monthly", icon: "📆" },
+  { label: "Lịch sử chỉnh sửa", href: "/history", icon: "🕘" },
 ];
 
 export default function AppNav({
