@@ -21,6 +21,12 @@ const tierOptions = [
 const statusOptions = ["Chờ phản hồi", "Đã phản hồi", "Cân nhắc", "Đã chốt", "Từ chối", "Trùng KOC"];
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
+const commissionOptions = [
+  "Mở",
+  "15% tn 3% ads",
+  "16% tn 8% ads",
+  "1% tn 1% ads",
+];
 const platformOptions = ["TikTok", "FB", "Shopee"];
 
 export default function ImportKocPage() {
@@ -126,6 +132,9 @@ function downloadKocTemplate() {
       "Campaign name": "",
       "GMV ngày": 0,
       "GMV tháng": 0,
+      "Món bán ra": 0,
+      "Món hoàn": 0,
+      "Hoa hồng": "15% tn 3% ads",
       "Marital status": "Đã có con",
       "CS gần nhất": "22/06/2026",
       "Link Facebook": "https://facebook.com/...",
@@ -496,6 +505,9 @@ function downloadKocTemplate() {
             "Campaign name",
             "GMV ngày",
             "GMV tháng",
+            "Món bán ra",
+            "Món hoàn",
+            "Hoa hồng",
             "Marital status",
             "CS gần nhất",
             "Link Facebook",
@@ -548,6 +560,9 @@ function downloadKocTemplate() {
                 <Th>Campaign</Th>
                 <Th>GMV ngày</Th>
                 <Th>GMV tháng</Th>
+                <Th>Món bán ra</Th>
+                <Th>Món hoàn</Th>
+                <Th>Hoa hồng</Th>
               </tr>
             </thead>
 
@@ -555,7 +570,7 @@ function downloadKocTemplate() {
               {previewRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={17}
+                    colSpan={20}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Chưa có dữ liệu preview.
@@ -618,6 +633,9 @@ function downloadKocTemplate() {
                   </Td>
                   <Td>{text(pick(row, ["GMV ngày", "GMV", "gmv"])) || "-"}</Td>
                   <Td>{text(pick(row, ["GMV tháng", "gmv_thang"])) || "-"}</Td>
+                  <Td>{text(pick(row, ["Món bán ra", "items_sold"])) || "-"}</Td>
+                  <Td>{text(pick(row, ["Món hoàn", "items_returned"])) || "-"}</Td>
+                  <Td>{text(pick(row, ["Hoa hồng", "commission_type"])) || "-"}</Td>
                 </tr>
               ))}
             </tbody>
@@ -729,6 +747,12 @@ function buildKocPayload(
     campaign_id: campaignId,
     gmv: optionalNumber(pick(row, ["GMV ngày", "GMV", "gmv"])),
     gmv_thang: optionalNumber(pick(row, ["GMV tháng", "gmv_thang"])),
+    items_sold: optionalNumber(pick(row, ["Món bán ra", "items_sold"])),
+    items_returned: optionalNumber(pick(row, ["Món hoàn", "items_returned"])),
+    commission_type: matchOption(
+      pick(row, ["Hoa hồng", "commission_type"]),
+      commissionOptions
+    ),
     marital_status: matchOption(
       pick(row, ["Marital status", "marital_status"]),
       maritalStatusOptions

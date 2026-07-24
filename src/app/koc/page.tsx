@@ -63,6 +63,12 @@ const tierOptions = [
 const statusOptions = ["Chờ phản hồi", "Đã phản hồi", "Cân nhắc", "Đã chốt", "Từ chối", "Trùng KOC"];
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
+const commissionOptions = [
+  "Mở",
+  "15% tn 3% ads",
+  "16% tn 8% ads",
+  "1% tn 1% ads",
+];
 const pageSizeOptions = [100, 200, 300];
 const visibleColumnsStorageKey = "drkam_koc_visible_columns_v5";
 // Giữ bộ lọc/sắp xếp/trang khi rời trang rồi quay lại (theo phiên tab)
@@ -99,6 +105,9 @@ const filterFields: FilterField[] = [
   { key: "campaign_id", label: "Campaign name", field: "campaign_id", type: "select", relation: "campaign" },
   { key: "gmv", label: "GMV ngày", field: "gmv", type: "number" },
   { key: "gmv_thang", label: "GMV tháng", field: "gmv_thang", type: "number" },
+  { key: "items_sold", label: "Món bán ra", field: "items_sold", type: "number" },
+  { key: "items_returned", label: "Món hoàn", field: "items_returned", type: "number" },
+  { key: "commission_type", label: "Hoa hồng", field: "commission_type", type: "select", options: commissionOptions },
   { key: "marital_status", label: "Marital status", field: "marital_status", type: "select", options: maritalStatusOptions },
   { key: "cast_price", label: "Giá cast", field: "cast_price", type: "number" },
   { key: "created_at", label: "Ngày tạo", field: "created_at", type: "date" },
@@ -130,6 +139,10 @@ const columnOptions: ColumnOption[] = [
   { key: "campaign_id", label: "Campaign name" },
   { key: "gmv", label: "GMV ngày" },
   { key: "gmv_thang", label: "GMV tháng" },
+  { key: "items_sold", label: "Món bán ra", defaultVisible: true },
+  { key: "items_returned", label: "Món hoàn", defaultVisible: true },
+  { key: "return_rate", label: "Tỷ lệ hoàn", defaultVisible: true },
+  { key: "commission_type", label: "Hoa hồng", defaultVisible: true },
   { key: "marital_status", label: "Marital status" },
   { key: "cast_price", label: "Giá cast" },
   { key: "created_at", label: "Ngày tạo", defaultVisible: true },
@@ -592,6 +605,10 @@ export default function KocListPage() {
         "Campaign name": campaignName === "-" ? "" : campaignName,
         "GMV ngày": Number(koc.gmv || 0),
         "GMV tháng": Number(koc.gmv_thang || 0),
+        "Món bán ra": Number(koc.items_sold || 0),
+        "Món hoàn": Number(koc.items_returned || 0),
+        "Tỷ lệ hoàn": formatReturnRate(koc.items_returned, koc.items_sold),
+        "Hoa hồng": koc.commission_type || "",
         "Marital status": koc.marital_status || "",
         "Giá cast": Number(koc.cast_price || 0),
         "Ngày tạo": formatDate(koc.created_at),
@@ -1399,6 +1416,16 @@ function formatNumber(value: unknown) {
   if (Number.isNaN(numberValue)) return String(value);
 
   return numberValue.toLocaleString("vi-VN");
+}
+
+// Tỷ lệ hoàn = Món hoàn / Món bán ra (dạng %)
+function formatReturnRate(returned: unknown, sold: unknown) {
+  const s = Number(sold) || 0;
+  const r = Number(returned) || 0;
+  if (s <= 0) return "";
+  return `${((r / s) * 100).toLocaleString("vi-VN", {
+    maximumFractionDigits: 1,
+  })}%`;
 }
 
 function formatDate(value: unknown) {
