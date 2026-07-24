@@ -49,6 +49,12 @@ const statusOptions = [
 ];
 
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
+const commissionOptions = [
+  "Mở",
+  "15% tn 3% ads",
+  "16% tn 8% ads",
+  "1% tn 1% ads",
+];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 const platformOptions = ["TikTok", "FB", "Shopee"];
 
@@ -205,6 +211,35 @@ const defaultColumns: ColumnConfig[] = [
     width: 115,
   },
   {
+    key: "items_sold",
+    label: "Món bán ra",
+    field: "items_sold",
+    type: "number",
+    width: 115,
+  },
+  {
+    key: "items_returned",
+    label: "Món hoàn",
+    field: "items_returned",
+    type: "number",
+    width: 110,
+  },
+  {
+    // Tỷ lệ hoàn = Món hoàn / Món bán ra (tính sẵn, không sửa)
+    key: "return_rate",
+    label: "Tỷ lệ hoàn",
+    type: "readonly",
+    width: 100,
+  },
+  {
+    key: "commission_type",
+    label: "Hoa hồng",
+    field: "commission_type",
+    type: "select",
+    options: commissionOptions,
+    width: 145,
+  },
+  {
     key: "marital_status",
     label: "Marital status",
     field: "marital_status",
@@ -272,6 +307,10 @@ const defaultVisibleColumnKeys = [
   "channel_type",
   "phone",
   "videos_with_revenue",
+  "items_sold",
+  "items_returned",
+  "return_rate",
+  "commission_type",
   "created_at",
   "new_contact_date",
   "time_contact",
@@ -1532,6 +1571,24 @@ function CellEditor({
         </select>
 
         {saving && <SavingDot />}
+      </div>
+    );
+  }
+
+  if (column.key === "return_rate") {
+    // Tỷ lệ hoàn = Món hoàn / Món bán ra
+    const sold = Number(koc.items_sold) || 0;
+    const returned = Number(koc.items_returned) || 0;
+    const display =
+      sold > 0
+        ? `${((returned / sold) * 100).toLocaleString("vi-VN", {
+            maximumFractionDigits: 1,
+          })}%`
+        : "-";
+
+    return (
+      <div className="truncate font-semibold text-slate-700" title={display}>
+        {display}
       </div>
     );
   }
