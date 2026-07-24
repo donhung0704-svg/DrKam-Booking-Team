@@ -894,9 +894,8 @@ export default function MonthlyReportPage() {
           </p>
         </div>
 
-        {/* Luôn 2 bảng nằm ngang cạnh nhau (không xếp dọc dù màn hình hẹp);
-            mỗi bảng tự cuộn ngang bên trong nếu thiếu chỗ */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* 1 bảng trên (Hunter), 1 bảng dưới (Famer) - mỗi bảng full chiều rộng */}
+        <div className="grid grid-cols-1 gap-4">
           <KpiGroupTable
             title="Hunter"
             accent="text-blue-700"
