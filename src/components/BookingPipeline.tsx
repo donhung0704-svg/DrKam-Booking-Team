@@ -34,6 +34,16 @@ export default function BookingPipeline({
 }) {
   const [dragId, setDragId] = useState("");
   const [dragOverStatus, setDragOverStatus] = useState("");
+  // Vừa copy cái gì (để hiện "Đã copy" trong ~1.2s)
+  const [copied, setCopied] = useState("");
+
+  function copyText(text: string) {
+    const value = String(text || "").trim();
+    if (!value) return;
+    navigator.clipboard?.writeText(value);
+    setCopied(value);
+    window.setTimeout(() => setCopied((cur) => (cur === value ? "" : cur)), 1200);
+  }
 
   // Gom booking theo status_booking; giữ đủ các cột chuẩn + cột lạ (nếu có)
   const { columns, groups } = useMemo(() => {
@@ -122,13 +132,33 @@ export default function BookingPipeline({
                       dragId === String(booking.id) ? "opacity-50" : ""
                     }`}
                   >
-                    <p className="truncate text-[13px] font-bold text-slate-950">
-                      {kocName}
-                    </p>
-                    {tiktok && (
-                      <p className="truncate text-[11.5px] font-semibold text-[#3964ff]">
-                        @{tiktok}
+                    <div className="flex items-start justify-between gap-1">
+                      <p className="truncate text-[13px] font-bold text-slate-950">
+                        {kocName}
                       </p>
+                      {/* Copy nhanh: ID TikTok (hoặc tên) để check KOC */}
+                      <button
+                        type="button"
+                        draggable={false}
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={() => copyText(tiktok || kocName)}
+                        title="Copy thông tin KOC"
+                        className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-bold text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      >
+                        {copied === (tiktok || kocName) ? "✓ Đã copy" : "📋"}
+                      </button>
+                    </div>
+                    {tiktok && (
+                      <button
+                        type="button"
+                        draggable={false}
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={() => copyText(tiktok)}
+                        title="Bấm để copy ID TikTok"
+                        className="block max-w-full truncate text-left text-[11.5px] font-semibold text-[#3964ff] hover:underline"
+                      >
+                        @{tiktok}
+                      </button>
                     )}
                     {booking.product && (
                       <p className="mt-0.5 truncate text-[11.5px] text-slate-500">
@@ -161,9 +191,24 @@ export default function BookingPipeline({
                           <span className="block text-[10px] font-bold uppercase text-slate-400">
                             Mã vận đơn
                           </span>
-                          <span className="block truncate text-[11px] font-semibold text-slate-600">
-                            {booking.tracking_code || "—"}
-                          </span>
+                          {booking.tracking_code ? (
+                            <button
+                              type="button"
+                              draggable={false}
+                              onMouseDown={(event) => event.stopPropagation()}
+                              onClick={() => copyText(booking.tracking_code)}
+                              title="Bấm để copy mã vận đơn"
+                              className="block max-w-full truncate text-left text-[11px] font-semibold text-slate-700 hover:text-[#3964ff] hover:underline"
+                            >
+                              {copied === String(booking.tracking_code).trim()
+                                ? "✓ Đã copy"
+                                : booking.tracking_code}
+                            </button>
+                          ) : (
+                            <span className="block text-[11px] font-semibold text-slate-600">
+                              —
+                            </span>
+                          )}
                         </div>
                       </div>
 
