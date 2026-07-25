@@ -781,7 +781,7 @@ export default function BookingListPage() {
         </div>
       )}
 
-      <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <section className="sticky top-0 z-30 mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="flex flex-wrap items-end gap-2">
           <div className="w-full sm:w-[190px]">
             <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">

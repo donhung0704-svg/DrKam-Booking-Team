@@ -4,14 +4,14 @@ import { useMemo, useState } from "react";
 
 type DbRow = Record<string, any>;
 
-// Màu viền trên mỗi cột (lặp lại nếu nhiều cột hơn)
-const columnAccents = [
-  "#f59e0b", // cam
-  "#8b5cf6", // tím
-  "#06b6d4", // xanh ngọc
-  "#22c55e", // xanh lá
-  "#ec4899", // hồng
-  "#3b82f6", // xanh dương
+// Bộ màu mỗi cột: viền trên đậm + nền cột + header (lặp nếu nhiều cột hơn)
+const columnStyles = [
+  { accent: "#f59e0b", soft: "#fff7ed", head: "#fef3c7", text: "#b45309" }, // cam
+  { accent: "#8b5cf6", soft: "#f5f3ff", head: "#ede9fe", text: "#6d28d9" }, // tím
+  { accent: "#06b6d4", soft: "#ecfeff", head: "#cffafe", text: "#0e7490" }, // ngọc
+  { accent: "#22c55e", soft: "#f0fdf4", head: "#dcfce7", text: "#15803d" }, // lá
+  { accent: "#ec4899", soft: "#fdf2f8", head: "#fce7f3", text: "#be185d" }, // hồng
+  { accent: "#3b82f6", soft: "#eff6ff", head: "#dbeafe", text: "#1d4ed8" }, // dương
 ];
 
 export default function BookingPipeline({
@@ -53,7 +53,7 @@ export default function BookingPipeline({
     <div className="flex gap-4 overflow-x-auto pb-4">
       {columns.map((status, index) => {
         const cards = groups.get(status) || [];
-        const accent = columnAccents[index % columnAccents.length];
+        const style = columnStyles[index % columnStyles.length];
         const isOver = dragOverStatus === status;
 
         return (
@@ -69,16 +69,31 @@ export default function BookingPipeline({
               setDragId("");
               setDragOverStatus("");
             }}
-            className={`flex min-w-[320px] flex-1 flex-col rounded-2xl border bg-slate-50 ${
-              isOver ? "border-[#3964ff] ring-2 ring-[#3964ff]/20" : "border-slate-200"
+            className={`flex min-w-[320px] flex-1 flex-col overflow-hidden rounded-2xl border-2 ${
+              isOver ? "ring-2 ring-offset-1" : ""
             }`}
-            style={{ borderTop: `4px solid ${accent}` }}
+            style={{
+              backgroundColor: style.soft,
+              borderColor: isOver ? "#3964ff" : style.accent,
+            }}
           >
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-[13px] font-black text-slate-800">
+            <div
+              className="flex items-center justify-between px-4 py-3"
+              style={{
+                backgroundColor: style.head,
+                borderBottom: `3px solid ${style.accent}`,
+              }}
+            >
+              <span
+                className="text-[13.5px] font-black"
+                style={{ color: style.text }}
+              >
                 {status}
               </span>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[12px] font-black text-slate-500">
+              <span
+                className="rounded-full bg-white px-2.5 py-0.5 text-[12px] font-black shadow-sm"
+                style={{ color: style.text }}
+              >
                 {cards.length}
               </span>
             </div>
@@ -132,76 +147,78 @@ export default function BookingPipeline({
                       </p>
                     )}
 
-                    {/* Ngày gửi (chỉ xem) + Dự kiến/Thực tế đăng (sửa trực tiếp).
+                    {/* Ngày gửi + Mã vận đơn cùng hàng; Dự kiến + Thực tế cùng hàng.
                         Chặn kéo thả khi thao tác trong khu vực này. */}
                     <div
-                      className="mt-2 space-y-1 border-t border-slate-100 pt-2"
+                      className="mt-2 space-y-1.5 border-t border-slate-100 pt-2"
                       draggable={false}
                       onMouseDown={(event) => event.stopPropagation()}
                     >
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
-                          Ngày gửi
-                        </span>
-                        <span className="text-[11px] font-semibold text-slate-600">
-                          {formatDateDisplay(booking.ship_date) || "—"}
-                        </span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="block text-[10px] font-bold uppercase text-slate-400">
+                            Ngày gửi
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-600">
+                            {formatDateDisplay(booking.ship_date) || "—"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] font-bold uppercase text-slate-400">
+                            Mã vận đơn
+                          </span>
+                          <span className="block truncate text-[11px] font-semibold text-slate-600">
+                            {booking.tracking_code || "—"}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
-                          Mã vận đơn
+                      <div>
+                        <span className="block text-[10px] font-bold uppercase text-slate-400">
+                          Tình trạng giao hàng
                         </span>
-                        <span className="truncate text-[11px] font-semibold text-slate-600">
-                          {booking.tracking_code || "—"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
-                          Tình trạng
-                        </span>
-                        <span className="truncate text-[11px] font-semibold text-slate-600">
+                        <span className="block truncate text-[11px] font-semibold text-slate-600">
                           {booking.order_status || "—"}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
-                          Dự kiến đăng
-                        </span>
-                        <input
-                          type="date"
-                          draggable={false}
-                          value={toDateInput(booking.expected_post_date)}
-                          onChange={(event) =>
-                            onFieldChange(
-                              String(booking.id),
-                              "expected_post_date",
-                              event.target.value || null
-                            )
-                          }
-                          className="h-6 flex-1 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] outline-none focus:border-[#3964ff]"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
-                          Thực tế đăng
-                        </span>
-                        <input
-                          type="date"
-                          draggable={false}
-                          value={toDateInput(booking.actual_post_date)}
-                          onChange={(event) =>
-                            onFieldChange(
-                              String(booking.id),
-                              "actual_post_date",
-                              event.target.value || null
-                            )
-                          }
-                          className="h-6 flex-1 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] outline-none focus:border-[#3964ff]"
-                        />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="mb-0.5 block text-[10px] font-bold uppercase text-slate-400">
+                            Dự kiến đăng
+                          </span>
+                          <input
+                            type="date"
+                            draggable={false}
+                            value={toDateInput(booking.expected_post_date)}
+                            onChange={(event) =>
+                              onFieldChange(
+                                String(booking.id),
+                                "expected_post_date",
+                                event.target.value || null
+                              )
+                            }
+                            className="h-6 w-full rounded-md border border-slate-200 bg-white px-1.5 text-[11px] outline-none focus:border-[#3964ff]"
+                          />
+                        </div>
+                        <div>
+                          <span className="mb-0.5 block text-[10px] font-bold uppercase text-slate-400">
+                            Thực tế đăng
+                          </span>
+                          <input
+                            type="date"
+                            draggable={false}
+                            value={toDateInput(booking.actual_post_date)}
+                            onChange={(event) =>
+                              onFieldChange(
+                                String(booking.id),
+                                "actual_post_date",
+                                event.target.value || null
+                              )
+                            }
+                            className="h-6 w-full rounded-md border border-slate-200 bg-white px-1.5 text-[11px] outline-none focus:border-[#3964ff]"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
