@@ -455,6 +455,15 @@ export default function BookingListPage() {
     const oldStatus = booking.status_booking;
     if (String(oldStatus || "") === newStatus) return;
 
+    // Điều kiện: chưa có Ngày gửi thì KHÔNG được chuyển sang "Đang lên video"
+    const hasShipDate = String(booking.ship_date ?? "").trim() !== "";
+    if (newStatus === "Đang lên video" && !hasShipDate) {
+      setMessage(
+        'Chưa có "Ngày gửi" nên không thể chuyển sang "Đang lên video".'
+      );
+      return;
+    }
+
     // Cập nhật ngay trên giao diện (optimistic)
     setBookings((prev) =>
       prev.map((b) =>
@@ -494,22 +503,36 @@ export default function BookingListPage() {
     const oldValue = booking[field] ?? null;
     if (String(oldValue ?? "") === String(value ?? "")) return;
 
+    const patch: DbRow = { [field]: value };
+
+    // Điều kiện: có "Ngày thực tế đăng" -> tự chuyển sang "Đã đăng video"
+    const oldStatus = booking.status_booking;
+    if (
+      field === "actual_post_date" &&
+      value &&
+      oldStatus !== "Đã đăng video"
+    ) {
+      patch.status_booking = "Đã đăng video";
+    }
+
     setBookings((prev) =>
       prev.map((b) =>
-        String(b.id) === String(bookingId) ? { ...b, [field]: value } : b
+        String(b.id) === String(bookingId) ? { ...b, ...patch } : b
       )
     );
 
     const { error } = await supabase
       .from("bookings")
-      .update({ [field]: value })
+      .update(patch)
       .eq("id", bookingId);
 
     if (error) {
       setMessage(`Lỗi cập nhật: ${error.message}`);
       setBookings((prev) =>
         prev.map((b) =>
-          String(b.id) === String(bookingId) ? { ...b, [field]: oldValue } : b
+          String(b.id) === String(bookingId)
+            ? { ...b, [field]: oldValue, status_booking: oldStatus }
+            : b
         )
       );
     }
