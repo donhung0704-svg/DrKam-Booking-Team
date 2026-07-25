@@ -69,7 +69,7 @@ export default function BookingPipeline({
               setDragId("");
               setDragOverStatus("");
             }}
-            className={`flex w-[300px] shrink-0 flex-col rounded-2xl border bg-slate-50 ${
+            className={`flex min-w-[320px] flex-1 flex-col rounded-2xl border bg-slate-50 ${
               isOver ? "border-[#3964ff] ring-2 ring-[#3964ff]/20" : "border-slate-200"
             }`}
             style={{ borderTop: `4px solid ${accent}` }}
@@ -145,6 +145,24 @@ export default function BookingPipeline({
                         </span>
                         <span className="text-[11px] font-semibold text-slate-600">
                           {formatDateDisplay(booking.ship_date) || "—"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
+                          Mã vận đơn
+                        </span>
+                        <span className="truncate text-[11px] font-semibold text-slate-600">
+                          {booking.tracking_code || "—"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
+                          Tình trạng
+                        </span>
+                        <span className="truncate text-[11px] font-semibold text-slate-600">
+                          {booking.order_status || "—"}
                         </span>
                       </div>
 

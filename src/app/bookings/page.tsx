@@ -724,6 +724,34 @@ export default function BookingListPage() {
                 Danh sách Booking
               </h1>
             </div>
+
+            {/* Chuyển Bảng / Pipeline ngay cạnh tiêu đề (shipper chỉ dùng Bảng) */}
+            {!isShipper && (
+              <div className="ml-2 inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("table")}
+                  className={`h-8 rounded-lg px-3 text-[12px] font-bold ${
+                    viewMode === "table"
+                      ? "bg-[#3964ff] text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  Bảng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("pipeline")}
+                  className={`h-8 rounded-lg px-3 text-[12px] font-bold ${
+                    viewMode === "pipeline"
+                      ? "bg-[#3964ff] text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  Pipeline
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -1004,34 +1032,6 @@ export default function BookingListPage() {
         )}
 
       </section>
-
-      {/* Chuyển giữa Bảng và Pipeline (Kanban). Shipper chỉ dùng bảng. */}
-      {!isShipper && (
-        <div className="mb-3 inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
-          <button
-            type="button"
-            onClick={() => setViewMode("table")}
-            className={`h-9 rounded-lg px-4 text-[12.5px] font-bold ${
-              viewMode === "table"
-                ? "bg-[#3964ff] text-white shadow-sm"
-                : "text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            Bảng
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("pipeline")}
-            className={`h-9 rounded-lg px-4 text-[12.5px] font-bold ${
-              viewMode === "pipeline"
-                ? "bg-[#3964ff] text-white shadow-sm"
-                : "text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            Pipeline
-          </button>
-        </div>
-      )}
 
       {viewMode === "pipeline" && !isShipper ? (
         <section className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
