@@ -45,13 +45,20 @@ export default function BookingPipeline({
     window.setTimeout(() => setCopied((cur) => (cur === value ? "" : cur)), 1200);
   }
 
-  // Gom booking theo status_booking; giữ đủ các cột chuẩn + cột lạ (nếu có)
+  // Gom booking theo status_booking; giữ đủ các cột chuẩn + cột lạ (nếu có).
+  // Quy tắc: đã có "Ngày thực tế đăng" -> luôn xếp vào cột "Đã đăng video"
+  // (trừ khi đang là "Hủy" / "Không cần lên vid").
   const { columns, groups } = useMemo(() => {
     const g = new Map<string, DbRow[]>();
     statuses.forEach((s) => g.set(s, []));
 
     bookings.forEach((booking) => {
-      const raw = String(booking.status_booking || "").trim() || statuses[0];
+      const stored = String(booking.status_booking || "").trim() || statuses[0];
+      const hasActual = String(booking.actual_post_date ?? "").trim() !== "";
+      const raw =
+        hasActual && stored !== "Hủy" && stored !== "Không cần lên vid"
+          ? "Đã đăng video"
+          : stored;
       if (!g.has(raw)) g.set(raw, []);
       g.get(raw)!.push(booking);
     });
