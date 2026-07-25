@@ -482,6 +482,39 @@ export default function BookingListPage() {
     }
   }
 
+  // Sửa trực tiếp 1 trường của booking trên card Pipeline (ngày dự kiến/thực tế)
+  async function handlePipelineFieldChange(
+    bookingId: string,
+    field: string,
+    value: string | null
+  ) {
+    const booking = bookings.find((b) => String(b.id) === String(bookingId));
+    if (!booking) return;
+
+    const oldValue = booking[field] ?? null;
+    if (String(oldValue ?? "") === String(value ?? "")) return;
+
+    setBookings((prev) =>
+      prev.map((b) =>
+        String(b.id) === String(bookingId) ? { ...b, [field]: value } : b
+      )
+    );
+
+    const { error } = await supabase
+      .from("bookings")
+      .update({ [field]: value })
+      .eq("id", bookingId);
+
+    if (error) {
+      setMessage(`Lỗi cập nhật: ${error.message}`);
+      setBookings((prev) =>
+        prev.map((b) =>
+          String(b.id) === String(bookingId) ? { ...b, [field]: oldValue } : b
+        )
+      );
+    }
+  }
+
   // Chọn/đảo sắp xếp: bấm lại cùng chiều -> tắt sắp xếp (về mặc định)
   function toggleSort(field: string, ascending: boolean) {
     setSortState((current) => {
@@ -1017,6 +1050,7 @@ export default function BookingListPage() {
             kocMap={kocMap}
             statuses={statusBookingOptions}
             onStatusChange={handlePipelineStatusChange}
+            onFieldChange={handlePipelineFieldChange}
           />
         </section>
       ) : (

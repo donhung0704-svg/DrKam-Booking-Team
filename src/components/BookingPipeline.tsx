@@ -19,11 +19,18 @@ export default function BookingPipeline({
   kocMap,
   statuses,
   onStatusChange,
+  onFieldChange,
 }: {
   bookings: DbRow[];
   kocMap: Map<string, DbRow>;
   statuses: string[];
   onStatusChange: (bookingId: string, newStatus: string) => void;
+  // Sửa trực tiếp trên card (Ngày dự kiến đăng / Ngày thực tế đăng)
+  onFieldChange: (
+    bookingId: string,
+    field: string,
+    value: string | null
+  ) => void;
 }) {
   const [dragId, setDragId] = useState("");
   const [dragOverStatus, setDragOverStatus] = useState("");
@@ -124,6 +131,61 @@ export default function BookingPipeline({
                         {compactMoney(value)}
                       </p>
                     )}
+
+                    {/* Ngày gửi (chỉ xem) + Dự kiến/Thực tế đăng (sửa trực tiếp).
+                        Chặn kéo thả khi thao tác trong khu vực này. */}
+                    <div
+                      className="mt-2 space-y-1 border-t border-slate-100 pt-2"
+                      draggable={false}
+                      onMouseDown={(event) => event.stopPropagation()}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
+                          Ngày gửi
+                        </span>
+                        <span className="text-[11px] font-semibold text-slate-600">
+                          {formatDateDisplay(booking.ship_date) || "—"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
+                          Dự kiến đăng
+                        </span>
+                        <input
+                          type="date"
+                          draggable={false}
+                          value={toDateInput(booking.expected_post_date)}
+                          onChange={(event) =>
+                            onFieldChange(
+                              String(booking.id),
+                              "expected_post_date",
+                              event.target.value || null
+                            )
+                          }
+                          className="h-6 flex-1 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] outline-none focus:border-[#3964ff]"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-[70px] shrink-0 text-[10.5px] font-bold text-slate-400">
+                          Thực tế đăng
+                        </span>
+                        <input
+                          type="date"
+                          draggable={false}
+                          value={toDateInput(booking.actual_post_date)}
+                          onChange={(event) =>
+                            onFieldChange(
+                              String(booking.id),
+                              "actual_post_date",
+                              event.target.value || null
+                            )
+                          }
+                          className="h-6 flex-1 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] outline-none focus:border-[#3964ff]"
+                        />
+                      </div>
+                    </div>
                   </div>
                 );
               })}
@@ -141,4 +203,18 @@ function compactMoney(value: number) {
   if (value >= 1_000_000)
     return `${(value / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}Mđ`;
   return `${value.toLocaleString("vi-VN")}đ`;
+}
+
+// Giá trị cho <input type="date"> -> "YYYY-MM-DD" (rỗng nếu không có)
+function toDateInput(value: unknown) {
+  const match = String(value ?? "").trim().match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : "";
+}
+
+// Hiển thị ngày dạng dd/mm/yyyy
+function formatDateDisplay(value: unknown) {
+  const key = toDateInput(value);
+  if (!key) return "";
+  const [year, month, day] = key.split("-");
+  return `${day}/${month}/${year}`;
 }
