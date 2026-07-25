@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import BookingAdvancedTable from "@/components/BookingAdvancedTable";
+import BookingPipeline from "@/components/BookingPipeline";
 import DatePickerInput from "@/components/DatePickerInput";
 import SavedFiltersDropdown from "@/components/SavedFiltersDropdown";
 import { useUserRole } from "@/lib/useUserRole";
@@ -142,6 +143,8 @@ export default function BookingListPage() {
   const [employees, setEmployees] = useState<DbRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  // Chế độ xem: "table" (bảng) hoặc "pipeline" (Kanban kéo thả theo Status)
+  const [viewMode, setViewMode] = useState<"table" | "pipeline">("table");
 
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(100);
@@ -439,6 +442,44 @@ export default function BookingListPage() {
     setPageIndex(0);
 
     return null;
+  }
+
+  // Kéo thả card trong Pipeline -> đổi Status booking
+  async function handlePipelineStatusChange(
+    bookingId: string,
+    newStatus: string
+  ) {
+    const booking = bookings.find((b) => String(b.id) === String(bookingId));
+    if (!booking) return;
+
+    const oldStatus = booking.status_booking;
+    if (String(oldStatus || "") === newStatus) return;
+
+    // Cập nhật ngay trên giao diện (optimistic)
+    setBookings((prev) =>
+      prev.map((b) =>
+        String(b.id) === String(bookingId)
+          ? { ...b, status_booking: newStatus }
+          : b
+      )
+    );
+
+    const { error } = await supabase
+      .from("bookings")
+      .update({ status_booking: newStatus })
+      .eq("id", bookingId);
+
+    if (error) {
+      setMessage(`Lỗi cập nhật trạng thái: ${error.message}`);
+      // Lỗi -> trả lại trạng thái cũ
+      setBookings((prev) =>
+        prev.map((b) =>
+          String(b.id) === String(bookingId)
+            ? { ...b, status_booking: oldStatus }
+            : b
+        )
+      );
+    }
   }
 
   // Chọn/đảo sắp xếp: bấm lại cùng chiều -> tắt sắp xếp (về mặc định)
@@ -931,6 +972,55 @@ export default function BookingListPage() {
 
       </section>
 
+      {/* Chuyển giữa Bảng và Pipeline (Kanban). Shipper chỉ dùng bảng. */}
+      {!isShipper && (
+        <div className="mb-3 inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            className={`h-9 rounded-lg px-4 text-[12.5px] font-bold ${
+              viewMode === "table"
+                ? "bg-[#3964ff] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            Bảng
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("pipeline")}
+            className={`h-9 rounded-lg px-4 text-[12.5px] font-bold ${
+              viewMode === "pipeline"
+                ? "bg-[#3964ff] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            Pipeline
+          </button>
+        </div>
+      )}
+
+      {viewMode === "pipeline" && !isShipper ? (
+        <section className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+          <div className="mb-3">
+            <p className="text-[15px] font-black text-slate-900">
+              Booking Pipeline
+            </p>
+            <p className="text-[12.5px] text-slate-500">
+              {totalBookingCount} booking · Kéo thả card giữa các cột để cập nhật
+              Status booking
+            </p>
+          </div>
+
+          <BookingPipeline
+            bookings={sortedBookings}
+            kocMap={kocMap}
+            statuses={statusBookingOptions}
+            onStatusChange={handlePipelineStatusChange}
+          />
+        </section>
+      ) : (
+        <>
       <BookingAdvancedTable
         bookings={currentPageBookings}
         kocs={kocs}
@@ -1073,6 +1163,8 @@ export default function BookingListPage() {
           </div>
         </div>
       </section>
+        </>
+      )}
     </section>
   );
 }
