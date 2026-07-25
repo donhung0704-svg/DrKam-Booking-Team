@@ -22,6 +22,7 @@ const statusBookingOptions = [
   "Đang lên video",
   "Đã đăng video",
   "Không cần lên vid",
+  "Hủy",
 ];
 
 const orderStatusOptions = [

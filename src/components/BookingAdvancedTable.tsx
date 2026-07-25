@@ -47,6 +47,7 @@ const statusBookingOptions = [
   "Đang lên video",
   "Đã đăng video",
   "Không cần lên vid",
+  "Hủy",
 ];
 
 const orderStatusOptions = [
@@ -1564,6 +1565,7 @@ function getSelectColorStyle(columnKey: string, value: unknown) {
     "Đang lên video": { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
     "Đã đăng video": { bg: "#f3e8ff", text: "#7e22ce", border: "#e9d5ff" },
     "Không cần lên vid": { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },
+    "Hủy": { bg: "#fee2e2", text: "#b91c1c", border: "#fecaca" },
 
     "Đã gửi": { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
     "Giao thành công": { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },

@@ -10,7 +10,7 @@ const columnStyles = [
   { accent: "#8b5cf6", soft: "#f5f3ff", head: "#ede9fe", text: "#6d28d9" }, // tím
   { accent: "#06b6d4", soft: "#ecfeff", head: "#cffafe", text: "#0e7490" }, // ngọc
   { accent: "#22c55e", soft: "#f0fdf4", head: "#dcfce7", text: "#15803d" }, // lá
-  { accent: "#ec4899", soft: "#fdf2f8", head: "#fce7f3", text: "#be185d" }, // hồng
+  { accent: "#ef4444", soft: "#fef2f2", head: "#fee2e2", text: "#b91c1c" }, // đỏ (Hủy)
   { accent: "#3b82f6", soft: "#eff6ff", head: "#dbeafe", text: "#1d4ed8" }, // dương
 ];
 
@@ -84,25 +84,27 @@ export default function BookingPipeline({
             }`}
             style={{ backgroundColor: style.soft }}
           >
-            <div
-              className="flex items-center justify-between px-4 py-3"
-              style={{ backgroundColor: style.head }}
-            >
-              <span
-                className="text-[13.5px] font-black"
-                style={{ color: style.text }}
+            {/* Header ĐƯỢC GHIM: dính đầu cột khi cuộn danh sách card */}
+            <div className="flex h-[calc(100vh-215px)] flex-col overflow-y-auto">
+              <div
+                className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 shadow-sm"
+                style={{ backgroundColor: style.head }}
               >
-                {status}
-              </span>
-              <span
-                className="rounded-full bg-white px-2.5 py-0.5 text-[12px] font-black shadow-sm"
-                style={{ color: style.text }}
-              >
-                {cards.length}
-              </span>
-            </div>
+                <span
+                  className="text-[13.5px] font-black"
+                  style={{ color: style.text }}
+                >
+                  {status}
+                </span>
+                <span
+                  className="rounded-full bg-white px-2.5 py-0.5 text-[12px] font-black shadow-sm"
+                  style={{ color: style.text }}
+                >
+                  {cards.length}
+                </span>
+              </div>
 
-            <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto px-3 pb-3">
+              <div className="flex flex-col gap-2 px-3 pb-3 pt-2">
               {cards.length === 0 && (
                 <div className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-[12px] text-slate-400">
                   Kéo card vào đây
@@ -263,6 +265,7 @@ export default function BookingPipeline({
                   </div>
                 );
               })}
+              </div>
             </div>
           </div>
         );

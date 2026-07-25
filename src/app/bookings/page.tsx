@@ -53,6 +53,7 @@ const statusBookingOptions = [
   "Đang lên video",
   "Đã đăng video",
   "Không cần lên vid",
+  "Hủy",
 ];
 
 // Trường lọc chọn từ danh sách (không phải gõ tay)
