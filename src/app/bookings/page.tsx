@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import BookingAdvancedTable from "@/components/BookingAdvancedTable";
+import BookingPipeline from "@/components/BookingPipeline";
 import DatePickerInput from "@/components/DatePickerInput";
 import SavedFiltersDropdown from "@/components/SavedFiltersDropdown";
 import { useUserRole } from "@/lib/useUserRole";
@@ -51,7 +52,8 @@ const statusBookingOptions = [
   "Chờ nhận SP",
   "Đang lên video",
   "Đã đăng video",
-  "Đã thanh toán",
+  "Không cần lên vid",
+  "Hủy",
 ];
 
 // Trường lọc chọn từ danh sách (không phải gõ tay)
@@ -142,6 +144,8 @@ export default function BookingListPage() {
   const [employees, setEmployees] = useState<DbRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  // Chế độ xem: "table" (bảng) hoặc "pipeline" (Kanban kéo thả theo Status)
+  const [viewMode, setViewMode] = useState<"table" | "pipeline">("table");
 
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(100);
@@ -441,6 +445,100 @@ export default function BookingListPage() {
     return null;
   }
 
+  // Kéo thả card trong Pipeline -> đổi Status booking
+  async function handlePipelineStatusChange(
+    bookingId: string,
+    newStatus: string
+  ) {
+    const booking = bookings.find((b) => String(b.id) === String(bookingId));
+    if (!booking) return;
+
+    const oldStatus = booking.status_booking;
+    if (String(oldStatus || "") === newStatus) return;
+
+    // Điều kiện: chưa có Ngày gửi thì KHÔNG được chuyển sang "Đang lên video"
+    const hasShipDate = String(booking.ship_date ?? "").trim() !== "";
+    if (newStatus === "Đang lên video" && !hasShipDate) {
+      setMessage(
+        'Chưa có "Ngày gửi" nên không thể chuyển sang "Đang lên video".'
+      );
+      return;
+    }
+
+    // Cập nhật ngay trên giao diện (optimistic)
+    setBookings((prev) =>
+      prev.map((b) =>
+        String(b.id) === String(bookingId)
+          ? { ...b, status_booking: newStatus }
+          : b
+      )
+    );
+
+    const { error } = await supabase
+      .from("bookings")
+      .update({ status_booking: newStatus })
+      .eq("id", bookingId);
+
+    if (error) {
+      setMessage(`Lỗi cập nhật trạng thái: ${error.message}`);
+      // Lỗi -> trả lại trạng thái cũ
+      setBookings((prev) =>
+        prev.map((b) =>
+          String(b.id) === String(bookingId)
+            ? { ...b, status_booking: oldStatus }
+            : b
+        )
+      );
+    }
+  }
+
+  // Sửa trực tiếp 1 trường của booking trên card Pipeline (ngày dự kiến/thực tế)
+  async function handlePipelineFieldChange(
+    bookingId: string,
+    field: string,
+    value: string | null
+  ) {
+    const booking = bookings.find((b) => String(b.id) === String(bookingId));
+    if (!booking) return;
+
+    const oldValue = booking[field] ?? null;
+    if (String(oldValue ?? "") === String(value ?? "")) return;
+
+    const patch: DbRow = { [field]: value };
+
+    // Điều kiện: có "Ngày thực tế đăng" -> tự chuyển sang "Đã đăng video"
+    const oldStatus = booking.status_booking;
+    if (
+      field === "actual_post_date" &&
+      value &&
+      oldStatus !== "Đã đăng video"
+    ) {
+      patch.status_booking = "Đã đăng video";
+    }
+
+    setBookings((prev) =>
+      prev.map((b) =>
+        String(b.id) === String(bookingId) ? { ...b, ...patch } : b
+      )
+    );
+
+    const { error } = await supabase
+      .from("bookings")
+      .update(patch)
+      .eq("id", bookingId);
+
+    if (error) {
+      setMessage(`Lỗi cập nhật: ${error.message}`);
+      setBookings((prev) =>
+        prev.map((b) =>
+          String(b.id) === String(bookingId)
+            ? { ...b, [field]: oldValue, status_booking: oldStatus }
+            : b
+        )
+      );
+    }
+  }
+
   // Chọn/đảo sắp xếp: bấm lại cùng chiều -> tắt sắp xếp (về mặc định)
   function toggleSort(field: string, ascending: boolean) {
     setSortState((current) => {
@@ -517,7 +615,7 @@ export default function BookingListPage() {
   ).length;
 
   const paidCount = currentPageBookings.filter(
-    (booking) => booking.status_booking === "Đã thanh toán"
+    (booking) => booking.status_booking === "Không cần lên vid"
   ).length;
 
   // Thêm điều kiện đang soạn vào danh sách áp dụng (Enter hoặc chọn xong)
@@ -650,6 +748,34 @@ export default function BookingListPage() {
                 Danh sách Booking
               </h1>
             </div>
+
+            {/* Chuyển Bảng / Pipeline ngay cạnh tiêu đề (shipper chỉ dùng Bảng) */}
+            {!isShipper && (
+              <div className="ml-2 inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("table")}
+                  className={`h-8 rounded-lg px-3 text-[12px] font-bold ${
+                    viewMode === "table"
+                      ? "bg-[#3964ff] text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  Bảng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("pipeline")}
+                  className={`h-8 rounded-lg px-3 text-[12px] font-bold ${
+                    viewMode === "pipeline"
+                      ? "bg-[#3964ff] text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  Pipeline
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -679,7 +805,7 @@ export default function BookingListPage() {
         </div>
       )}
 
-      <section className="mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <section className="sticky top-[92px] z-20 mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="flex flex-wrap items-end gap-2">
           <div className="w-full sm:w-[190px]">
             <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
@@ -931,6 +1057,28 @@ export default function BookingListPage() {
 
       </section>
 
+      {viewMode === "pipeline" && !isShipper ? (
+        <section className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+          <div className="mb-3">
+            <p className="text-[15px] font-black text-slate-900">
+              Booking Pipeline
+            </p>
+            <p className="text-[12.5px] text-slate-500">
+              {totalBookingCount} booking · Kéo thả card giữa các cột để cập nhật
+              Status booking
+            </p>
+          </div>
+
+          <BookingPipeline
+            bookings={sortedBookings}
+            kocMap={kocMap}
+            statuses={statusBookingOptions}
+            onStatusChange={handlePipelineStatusChange}
+            onFieldChange={handlePipelineFieldChange}
+          />
+        </section>
+      ) : (
+        <>
       <BookingAdvancedTable
         bookings={currentPageBookings}
         kocs={kocs}
@@ -1005,7 +1153,7 @@ export default function BookingListPage() {
                 Booking quà:{" "}
                 <b className="text-orange-600">{giftBookingCount}</b>{" "}
                 <span className="font-semibold text-slate-400">
-                  (Đã thanh toán: {paidCount})
+                  (Không cần lên vid: {paidCount})
                 </span>
               </span>
             </div>
@@ -1073,6 +1221,8 @@ export default function BookingListPage() {
           </div>
         </div>
       </section>
+        </>
+      )}
     </section>
   );
 }
