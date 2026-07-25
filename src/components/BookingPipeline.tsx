@@ -69,20 +69,14 @@ export default function BookingPipeline({
               setDragId("");
               setDragOverStatus("");
             }}
-            className={`flex min-w-[320px] flex-1 flex-col overflow-hidden rounded-2xl border-2 ${
-              isOver ? "ring-2 ring-offset-1" : ""
+            className={`flex min-w-[320px] flex-1 flex-col overflow-hidden rounded-2xl ${
+              isOver ? "ring-2 ring-[#3964ff] ring-offset-1" : ""
             }`}
-            style={{
-              backgroundColor: style.soft,
-              borderColor: isOver ? "#3964ff" : style.accent,
-            }}
+            style={{ backgroundColor: style.soft }}
           >
             <div
               className="flex items-center justify-between px-4 py-3"
-              style={{
-                backgroundColor: style.head,
-                borderBottom: `3px solid ${style.accent}`,
-              }}
+              style={{ backgroundColor: style.head }}
             >
               <span
                 className="text-[13.5px] font-black"
