@@ -52,7 +52,7 @@ const statusBookingOptions = [
   "Chờ nhận SP",
   "Đang lên video",
   "Đã đăng video",
-  "Đã thanh toán",
+  "Không cần lên vid",
 ];
 
 // Trường lọc chọn từ danh sách (không phải gõ tay)
@@ -558,7 +558,7 @@ export default function BookingListPage() {
   ).length;
 
   const paidCount = currentPageBookings.filter(
-    (booking) => booking.status_booking === "Đã thanh toán"
+    (booking) => booking.status_booking === "Không cần lên vid"
   ).length;
 
   // Thêm điều kiện đang soạn vào danh sách áp dụng (Enter hoặc chọn xong)
@@ -1095,7 +1095,7 @@ export default function BookingListPage() {
                 Booking quà:{" "}
                 <b className="text-orange-600">{giftBookingCount}</b>{" "}
                 <span className="font-semibold text-slate-400">
-                  (Đã thanh toán: {paidCount})
+                  (Không cần lên vid: {paidCount})
                 </span>
               </span>
             </div>

@@ -282,7 +282,7 @@ export default async function Home() {
     supabase
       .from("bookings")
       .select("id", { count: "exact", head: true })
-      .eq("status_booking", "Đã thanh toán"),
+      .eq("status_booking", "Không cần lên vid"),
 
     supabase
       .from("bookings")
@@ -375,7 +375,7 @@ export default async function Home() {
     return (
       expectedDate < today &&
       status !== "Đã đăng video" &&
-      status !== "Đã thanh toán"
+      status !== "Không cần lên vid"
     );
   });
 
@@ -384,7 +384,7 @@ export default async function Home() {
     const actualPostDate = normalizeDate(booking.actual_post_date);
 
     return (
-      status !== "Đã thanh toán" &&
+      status !== "Không cần lên vid" &&
       (status === "Đã đăng video" || Boolean(actualPostDate))
     );
   });
@@ -505,9 +505,9 @@ export default async function Home() {
 
         <KpiCard
           icon="✅"
-          title="Đã thanh toán (tổng)"
+          title="Không cần lên vid (tổng)"
           value={paidBookingTotalCount}
-          note="Tổng booking có status Đã thanh toán"
+          note="Tổng booking có status Không cần lên vid"
           tone="blue"
         />
 
@@ -550,8 +550,8 @@ export default async function Home() {
 
       <section className="mb-6 rounded-[28px] border border-blue-200 bg-blue-50 px-5 py-4 text-sm font-medium text-blue-800">
         Các KPI theo ngày được tính trực tiếp bằng mốc giờ Việt Nam
-        <b> 00:00–24:00 (+07:00)</b>. Chỉ số <b>Đã thanh toán (tổng)</b> là tổng
-        booking đang có status <b>Đã thanh toán</b>; hệ thống hiện chưa có cột
+        <b> 00:00–24:00 (+07:00)</b>. Chỉ số <b>Không cần lên vid (tổng)</b> là tổng
+        booking đang có status <b>Không cần lên vid</b>; hệ thống hiện chưa có cột
         ngày thanh toán riêng nên không thể xác định chính xác số thanh toán riêng trong ngày.
       </section>
 
