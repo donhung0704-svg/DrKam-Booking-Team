@@ -84,8 +84,10 @@ export default function BookingPipeline({
             }`}
             style={{ backgroundColor: style.soft }}
           >
-            {/* Header ĐƯỢC GHIM: dính đầu cột khi cuộn danh sách card */}
-            <div className="flex h-[calc(100vh-215px)] flex-col overflow-y-auto">
+            {/* Header ĐƯỢC GHIM: dính đầu cột khi cuộn danh sách card.
+                Chiều cao cột vừa khung màn hình -> cuộn NỘI BỘ cột (không cuộn
+                cả trang) nên tiêu đề luôn dính. */}
+            <div className="flex h-[calc(100vh-300px)] min-h-[360px] flex-col overflow-y-auto">
               <div
                 className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 shadow-sm"
                 style={{ backgroundColor: style.head }}
