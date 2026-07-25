@@ -456,6 +456,20 @@ export default function BookingListPage() {
     const oldStatus = booking.status_booking;
     if (String(oldStatus || "") === newStatus) return;
 
+    // Đã có "Ngày thực tế đăng" -> chốt ở "Đã đăng video", không kéo sang cột khác
+    const hasActualPost = String(booking.actual_post_date ?? "").trim() !== "";
+    if (
+      hasActualPost &&
+      newStatus !== "Đã đăng video" &&
+      newStatus !== "Hủy" &&
+      newStatus !== "Không cần lên vid"
+    ) {
+      setMessage(
+        'Booking đã có "Ngày thực tế đăng" nên ở cột "Đã đăng video". Xóa ngày đó nếu muốn chuyển cột khác.'
+      );
+      return;
+    }
+
     // Điều kiện: chưa có Ngày gửi thì KHÔNG được chuyển sang "Đang lên video"
     const hasShipDate = String(booking.ship_date ?? "").trim() !== "";
     if (newStatus === "Đang lên video" && !hasShipDate) {
