@@ -53,7 +53,7 @@ const statusOptions = [
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const commissionOptions = [
   "Mở",
-  "15% tn 3% ads",
+  "15% tn 5% ads",
   "16% tn 8% ads",
   "1% tn 1% ads",
 ];
