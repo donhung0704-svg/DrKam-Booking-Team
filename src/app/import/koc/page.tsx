@@ -24,7 +24,7 @@ const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 const commissionOptions = [
   "Mở",
-  "15% tn 3% ads",
+  "15% tn 5% ads",
   "16% tn 8% ads",
   "1% tn 1% ads",
 ];
@@ -135,7 +135,7 @@ function downloadKocTemplate() {
       "GMV tháng": 0,
       "Món bán ra": 0,
       "Món hoàn": 0,
-      "Hoa hồng": "15% tn 3% ads",
+      "Hoa hồng": "15% tn 5% ads",
       "Marital status": "Đã có con",
       "CS gần nhất": "22/06/2026",
       "Link Facebook": "https://facebook.com/...",
