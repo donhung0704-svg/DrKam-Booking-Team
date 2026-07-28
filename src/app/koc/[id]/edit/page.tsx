@@ -30,11 +30,18 @@ const statusOptions = [
   "Dừng CS",
 ];
 
-const channelTypeOptions = ["Người thật", "AI", "Pov-Unbox"];
+const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
 
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 
 const platformOptions = ["TikTok", "FB", "Shopee"];
+
+const commissionOptions = [
+  "Mở",
+  "15% tn 5% ads",
+  "16% tn 8% ads",
+  "1% tn 1% ads",
+];
 
 function parseMultiList(value: unknown) {
   return Array.from(
@@ -139,6 +146,11 @@ export default function EditKocPage() {
       campaign_id: getText(formData, "campaign_id") || null,
       gmv: getNumber(formData, "gmv"),
       gmv_thang: getNumber(formData, "gmv_thang"),
+      videos_with_revenue: getNumber(formData, "videos_with_revenue"),
+      items_sold: getNumber(formData, "items_sold"),
+      items_returned: getNumber(formData, "items_returned"),
+      commission_type: getText(formData, "commission_type") || null,
+      cast_price: getNumber(formData, "cast_price"),
       marital_status: getText(formData, "marital_status") || null,
       new_contact_date: parseVietnameseDateInput(
         formData.get("new_contact_date")
@@ -447,6 +459,57 @@ export default function EditKocPage() {
                     name="gmv_thang"
                     defaultValue={koc.gmv_thang || ""}
                     placeholder="Ví dụ: 30000000"
+                    className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  />
+                </CompactField>
+
+                <CompactField label="Video có DT">
+                  <input
+                    name="videos_with_revenue"
+                    defaultValue={koc.videos_with_revenue || ""}
+                    placeholder="Số video có doanh thu"
+                    className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  />
+                </CompactField>
+
+                <CompactField label="Món bán ra">
+                  <input
+                    name="items_sold"
+                    defaultValue={koc.items_sold || ""}
+                    placeholder="Số món bán ra"
+                    className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  />
+                </CompactField>
+
+                <CompactField label="Món hoàn">
+                  <input
+                    name="items_returned"
+                    defaultValue={koc.items_returned || ""}
+                    placeholder="Số món hoàn"
+                    className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  />
+                </CompactField>
+
+                <CompactField label="Hoa hồng">
+                  <select
+                    name="commission_type"
+                    defaultValue={koc.commission_type || ""}
+                    className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  >
+                    <option value="">Chọn hoa hồng</option>
+                    {commissionOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </CompactField>
+
+                <CompactField label="Giá cast">
+                  <input
+                    name="cast_price"
+                    defaultValue={koc.cast_price || ""}
+                    placeholder="Ví dụ: 500000"
                     className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
                   />
                 </CompactField>
