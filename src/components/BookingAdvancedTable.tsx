@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DatePickerInput from "@/components/DatePickerInput";
+import CopyableCell from "@/components/CopyableCell";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -1362,36 +1363,22 @@ function CellEditor({
           ? String(relatedKoc?.address || "-")
           : String(relatedKoc?.phone || "-");
 
-    return (
-      <div
-        className="truncate font-semibold text-slate-700"
-        title={displayValue}
-      >
-        {displayValue}
-      </div>
-    );
+    return <CopyableCell text={displayValue} />;
   }
 
-  // Tài khoản bị hạn chế: các trường không được sửa -> hiển thị chỉ đọc
+  // Tài khoản bị hạn chế: các trường không được sửa -> hiển thị chỉ đọc (copy được)
   if (forceReadonly) {
     return (
-      <div
-        className="truncate font-semibold text-slate-600"
-        title={formatCellDisplay(column, value, kocMap, employeeMap)}
-      >
-        {formatCellDisplay(column, value, kocMap, employeeMap)}
-      </div>
+      <CopyableCell
+        text={formatCellDisplay(column, value, kocMap, employeeMap)}
+        bold={false}
+      />
     );
   }
 
   if (column.type === "readonly") {
     return (
-      <div
-        className="truncate font-semibold text-slate-700"
-        title={formatCellDisplay(column, value, kocMap, employeeMap)}
-      >
-        {formatCellDisplay(column, value, kocMap, employeeMap)}
-      </div>
+      <CopyableCell text={formatCellDisplay(column, value, kocMap, employeeMap)} />
     );
   }
 
@@ -1496,17 +1483,58 @@ function CellEditor({
   }
 
   return (
-    <div className="relative">
+    <EditableCopyText
+      initial={formatInputValue(column, value)}
+      saving={saving}
+      onSave={onSave}
+    />
+  );
+}
+
+// Ô text sửa được + nút copy nhanh (hiện khi rê chuột vào ô)
+function EditableCopyText({
+  initial,
+  saving,
+  onSave,
+}: {
+  initial: string;
+  saving: boolean;
+  onSave: (value: unknown) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <div className="group/cell relative">
       <input
-        defaultValue={formatInputValue(column, value)}
+        ref={inputRef}
+        defaultValue={initial}
         onBlur={(event) => onSave(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             event.currentTarget.blur();
           }
         }}
-        className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
       />
+
+      <button
+        type="button"
+        title="Bấm để copy"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={(event) => {
+          event.stopPropagation();
+          const text = (inputRef.current?.value || "").trim();
+          if (!text) return;
+          navigator.clipboard?.writeText(text);
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 900);
+        }}
+        className="absolute right-1 top-1/2 -translate-y-1/2 rounded px-0.5 text-[11px] text-slate-300 opacity-0 hover:text-[#3964ff] group-hover/cell:opacity-100"
+      >
+        {copied ? "✓" : "⧉"}
+      </button>
+
       {saving && <SavingDot />}
     </div>
   );
