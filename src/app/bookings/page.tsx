@@ -1416,11 +1416,10 @@ function getKocDisplayName(koc?: DbRow | null) {
 function getEmployeeDisplayName(employee?: DbRow | null) {
   if (!employee) return "Chưa có PIC";
 
+  const code = employee.employee_code || "";
+  const name = employee.full_name || "";
   return (
-    employee.full_name ||
-    employee.employee_code ||
-    employee.email ||
-    "Chưa rõ PIC"
+    [code, name].filter(Boolean).join(" - ") || employee.email || "Chưa rõ PIC"
   );
 }
 
