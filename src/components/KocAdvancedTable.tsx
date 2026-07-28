@@ -2190,5 +2190,7 @@ function getCampaignDisplayName(campaign?: DbRow | null) {
 function getEmployeeDisplayName(employee?: DbRow | null) {
   if (!employee) return "Chưa có PIC";
 
-  return employee.full_name || employee.employee_code || "Chưa rõ PIC";
+  const code = employee.employee_code || "";
+  const name = employee.full_name || "";
+  return [code, name].filter(Boolean).join(" - ") || "Chưa rõ PIC";
 }
