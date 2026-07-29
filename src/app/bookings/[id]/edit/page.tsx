@@ -799,5 +799,5 @@ function getEmployeeDisplayName(employee?: DbRow | null) {
   const phone = employee.phone || "";
   const role = employee.role || "";
 
-  return [code, name].filter(Boolean).join(" - ") || "Chưa rõ PIC";
+  return [name, code].filter(Boolean).join(" - ") || "Chưa rõ PIC";
 }
