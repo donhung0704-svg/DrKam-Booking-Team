@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import DatePickerInput from "@/components/DatePickerInput";
 
 type DbRow = Record<string, any>;
 
@@ -237,36 +238,36 @@ export default function BookingPipeline({
                           <span className="mb-0.5 block text-[10px] font-bold uppercase text-slate-400">
                             Dự kiến đăng
                           </span>
-                          <input
-                            type="date"
-                            draggable={false}
-                            value={toDateInput(booking.expected_post_date)}
-                            onChange={(event) =>
+                          <DatePickerInput
+                            name={`exp_${booking.id}`}
+                            value={booking.expected_post_date ?? ""}
+                            onChange={(display) =>
                               onFieldChange(
                                 String(booking.id),
                                 "expected_post_date",
-                                event.target.value || null
+                                displayToIso(display)
                               )
                             }
-                            className="h-6 w-full rounded-md border border-slate-200 bg-white px-1.5 text-[11px] outline-none focus:border-[#3964ff]"
+                            placeholder="dd/mm/yyyy"
+                            className="h-6 w-full rounded-md border border-slate-200 bg-white px-1.5 pr-6 text-[11px] outline-none focus:border-[#3964ff]"
                           />
                         </div>
                         <div>
                           <span className="mb-0.5 block text-[10px] font-bold uppercase text-slate-400">
                             Thực tế đăng
                           </span>
-                          <input
-                            type="date"
-                            draggable={false}
-                            value={toDateInput(booking.actual_post_date)}
-                            onChange={(event) =>
+                          <DatePickerInput
+                            name={`act_${booking.id}`}
+                            value={booking.actual_post_date ?? ""}
+                            onChange={(display) =>
                               onFieldChange(
                                 String(booking.id),
                                 "actual_post_date",
-                                event.target.value || null
+                                displayToIso(display)
                               )
                             }
-                            className="h-6 w-full rounded-md border border-slate-200 bg-white px-1.5 text-[11px] outline-none focus:border-[#3964ff]"
+                            placeholder="dd/mm/yyyy"
+                            className="h-6 w-full rounded-md border border-slate-200 bg-white px-1.5 pr-6 text-[11px] outline-none focus:border-[#3964ff]"
                           />
                         </div>
                       </div>
@@ -295,6 +296,15 @@ function compactMoney(value: number) {
 function toDateInput(value: unknown) {
   const match = String(value ?? "").trim().match(/^(\d{4}-\d{2}-\d{2})/);
   return match ? match[1] : "";
+}
+
+// DatePickerInput trả về "dd/mm/yyyy" -> đổi sang ISO "YYYY-MM-DD" để lưu DB
+function displayToIso(display: string): string | null {
+  const raw = String(display ?? "").trim();
+  if (!raw) return null;
+  const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
 }
 
 // Hiển thị ngày dạng dd/mm/yyyy

@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import DatePickerInput from "@/components/DatePickerInput";
 import { useEffect, useMemo, useState } from "react";
 
 type DbRow = Record<string, any>;
@@ -202,12 +203,17 @@ export default function EditHistoryPage() {
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <label className="text-[13px] font-bold text-slate-600">Ngày:</label>
-          <input
-            type="date"
-            value={dateKey}
-            onChange={(event) => setDateKey(event.target.value)}
-            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
-          />
+          <div className="w-[150px]">
+            <DatePickerInput
+              name="history_date"
+              value={dateKey}
+              onChange={(display) => {
+                const iso = displayToIso(display);
+                if (iso) setDateKey(iso);
+              }}
+              placeholder="dd/mm/yyyy"
+            />
+          </div>
           <button
             type="button"
             onClick={() => setDateKey(getVietnamTodayKey())}
@@ -375,6 +381,15 @@ function diffChanges(row: HistoryRow): string[] {
   });
 
   return changed;
+}
+
+// DatePickerInput trả "dd/mm/yyyy" -> ISO "YYYY-MM-DD"
+function displayToIso(display: string): string | null {
+  const raw = String(display ?? "").trim();
+  if (!raw) return null;
+  const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
 }
 
 function getVietnamTodayKey() {
