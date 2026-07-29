@@ -757,10 +757,18 @@ export default function BookingAdvancedTable({
 
       {restricted && (
         <div className="border-b border-slate-200 bg-amber-50 px-5 py-2.5">
-          <p className="text-[12px] font-bold text-amber-700">
-            Tài khoản Giao hàng: chỉ xem và sửa 3 trường Ngày gửi, Mã vận đơn,
-            Tình trạng đơn hàng.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[12px] font-bold text-amber-700">
+              Tài khoản Giao hàng: chỉ xem và sửa 3 trường Ngày gửi, Mã vận đơn,
+              Tình trạng đơn hàng.
+            </p>
+            {/* Vẫn cho shipper ẩn/hiện + reset cột cho gọn */}
+            {trailingActions && (
+              <div className="flex flex-wrap items-center gap-2">
+                {trailingActions}
+              </div>
+            )}
+          </div>
           {statsInfo && <div className="mt-2">{statsInfo}</div>}
         </div>
       )}
