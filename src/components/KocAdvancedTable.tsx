@@ -2230,5 +2230,5 @@ function getEmployeeDisplayName(employee?: DbRow | null) {
 
   const code = employee.employee_code || "";
   const name = employee.full_name || "";
-  return [code, name].filter(Boolean).join(" - ") || "Chưa rõ PIC";
+  return [name, code].filter(Boolean).join(" - ") || "Chưa rõ PIC";
 }

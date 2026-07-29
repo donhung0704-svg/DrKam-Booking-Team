@@ -1998,6 +1998,6 @@ function getEmployeeDisplayName(employee?: DbRow | null) {
   const code = employee.employee_code || "";
   const name = employee.full_name || "";
   return (
-    [code, name].filter(Boolean).join(" - ") || employee.email || "Chưa rõ PIC"
+    [name, code].filter(Boolean).join(" - ") || employee.email || "Chưa rõ PIC"
   );
 }
