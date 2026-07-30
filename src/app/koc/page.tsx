@@ -389,31 +389,87 @@ export default function KocListPage() {
   // Cập nhật TẤT CẢ KOC khớp bộ lọc hiện tại (mọi trang, không chỉ trang đang xem).
   // Chạy thẳng bằng điều kiện lọc nên không cần liệt kê id -> không vướng
   // giới hạn 1000 dòng của Supabase.
+  // Lấy TẤT CẢ id khớp bộ lọc (phân trang). Trả về danh sách id để chia lô.
+  async function loadFilteredKocIds(): Promise<string[]> {
+    const pageSize = 1000;
+    const ids: string[] = [];
+
+    for (let from = 0; ; from += pageSize) {
+      let query = supabase
+        .from("koc")
+        .select("id")
+        .order("id", { ascending: true })
+        .range(from, from + pageSize - 1);
+
+      activeFilters.forEach((condition) => {
+        query = applyConditionToQuery(query, condition);
+      });
+
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+
+      const batch = data || [];
+      batch.forEach((row) => ids.push(String(row.id)));
+
+      if (batch.length < pageSize) break;
+    }
+
+    return ids;
+  }
+
+  // Chạy thao tác theo lô 200 id (chạy 4 lô song song) để tránh 1 câu lệnh
+  // quá lớn -> statement timeout của Postgres.
+  async function runOnKocIdsInChunks(
+    ids: string[],
+    run: (chunk: string[]) => Promise<{ error: { message: string } | null }>
+  ): Promise<string | null> {
+    const chunkSize = 200;
+    const chunks: string[][] = [];
+    for (let i = 0; i < ids.length; i += chunkSize) {
+      chunks.push(ids.slice(i, i + chunkSize));
+    }
+
+    const concurrency = 4;
+    for (let i = 0; i < chunks.length; i += concurrency) {
+      const results = await Promise.all(
+        chunks.slice(i, i + concurrency).map((chunk) => run(chunk))
+      );
+      const failed = results.find((result) => result.error);
+      if (failed?.error) return failed.error.message;
+    }
+
+    return null;
+  }
+
   async function bulkUpdateAllFiltered(patch: DbRow) {
-    let query = supabase.from("koc").update(patch).not("id", "is", null);
+    let ids: string[];
+    try {
+      ids = await loadFilteredKocIds();
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
 
-    activeFilters.forEach((condition) => {
-      query = applyConditionToQuery(query, condition);
-    });
-
-    const { error } = await query;
-
-    if (error) return error.message;
+    const errorMessage = await runOnKocIdsInChunks(ids, async (chunk) =>
+      supabase.from("koc").update(patch).in("id", chunk)
+    );
+    if (errorMessage) return errorMessage;
 
     setReloadSignal((current) => current + 1);
     return null;
   }
 
   async function bulkDeleteAllFiltered() {
-    let query = supabase.from("koc").delete().not("id", "is", null);
+    let ids: string[];
+    try {
+      ids = await loadFilteredKocIds();
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
 
-    activeFilters.forEach((condition) => {
-      query = applyConditionToQuery(query, condition);
-    });
-
-    const { error } = await query;
-
-    if (error) return error.message;
+    const errorMessage = await runOnKocIdsInChunks(ids, async (chunk) =>
+      supabase.from("koc").delete().in("id", chunk)
+    );
+    if (errorMessage) return errorMessage;
 
     setPageIndex(0);
     setReloadSignal((current) => current + 1);
