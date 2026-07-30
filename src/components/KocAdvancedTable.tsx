@@ -917,6 +917,13 @@ const orderedColumns = useMemo(() => {
 
   return (
     <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+      {/* Gợi ý Hoa hồng dùng chung cho ô nhập commission_type (vẫn tự ghi được) */}
+      <datalist id="koc-commission-options">
+        {commissionOptions.map((option) => (
+          <option key={option} value={option} />
+        ))}
+      </datalist>
+
       {error && (
         <div className="border-b border-slate-200 px-5 py-3">
           <p className="text-[12px] font-bold text-red-600">{error}</p>
@@ -1601,6 +1608,25 @@ function CellEditor({
       <CopyableCell
         text={formatCellDisplay(column, value, campaignMap, employeeMap)}
       />
+    );
+  }
+
+  // Hoa hồng: chọn từ gợi ý HOẶC tự ghi giá trị khác (input + datalist)
+  if (column.key === "commission_type") {
+    return (
+      <div className="relative">
+        <input
+          list="koc-commission-options"
+          defaultValue={String(value || "")}
+          onBlur={(event) => onSave(event.target.value.trim() || null)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.currentTarget.blur();
+          }}
+          placeholder="Chọn hoặc tự ghi"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        />
+        {saving && <SavingDot />}
+      </div>
     );
   }
 

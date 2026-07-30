@@ -491,18 +491,18 @@ export default function EditKocPage() {
                 </CompactField>
 
                 <CompactField label="Hoa hồng">
-                  <select
+                  <input
                     name="commission_type"
+                    list="koc-commission-options-edit"
                     defaultValue={koc.commission_type || ""}
+                    placeholder="Chọn hoặc tự ghi"
                     className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
-                  >
-                    <option value="">Chọn hoa hồng</option>
+                  />
+                  <datalist id="koc-commission-options-edit">
                     {commissionOptions.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
+                      <option key={item} value={item} />
                     ))}
-                  </select>
+                  </datalist>
                 </CompactField>
 
                 <CompactField label="Giá cast">
