@@ -2,7 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import PicFilter from "@/components/PicFilter";
-import ResizableTh from "@/components/ResizableTh";
+import ResizableTh, { ResizeGroupContext } from "@/components/ResizableTh";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -717,6 +717,7 @@ export default function MonthlyReportPage() {
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
+          <ResizeGroupContext.Provider value="monthly-main">
           <table className="report-table w-full table-fixed text-center text-[13px]">
             <thead>
               <tr className="bg-slate-50">
@@ -829,6 +830,7 @@ export default function MonthlyReportPage() {
               )}
             </tbody>
           </table>
+          </ResizeGroupContext.Provider>
         </div>
       </section>
 
@@ -844,6 +846,7 @@ export default function MonthlyReportPage() {
         </div>
 
         <div className="overflow-x-auto">
+          <ResizeGroupContext.Provider value="monthly-summary">
           <table className="report-table w-full table-fixed text-center text-[13px]">
             <thead>
               <tr className="bg-slate-50">
@@ -941,6 +944,7 @@ export default function MonthlyReportPage() {
               )}
             </tbody>
           </table>
+          </ResizeGroupContext.Provider>
         </div>
       </section>
 
@@ -1086,6 +1090,7 @@ function KpiGroupTable({
       </div>
 
       <div className="overflow-x-auto">
+        <ResizeGroupContext.Provider value={`monthly-kpi-${title}`}>
         <table className="report-table w-full text-center text-[11px]">
           <thead>
             <tr className="bg-slate-50">
@@ -1365,6 +1370,7 @@ function KpiGroupTable({
             })}
           </tbody>
         </table>
+        </ResizeGroupContext.Provider>
       </div>
     </div>
   );

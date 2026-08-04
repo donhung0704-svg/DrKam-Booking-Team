@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabase/client";
 import DatePickerInput from "@/components/DatePickerInput";
 import PicFilter from "@/components/PicFilter";
-import ResizableTh from "@/components/ResizableTh";
+import ResizableTh, { ResizeGroupContext } from "@/components/ResizableTh";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -439,6 +439,7 @@ export default function PicReportPage() {
 
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
+          <ResizeGroupContext.Provider value="daily-main">
           <table className="report-table w-full table-fixed text-center text-sm">
             <thead>
               <tr className="bg-slate-50">
@@ -526,6 +527,7 @@ export default function PicReportPage() {
               )}
             </tbody>
           </table>
+          </ResizeGroupContext.Provider>
         </div>
       </section>
 
