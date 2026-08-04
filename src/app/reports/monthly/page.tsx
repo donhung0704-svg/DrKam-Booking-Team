@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import PicFilter from "@/components/PicFilter";
+import ResizableTh from "@/components/ResizableTh";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -1001,9 +1002,9 @@ export default function MonthlyReportPage() {
 
 function Th({ children }: { children: ReactNode }) {
   return (
-    <th className="border-b border-slate-200 px-2 py-2 text-center align-middle text-[11px] font-black uppercase tracking-[0.04em] text-slate-700">
+    <ResizableTh className="border-b border-slate-200 px-2 py-2 text-center align-middle text-[11px] font-black uppercase tracking-[0.04em] text-slate-700">
       {children}
-    </th>
+    </ResizableTh>
   );
 }
 
@@ -1035,13 +1036,13 @@ function KpiTh({
   narrow?: boolean;
 }) {
   return (
-    <th
+    <ResizableTh
       className={`border-b border-slate-200 py-2 text-center text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600 ${
         narrow ? "px-1" : "px-4"
       } ${borderRight ? "border-r" : ""}`}
     >
       {children}
-    </th>
+    </ResizableTh>
   );
 }
 
