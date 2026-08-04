@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import KocAdvancedTable from "@/components/KocAdvancedTable";
+import DatePickerInput from "@/components/DatePickerInput";
 import SavedFiltersDropdown from "@/components/SavedFiltersDropdown";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -21,6 +22,7 @@ type FilterOperator =
   | "lte"
   | "between"
   | "date_eq"
+  | "date_neq"
   | "date_from"
   | "date_to"
   | "date_between"
@@ -793,6 +795,18 @@ export default function KocListPage() {
             onEnter={addFilter}
           />
 
+          {/* Trường ngày dùng lịch dd/mm/yyyy (không gõ Enter được) -> nút Thêm */}
+          {selectedField.type === "date" &&
+            !["is_empty", "is_not_empty"].includes(filterOperator) && (
+              <button
+                type="button"
+                onClick={addFilter}
+                className="h-10 self-end rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-sm hover:bg-[#2f55df]"
+              >
+                + Thêm điều kiện
+              </button>
+            )}
+
           <button
             type="button"
             onClick={clearFilters}
@@ -1107,11 +1121,27 @@ function FilterValueInput({
     );
   }
 
+  // Trường ngày: lịch dd/mm/yyyy (lưu ISO qua kocDisplayToIso)
+  if (field.type === "date") {
+    return (
+      <div>
+        <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">{label}</label>
+        <DatePickerInput
+          name="koc_filter_value"
+          value={value}
+          onChange={(display) => onChange(kocDisplayToIso(display))}
+          placeholder="dd/mm/yyyy"
+          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff]"
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">{label}</label>
       <input
-        type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
+        type={field.type === "number" ? "number" : "text"}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
@@ -1125,6 +1155,15 @@ function FilterValueInput({
       />
     </div>
   );
+}
+
+// dd/mm/yyyy -> ISO "YYYY-MM-DD" (rỗng nếu không hợp lệ). Ô lọc lưu ISO.
+function kocDisplayToIso(display: string) {
+  const raw = String(display ?? "").trim();
+  if (!raw) return "";
+  const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return "";
+  return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
 }
 
 function FilterSecondValueInput({
@@ -1146,11 +1185,26 @@ function FilterSecondValueInput({
     return null;
   }
 
+  if (field.type === "date") {
+    return (
+      <div className="w-[150px]">
+        <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Giá trị đến</label>
+        <DatePickerInput
+          name="koc_filter_value2"
+          value={value}
+          onChange={(display) => onChange(kocDisplayToIso(display))}
+          placeholder="dd/mm/yyyy"
+          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff]"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="w-[150px]">
       <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Giá trị đến</label>
       <input
-        type={field.type === "date" ? "date" : "number"}
+        type="number"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
@@ -1186,6 +1240,7 @@ function applyConditionToQuery(query: any, condition: FilterCondition) {
     case "date_eq":
       return query.eq(column, value);
     case "neq":
+    case "date_neq":
       return query.neq(column, value);
     case "in": {
       const values = condition.value.split(",").map((item) => normalizeFilterValue(field, item)).filter((item) => item !== "" && item !== null && item !== undefined);
@@ -1363,6 +1418,7 @@ function getOperatorsForField(field: FilterField) {
   if (field.type === "number") {
     return [
       { value: "eq" as const, label: "Bằng" },
+      { value: "neq" as const, label: "Khác" },
       { value: "gt" as const, label: "Lớn hơn" },
       { value: "gte" as const, label: "Lớn hơn hoặc bằng" },
       { value: "lt" as const, label: "Nhỏ hơn" },
@@ -1376,6 +1432,7 @@ function getOperatorsForField(field: FilterField) {
   if (field.type === "date") {
     return [
       { value: "date_eq" as const, label: "Bằng ngày" },
+      { value: "date_neq" as const, label: "Khác ngày" },
       { value: "date_from" as const, label: "Từ ngày" },
       { value: "date_to" as const, label: "Đến ngày" },
       { value: "date_between" as const, label: "Trong khoảng ngày" },
