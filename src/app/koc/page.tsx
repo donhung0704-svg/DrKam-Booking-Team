@@ -21,6 +21,7 @@ type FilterOperator =
   | "lte"
   | "between"
   | "date_eq"
+  | "date_neq"
   | "date_from"
   | "date_to"
   | "date_between"
@@ -1186,6 +1187,7 @@ function applyConditionToQuery(query: any, condition: FilterCondition) {
     case "date_eq":
       return query.eq(column, value);
     case "neq":
+    case "date_neq":
       return query.neq(column, value);
     case "in": {
       const values = condition.value.split(",").map((item) => normalizeFilterValue(field, item)).filter((item) => item !== "" && item !== null && item !== undefined);
@@ -1363,6 +1365,7 @@ function getOperatorsForField(field: FilterField) {
   if (field.type === "number") {
     return [
       { value: "eq" as const, label: "Bằng" },
+      { value: "neq" as const, label: "Khác" },
       { value: "gt" as const, label: "Lớn hơn" },
       { value: "gte" as const, label: "Lớn hơn hoặc bằng" },
       { value: "lt" as const, label: "Nhỏ hơn" },
@@ -1376,6 +1379,7 @@ function getOperatorsForField(field: FilterField) {
   if (field.type === "date") {
     return [
       { value: "date_eq" as const, label: "Bằng ngày" },
+      { value: "date_neq" as const, label: "Khác ngày" },
       { value: "date_from" as const, label: "Từ ngày" },
       { value: "date_to" as const, label: "Đến ngày" },
       { value: "date_between" as const, label: "Trong khoảng ngày" },
