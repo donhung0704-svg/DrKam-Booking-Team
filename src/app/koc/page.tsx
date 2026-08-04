@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import KocAdvancedTable from "@/components/KocAdvancedTable";
+import DatePickerInput from "@/components/DatePickerInput";
 import SavedFiltersDropdown from "@/components/SavedFiltersDropdown";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -794,6 +795,18 @@ export default function KocListPage() {
             onEnter={addFilter}
           />
 
+          {/* Trường ngày dùng lịch dd/mm/yyyy (không gõ Enter được) -> nút Thêm */}
+          {selectedField.type === "date" &&
+            !["is_empty", "is_not_empty"].includes(filterOperator) && (
+              <button
+                type="button"
+                onClick={addFilter}
+                className="h-10 self-end rounded-xl bg-[#3964ff] px-4 text-[13px] font-bold text-white shadow-sm hover:bg-[#2f55df]"
+              >
+                + Thêm điều kiện
+              </button>
+            )}
+
           <button
             type="button"
             onClick={clearFilters}
@@ -1108,11 +1121,27 @@ function FilterValueInput({
     );
   }
 
+  // Trường ngày: lịch dd/mm/yyyy (lưu ISO qua kocDisplayToIso)
+  if (field.type === "date") {
+    return (
+      <div>
+        <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">{label}</label>
+        <DatePickerInput
+          name="koc_filter_value"
+          value={value}
+          onChange={(display) => onChange(kocDisplayToIso(display))}
+          placeholder="dd/mm/yyyy"
+          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff]"
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">{label}</label>
       <input
-        type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
+        type={field.type === "number" ? "number" : "text"}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
@@ -1126,6 +1155,15 @@ function FilterValueInput({
       />
     </div>
   );
+}
+
+// dd/mm/yyyy -> ISO "YYYY-MM-DD" (rỗng nếu không hợp lệ). Ô lọc lưu ISO.
+function kocDisplayToIso(display: string) {
+  const raw = String(display ?? "").trim();
+  if (!raw) return "";
+  const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return "";
+  return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
 }
 
 function FilterSecondValueInput({
@@ -1147,11 +1185,26 @@ function FilterSecondValueInput({
     return null;
   }
 
+  if (field.type === "date") {
+    return (
+      <div className="w-[150px]">
+        <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Giá trị đến</label>
+        <DatePickerInput
+          name="koc_filter_value2"
+          value={value}
+          onChange={(display) => onChange(kocDisplayToIso(display))}
+          placeholder="dd/mm/yyyy"
+          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff]"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="w-[150px]">
       <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Giá trị đến</label>
       <input
-        type={field.type === "date" ? "date" : "number"}
+        type="number"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
