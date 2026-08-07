@@ -62,8 +62,7 @@ const selectFilterFields = new Set(["employee", "status_booking", "booking_type"
 const pageSizeOptions = [100, 200, 300];
 // Giữ bộ lọc/sắp xếp khi rời trang rồi quay lại (theo phiên tab)
 const filtersStorageKey = "drkam_booking_filters_v1";
-// Danh sách bộ lọc đã lưu (bền qua đăng nhập lại, lưu theo trình duyệt)
-const filterPresetsStorageKey = "drkam_booking_filter_presets_v1";
+// Bộ lọc đã lưu giờ DÙNG CHUNG cả team -> lưu bảng filter_presets trong DB
 
 type FilterPreset = {
   id: string;
@@ -567,42 +566,59 @@ export default function BookingListPage() {
   // Danh sách bộ lọc đã lưu
   const [presets, setPresets] = useState<FilterPreset[]>([]);
 
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(filterPresetsStorageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) setPresets(parsed);
-      }
-    } catch {
-      // bỏ qua dữ liệu hỏng
-    }
-  }, []);
+  // Bộ lọc đã lưu DÙNG CHUNG cho cả team (bảng filter_presets trong DB)
+  async function loadPresets() {
+    const { data, error } = await supabase
+      .from("filter_presets")
+      .select("id, name, filters, sort")
+      .eq("scope", "booking")
+      .order("created_at", { ascending: true });
 
-  function savePresets(next: FilterPreset[]) {
-    setPresets(next);
-    window.localStorage.setItem(filterPresetsStorageKey, JSON.stringify(next));
+    if (!error && Array.isArray(data)) {
+      setPresets(
+        data.map((row) => ({
+          id: String(row.id),
+          name: row.name,
+          filters: row.filters || [],
+          sort: row.sort ?? null,
+        }))
+      );
+    }
   }
 
-  function saveCurrentAsPreset() {
+  useEffect(() => {
+    loadPresets();
+  }, []);
+
+  async function saveCurrentAsPreset() {
     if (filters.length === 0) {
       setMessage("Chưa có điều kiện lọc nào để lưu.");
       return;
     }
 
-    const name = window.prompt("Đặt tên cho bộ lọc:")?.trim();
+    const name = window.prompt("Đặt tên cho bộ lọc (dùng chung cả team):")?.trim();
     if (!name) return;
 
-    savePresets([
-      ...presets.filter((preset) => preset.name !== name),
-      {
-        id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
-        name,
-        filters,
-        sort: sortState,
-      },
-    ]);
+    await supabase
+      .from("filter_presets")
+      .delete()
+      .eq("scope", "booking")
+      .eq("name", name);
+
+    const { error } = await supabase.from("filter_presets").insert({
+      scope: "booking",
+      name,
+      filters,
+      sort: sortState,
+    });
+
+    if (error) {
+      setMessage(`Lỗi lưu bộ lọc: ${error.message}`);
+      return;
+    }
+
     setMessage("");
+    loadPresets();
   }
 
   function applyPreset(preset: FilterPreset) {
@@ -612,8 +628,13 @@ export default function BookingListPage() {
     setMessage("");
   }
 
-  function deletePreset(id: string) {
-    savePresets(presets.filter((preset) => preset.id !== id));
+  async function deletePreset(id: string) {
+    const { error } = await supabase.from("filter_presets").delete().eq("id", id);
+    if (error) {
+      setMessage(`Lỗi xóa bộ lọc: ${error.message}`);
+      return;
+    }
+    loadPresets();
   }
 
   const currentPageCount = currentPageBookings.length;
