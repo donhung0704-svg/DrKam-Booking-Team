@@ -147,8 +147,6 @@ type MetricConfig = {
   // ratio=true: "thực đạt" HIỂN THỊ chính giá trị % (Video DT / Monthly Videos),
   // không phải actual/kpi. Màu vẫn so với KPI mục tiêu.
   ratio?: boolean;
-  // narrow=true: cột hẹp (~1/2 độ rộng) cho các chỉ số giá trị ngắn
-  narrow?: boolean;
 };
 
 // Chỉ số "% Video có DT" dùng chung cho cả Hunter và Famer
@@ -157,7 +155,6 @@ const VIDEO_CO_DT_METRIC: MetricConfig = {
   label: "% Video có DT",
   actual: videoCoDtPercent,
   ratio: true,
-  narrow: true,
 };
 
 // Famer: Video trừ POV + Doanh thu + % Video có DT
@@ -178,14 +175,12 @@ const HUNTER_METRICS: MetricConfig[] = [
     field: "kocMoi",
     label: "KOC chốt mới",
     actual: (r) => r.kocChotMoi,
-    narrow: true,
   },
   {
     field: "videoMoi",
     label: "Video trừ POV",
     // Tổng video KOC phụ trách không phải POV = Unbox + AI + Người thật + khác
     actual: (r) => r.videoUnbox + r.videoAi + r.videoReal + r.videoOther,
-    narrow: true,
   },
   { field: "gmv", label: "Doanh thu", actual: (r) => r.gmvNgay, money: true },
   {
@@ -1030,23 +1025,29 @@ function Td({
   );
 }
 
-function KpiTh({
-  children,
-  borderRight,
-  narrow,
-}: {
-  children: ReactNode;
-  borderRight?: boolean;
-  narrow?: boolean;
-}) {
+function KpiTh({ children }: { children: ReactNode }) {
   return (
-    <ResizableTh
-      className={`border-b border-slate-200 py-2 text-center text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600 ${
-        narrow ? "px-1" : "px-4"
-      } ${borderRight ? "border-r" : ""}`}
-    >
+    <ResizableTh className="border-b border-slate-200 px-3 py-2 text-center text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600">
       {children}
     </ResizableTh>
+  );
+}
+
+// Nhãn khu vực ở đầu mỗi băng ngang (KPI đặt ra / Thực tế / % thực tế /
+// Quy đổi trọng số). Vạch màu bên trái giúp phân biệt băng khi lướt mắt.
+function ZoneLabel({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className: string;
+}) {
+  return (
+    <td
+      className={`zone-label whitespace-nowrap border-r border-slate-200 px-3 py-2 text-left text-[10px] font-black uppercase tracking-[0.08em] ${className}`}
+    >
+      {children}
+    </td>
   );
 }
 
@@ -1090,132 +1091,66 @@ function KpiGroupTable({
       </div>
 
       <div className="overflow-x-auto">
-        <ResizeGroupContext.Provider value={`monthly-kpi-${title}`}>
-        <table className="report-table w-full text-center text-[11px]">
+        {/* Khóa resize đổi sang v3: bố cục mới không dùng lại độ rộng cột đã lưu
+            của bảng 27 cột cũ (cột cũ rất hẹp, khôi phục vào đây sẽ bóp bảng). */}
+        <ResizeGroupContext.Provider value={`monthly-kpi-v3-${title}`}>
+        <table className="report-table kpi-zone-table w-full text-center text-[11px]">
+          {/* Header 1 hàng: mỗi chỉ số đúng 1 nhãn (trước đây 5 nhóm × N chỉ số
+              = 25 ô tiêu đề lặp lại, là nguyên nhân bảng rộng 27 cột). */}
           <thead>
             <tr className="bg-slate-50">
-              <th
-                rowSpan={2}
-                className="border-b border-r border-slate-200 px-2 py-2 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
-              >
+              <th className="border-b border-r border-slate-200 px-3 py-2 text-left text-[11px] font-black uppercase tracking-[0.04em] text-slate-700">
                 PIC
               </th>
-              <th
-                colSpan={metrics.length}
-                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-blue-700"
-              >
-                KPI
+              <th className="border-b border-r border-slate-200 px-3 py-2 text-left text-[11px] font-black uppercase tracking-[0.04em] text-slate-700">
+                Khu vực
               </th>
-              <th
-                colSpan={metrics.length}
-                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-slate-700"
-              >
-                Thực đạt
-              </th>
-              <th
-                colSpan={metrics.length}
-                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-emerald-700"
-              >
-                % thực đạt
-              </th>
-              <th
-                colSpan={metrics.length}
-                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-violet-700"
-              >
-                Trọng số tiêu chuẩn
-              </th>
-              <th
-                colSpan={metrics.length}
-                className="border-b border-r border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.08em] text-violet-700"
-              >
-                Trọng số thực tế
-              </th>
-              <th
-                rowSpan={2}
-                className="border-b border-slate-200 px-2 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.04em] text-violet-800"
-              >
+              {metrics.map((metric) => (
+                <KpiTh key={`head-${metric.field}`}>{metric.label}</KpiTh>
+              ))}
+              <th className="border-b border-l border-slate-200 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700">
                 Tổng trọng số
               </th>
             </tr>
-
-            <tr className="bg-slate-50">
-              {metrics.map((metric, index) => (
-                <KpiTh
-                  key={`kpi-head-${metric.field}`}
-                  borderRight={index === metrics.length - 1}
-                  narrow={metric.narrow}
-                >
-                  {metric.label}
-                </KpiTh>
-              ))}
-              {metrics.map((metric, index) => (
-                <KpiTh
-                  key={`actual-head-${metric.field}`}
-                  borderRight={index === metrics.length - 1}
-                  narrow={metric.narrow}
-                >
-                  {metric.label}
-                </KpiTh>
-              ))}
-              {metrics.map((metric, index) => (
-                <KpiTh
-                  key={`pct-head-${metric.field}`}
-                  borderRight={index === metrics.length - 1}
-                  narrow={metric.narrow}
-                >
-                  {metric.label}
-                </KpiTh>
-              ))}
-              {metrics.map((metric, index) => (
-                <KpiTh
-                  key={`wstd-head-${metric.field}`}
-                  borderRight={index === metrics.length - 1}
-                  narrow={metric.narrow}
-                >
-                  {metric.label}
-                </KpiTh>
-              ))}
-              {metrics.map((metric, index) => (
-                <KpiTh
-                  key={`wact-head-${metric.field}`}
-                  borderRight={index === metrics.length - 1}
-                  narrow={metric.narrow}
-                >
-                  {metric.label}
-                </KpiTh>
-              ))}
-            </tr>
           </thead>
 
-          <tbody>
-            {!loading && rows.length === 0 && (
+          {!loading && rows.length === 0 && (
+            <tbody>
               <tr>
                 <td
-                  colSpan={2 + metrics.length * 5}
+                  colSpan={3 + metrics.length}
                   className="px-4 py-6 text-center text-[12px] text-slate-400"
                 >
                   Chưa có PIC trong nhóm này.
                 </td>
               </tr>
-            )}
+            </tbody>
+          )}
 
-            {rows.map((row) => {
-              const k = kpiInputs[row.employeeId] || EMPTY_KPI;
-              const w = weightInputs[row.employeeId] || EMPTY_KPI;
+          {/* Mỗi PIC = 1 <tbody> gồm 4 băng khu vực. Ô PIC và Tổng trọng số
+              rowSpan qua cả 4 băng. */}
+          {rows.map((row) => {
+            const k = kpiInputs[row.employeeId] || EMPTY_KPI;
+            const w = weightInputs[row.employeeId] || EMPTY_KPI;
 
-              // Tổng trọng số = Σ trọng số thực tế của các chỉ số
-              const totalWeight = metrics.reduce((sum, metric) => {
-                const actual = metric.actual(row);
-                const kpi = parseNumber(k[metric.field]);
-                const std = parseNumber(w[metric.field]);
-                return sum + actualWeight(metric, actual, kpi, std);
-              }, 0);
+            // Tổng trọng số = Σ trọng số thực tế của các chỉ số
+            const totalWeight = metrics.reduce((sum, metric) => {
+              const actual = metric.actual(row);
+              const kpi = parseNumber(k[metric.field]);
+              const std = parseNumber(w[metric.field]);
+              return sum + actualWeight(metric, actual, kpi, std);
+            }, 0);
 
-              return (
-                <tr key={row.employeeId} className="hover:bg-slate-50">
-                  <Td>
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="font-bold text-slate-950">
+            return (
+              <tbody key={row.employeeId} className="kpi-pic-block">
+                {/* ---- KHU VỰC 1: KPI đặt ra (nhập tay) ---- */}
+                <tr className="zone-kpi">
+                  <td
+                    rowSpan={4}
+                    className="zone-span border-r border-slate-200 px-3 py-3 text-left align-top"
+                  >
+                    <div className="flex flex-col items-start gap-1">
+                      <span className="text-[13px] font-bold text-slate-950">
                         {row.employeeName}
                       </span>
                       <select
@@ -1229,10 +1164,12 @@ function KpiGroupTable({
                         <option value="Famer">Famer</option>
                       </select>
                     </div>
-                  </Td>
+                  </td>
+
+                  <ZoneLabel className="text-blue-700">KPI đặt ra</ZoneLabel>
 
                   {metrics.map((metric) => (
-                    <Td key={`kpi-${metric.field}`} narrow={metric.narrow}>
+                    <td key={`kpi-${metric.field}`} className="px-3 py-1.5">
                       <input
                         value={k[metric.field]}
                         onChange={(event) =>
@@ -1243,15 +1180,28 @@ function KpiGroupTable({
                           )
                         }
                         onBlur={() => onKpiBlur(row.employeeId, metric.field)}
-                        placeholder="KPI"
-                        className={`h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[11px] outline-none focus:border-[#3964ff] ${
-                          metric.narrow ? "min-w-[36px] px-1" : "min-w-[72px]"
-                        }`}
+                        placeholder="Nhập KPI"
+                        className="h-7 w-full min-w-[92px] rounded-lg border border-slate-200 bg-white px-2 text-right text-[11.5px] outline-none focus:border-[#3964ff]"
                       />
-                    </Td>
+                    </td>
                   ))}
 
-                  {/* Nhóm giữa: THỰC ĐẠT (số thực tế) */}
+                  <td
+                    rowSpan={4}
+                    className="zone-span border-l border-slate-200 px-3 text-center align-middle"
+                  >
+                    <span className="text-[17px] font-black text-violet-800">
+                      {totalWeight.toLocaleString("vi-VN", {
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </td>
+                </tr>
+
+                {/* ---- KHU VỰC 2: Thực tế (số thật lấy từ booking) ---- */}
+                <tr className="zone-act">
+                  <ZoneLabel className="text-slate-600">Thực tế</ZoneLabel>
+
                   {metrics.map((metric) => {
                     const actual = metric.actual(row);
                     let display: string;
@@ -1268,19 +1218,27 @@ function KpiGroupTable({
                     }
 
                     return (
-                      <Td key={`actual-${metric.field}`} narrow={metric.narrow}>
-                        <span className="font-bold text-slate-800">
+                      <td
+                        key={`actual-${metric.field}`}
+                        className="px-3 py-2 text-center"
+                      >
+                        <span className="text-[12.5px] font-bold text-slate-800">
                           {display}
                         </span>
-                      </Td>
+                      </td>
                     );
                   })}
+                </tr>
+
+                {/* ---- KHU VỰC 3: % thực tế ---- */}
+                <tr className="zone-pct">
+                  <ZoneLabel className="text-emerald-700">% thực tế</ZoneLabel>
 
                   {metrics.map((metric) => {
                     const actual = metric.actual(row);
                     const kpi = parseNumber(k[metric.field]);
 
-                    // Metric ratio: cột thực đạt HIỂN THỊ chính tỉ lệ %
+                    // Metric ratio: HIỂN THỊ chính tỉ lệ %
                     // (Video DT / Monthly Videos), màu so với KPI mục tiêu.
                     if (metric.ratio) {
                       const denom = monthlyVideoTotal(row);
@@ -1293,18 +1251,24 @@ function KpiGroupTable({
                             : "text-slate-700";
 
                       return (
-                        <Td key={`pct-${metric.field}`} narrow={metric.narrow}>
-                          <span className={`font-bold ${ratioColor}`}>
+                        <td
+                          key={`pct-${metric.field}`}
+                          className="px-3 py-2 text-center"
+                        >
+                          <span className={`text-[12.5px] font-bold ${ratioColor}`}>
                             {denom <= 0 ? "—" : formatRatioPercent(actual)}
                           </span>
-                        </Td>
+                        </td>
                       );
                     }
 
                     return (
-                      <Td key={`pct-${metric.field}`} narrow={metric.narrow}>
+                      <td
+                        key={`pct-${metric.field}`}
+                        className="px-3 py-2 text-center"
+                      >
                         <span
-                          className={`font-bold ${pctColor(
+                          className={`text-[12.5px] font-bold ${pctColor(
                             actual,
                             kpi,
                             metric.cost
@@ -1312,32 +1276,20 @@ function KpiGroupTable({
                         >
                           {formatPercent(actual, kpi)}
                         </span>
-                      </Td>
+                      </td>
                     );
                   })}
+                </tr>
 
-                  {/* TRỌNG SỐ TIÊU CHUẨN (nhập tay) */}
-                  {metrics.map((metric) => (
-                    <Td key={`wstd-${metric.field}`} narrow={metric.narrow}>
-                      <input
-                        value={w[metric.field]}
-                        onChange={(event) =>
-                          onWeightChange(
-                            row.employeeId,
-                            metric.field,
-                            event.target.value
-                          )
-                        }
-                        onBlur={() => onWeightBlur(row.employeeId, metric.field)}
-                        placeholder="TS"
-                        className={`h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-[11px] outline-none focus:border-[#7c3aed] ${
-                          metric.narrow ? "min-w-[36px] px-1" : "min-w-[60px]"
-                        }`}
-                      />
-                    </Td>
-                  ))}
+                {/* ---- KHU VỰC 4: Quy đổi trọng số ----
+                    Gộp "Trọng số tiêu chuẩn" (nhập tay) và "Trọng số thực tế"
+                    (tính ra) vào cùng một ô dạng: hệ số → kết quả. Người dùng
+                    coi đây là MỘT việc chứ không phải hai khu vực. */}
+                <tr className="zone-wgt">
+                  <ZoneLabel className="text-violet-700">
+                    Quy đổi trọng số
+                  </ZoneLabel>
 
-                  {/* TRỌNG SỐ THỰC TẾ = (thực đạt/KPI) × TS tiêu chuẩn; 0 nếu đạt < 70% */}
                   {metrics.map((metric) => {
                     const actual = metric.actual(row);
                     const kpi = parseNumber(k[metric.field]);
@@ -1345,30 +1297,51 @@ function KpiGroupTable({
                     const value = actualWeight(metric, actual, kpi, std);
 
                     return (
-                      <Td key={`wact-${metric.field}`} narrow={metric.narrow}>
-                        <span className="font-bold text-violet-700">
-                          {value > 0
-                            ? value.toLocaleString("vi-VN", {
-                                maximumFractionDigits: 2,
-                              })
-                            : "0"}
-                        </span>
-                      </Td>
+                      <td key={`wgt-${metric.field}`} className="px-3 py-1.5">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <input
+                            value={w[metric.field]}
+                            onChange={(event) =>
+                              onWeightChange(
+                                row.employeeId,
+                                metric.field,
+                                event.target.value
+                              )
+                            }
+                            onBlur={() =>
+                              onWeightBlur(row.employeeId, metric.field)
+                            }
+                            placeholder="TS"
+                            title="Trọng số tiêu chuẩn"
+                            className="h-7 w-full min-w-[46px] rounded-lg border border-slate-200 bg-white px-2 text-right text-[11.5px] outline-none focus:border-[#7c3aed]"
+                          />
+                          <span
+                            aria-hidden="true"
+                            className="text-[11px] text-slate-400"
+                          >
+                            →
+                          </span>
+                          <span
+                            title="Trọng số thực tế"
+                            className={`min-w-[38px] text-right text-[12.5px] font-black ${
+                              value > 0 ? "text-violet-700" : "text-slate-400"
+                            }`}
+                          >
+                            {value > 0
+                              ? value.toLocaleString("vi-VN", {
+                                  maximumFractionDigits: 2,
+                                })
+                              : "0"}
+                          </span>
+                        </div>
+                      </td>
                     );
                   })}
-
-                  {/* TỔNG TRỌNG SỐ */}
-                  <Td>
-                    <span className="font-black text-violet-800">
-                      {totalWeight.toLocaleString("vi-VN", {
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
-                  </Td>
                 </tr>
-              );
-            })}
-          </tbody>
+
+              </tbody>
+            );
+          })}
         </table>
         </ResizeGroupContext.Provider>
       </div>
