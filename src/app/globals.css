@@ -990,3 +990,89 @@ header.fixed.h-\[92px\] {
 .crm-light .campaign-advanced-table th {
   overflow: hidden;
 }
+
+/* ============================================================
+   BẢNG KPI THÁNG - KHU VỰC XẾP THÀNH BĂNG NGANG
+   Mỗi PIC là 1 <tbody> gồm 4 băng: KPI đặt ra / Thực tế /
+   % thực tế / Quy đổi trọng số. Trước đây 5 nhóm nhân với N chỉ
+   số = 27 cột, cột chỉ còn ~37px nên chữ vỡ dọc từng ký tự.
+   ============================================================ */
+
+/* Cấm ngắt chữ - đây là thứ gây vỡ tiêu đề ở bảng cũ.
+   Đặc hiệu hơn ".crm-light .report-table th" ở trên nên thắng. */
+.crm-light table.kpi-zone-table th {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  padding: 10px 12px !important;
+}
+
+.crm-light table.kpi-zone-table td {
+  white-space: nowrap !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  vertical-align: middle !important;
+}
+
+/* Nền 4 băng khu vực. Màu khớp với màu chữ của 5 nhóm tiêu đề cũ
+   (xanh dương / xám / xanh lá / tím) để người dùng không phải học lại.
+   Đặc hiệu (0,3,3) - đủ để thắng ".crm-light table tbody tr:last-child td"
+   (0,2,4) ở dòng 371, vốn sẽ tô xám băng cuối của MỌI tbody. */
+.crm-light .kpi-zone-table tbody tr.zone-kpi td {
+  background: #eff5ff !important;
+}
+
+.crm-light .kpi-zone-table tbody tr.zone-act td {
+  background: #ffffff !important;
+}
+
+.crm-light .kpi-zone-table tbody tr.zone-pct td {
+  background: #f7fbf9 !important;
+}
+
+.crm-light .kpi-zone-table tbody tr.zone-wgt td {
+  background: #f8f5ff !important;
+}
+
+/* Ô PIC và Tổng trọng số rowSpan qua cả 4 băng -> nền trắng riêng,
+   không ăn theo màu băng đầu tiên. Đặc hiệu (0,4,3) để chắc chắn thắng. */
+.crm-light .kpi-zone-table tbody tr.zone-kpi td.zone-span {
+  background: #ffffff !important;
+  vertical-align: top !important;
+}
+
+.crm-light .kpi-zone-table tbody tr.zone-kpi td.zone-span:last-child {
+  vertical-align: middle !important;
+}
+
+/* Vạch màu đầu mỗi băng - phân biệt khu vực khi lướt mắt theo chiều dọc */
+.crm-light .kpi-zone-table tbody td.zone-label {
+  border-left: 3px solid transparent !important;
+}
+.crm-light .kpi-zone-table tbody tr.zone-kpi td.zone-label {
+  border-left-color: #3964ff !important;
+}
+.crm-light .kpi-zone-table tbody tr.zone-act td.zone-label {
+  border-left-color: #94a3b8 !important;
+}
+.crm-light .kpi-zone-table tbody tr.zone-pct td.zone-label {
+  border-left-color: #059669 !important;
+}
+.crm-light .kpi-zone-table tbody tr.zone-wgt td.zone-label {
+  border-left-color: #7c3aed !important;
+}
+
+/* Vạch đậm ngăn giữa các PIC (mỗi PIC 1 tbody) */
+.crm-light .kpi-zone-table tbody.kpi-pic-block tr.zone-wgt td {
+  border-bottom: 2px solid #e9a8c8 !important;
+}
+
+/* Hover cả khối 4 băng của một PIC, không phải từng hàng lẻ */
+.crm-light .kpi-zone-table tbody.kpi-pic-block:hover td.zone-span {
+  background: #fff7fb !important;
+}
+
+/* Input trong bảng: bỏ padding to của quy tắc td chung */
+.crm-light .kpi-zone-table td input {
+  font-size: 11.5px !important;
+  padding: 2px 8px !important;
+}
