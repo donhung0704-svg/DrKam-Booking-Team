@@ -188,14 +188,18 @@ export default function PicReportPage() {
     });
 
     kocs.forEach((koc) => {
-      // KOC chỉ tính vào PIC có tên khi VỪA có PIC hợp lệ VỪA có ngày Booking.
-      // Còn lại (có PIC nhưng chưa Booking date; hoặc không có PIC) -> nhóm "Khác".
-      const countUnderPic =
-        employeeMap.has(String(koc.employee_id)) &&
-        hasBookingDate(koc.booking_date);
-      const row = countUnderPic
-        ? ensureRow(String(koc.employee_id))
-        : ensureRow("");
+      const isPic = employeeMap.has(String(koc.employee_id));
+
+      // picRow: Liên hệ/Phản hồi tính theo PIC THẬT (không cần Booking date);
+      // KOC không có PIC -> "Khác".
+      const picRow = isPic ? ensureRow(String(koc.employee_id)) : ensureRow("");
+
+      // perfRow: Video/GMV chỉ tính khi CÓ PIC hợp lệ + CÓ Booking date;
+      // còn lại (PIC nhưng chưa Booking date; hoặc không PIC) -> "Khác".
+      const perfRow =
+        isPic && hasBookingDate(koc.booking_date)
+          ? ensureRow(String(koc.employee_id))
+          : ensureRow("");
 
       const createdKey = toVietnamDateKey(koc.created_at);
       const contactKey = toVietnamDateKey(koc.new_contact_date);
@@ -203,18 +207,18 @@ export default function PicReportPage() {
 
       // Liên hệ = KOC tạo mới trong ngày + KOC có CS trong ngày nhưng NGÀY TẠO khác ngày báo cáo
       if (createdKey === dayKey) {
-        row.lienHe += 1;
+        picRow.lienHe += 1;
       } else if (contactKey === dayKey) {
-        row.lienHe += 1;
+        picRow.lienHe += 1;
       }
 
       // Phản hồi: KOC tạo mới trong ngày và Status khác Chờ phản hồi & Đã phản hồi
       if (createdKey === dayKey && !notRespondedStatuses.includes(status)) {
-        row.phanHoi += 1;
+        picRow.phanHoi += 1;
       }
 
-      // Video/GMV tính cùng row đã xác định ở trên (PIC nếu đủ điều kiện, ngược lại "Khác").
-      const videoRow = row;
+      // Video/GMV tính theo perfRow (PIC nếu có Booking date, ngược lại "Khác").
+      const videoRow = perfRow;
 
       // Daily Videos(T-1): tách theo KOC mới (tier "Mới hoạt động") và KOC cũ
       const dailyVideos = parseNumber(koc.number_of_videos);
