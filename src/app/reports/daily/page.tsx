@@ -217,6 +217,11 @@ export default function PicReportPage() {
         picRow.phanHoi += 1;
       }
 
+      // Booking mới = số KOC có ngày Booking (booking_date) = ngày báo cáo
+      if (toVietnamDateKey(koc.booking_date) === dayKey) {
+        perfRow.bookingMoi += 1;
+      }
+
       // Video/GMV tính theo perfRow (PIC nếu có Booking date, ngược lại "Khác").
       const videoRow = perfRow;
 
@@ -234,8 +239,9 @@ export default function PicReportPage() {
     bookings.forEach((booking) => {
       const row = ensureRow(String(booking.employee_id || ""));
 
+      // Giá Cast vẫn lấy từ bảng bookings (booking tạo trong ngày).
+      // Booking mới đã chuyển sang đếm KOC có booking_date = ngày báo cáo (ở vòng lặp kocs).
       if (toVietnamDateKey(booking.created_at) === dayKey) {
-        row.bookingMoi += 1;
         row.giaCast += parseNumber(booking.cast_price);
       }
     });
