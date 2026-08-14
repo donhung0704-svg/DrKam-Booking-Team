@@ -188,6 +188,10 @@ export default function PicReportPage() {
     });
 
     kocs.forEach((koc) => {
+      // Mọi số liệu THỰC TẾ chỉ tính KOC ĐÃ CÓ ngày Booking (booking_date).
+      // KOC chưa có Booking date không tính vào bất kỳ chỉ số nào.
+      if (!hasBookingDate(koc.booking_date)) return;
+
       const row = ensureRow(String(koc.employee_id || ""));
 
       const createdKey = toVietnamDateKey(koc.created_at);
@@ -206,9 +210,9 @@ export default function PicReportPage() {
         row.phanHoi += 1;
       }
 
-      // Video & GMV: KOC "có PIC nhưng chưa có Booking date" -> dồn sang "Khác"
-      // (videoRow = PIC nếu có Booking date, ngược lại là nhóm Khác = row no-pic).
-      const videoRow = hasBookingDate(koc.booking_date) ? row : ensureRow("");
+      // KOC đều đã có Booking date (đã lọc ở trên). KOC có Booking nhưng KHÔNG
+      // có PIC -> dồn vào nhóm "Khác" (row no-pic theo employee_id rỗng).
+      const videoRow = row;
 
       // Daily Videos(T-1): tách theo KOC mới (tier "Mới hoạt động") và KOC cũ
       const dailyVideos = parseNumber(koc.number_of_videos);
