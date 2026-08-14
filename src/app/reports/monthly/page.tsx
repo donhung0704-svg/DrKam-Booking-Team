@@ -814,27 +814,6 @@ export default function MonthlyReportPage() {
             Tháng này
           </button>
 
-          <div className="md:w-[210px]">
-            <label className="mb-1.5 block text-[13px] font-bold text-slate-600">
-              Số KOC có video tháng trước
-            </label>
-
-            <input
-              type="number"
-              inputMode="numeric"
-              value={kocVidPrev}
-              onChange={(event) => setKocVidPrev(event.target.value)}
-              onBlur={saveKocVidPrev}
-              placeholder="Nhập số"
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10"
-            />
-
-            <p className="mt-1 text-[11px] font-medium text-slate-400">
-              Mẫu số cột &quot;% Video có DT&quot;
-              {savingKocVidPrev ? " · đang lưu…" : ""}
-            </p>
-          </div>
-
           <PicFilter
             employees={employees}
             selectedIds={selectedPics ?? []}
@@ -1082,20 +1061,43 @@ export default function MonthlyReportPage() {
       </section>
 
       <section className="mt-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
-        <div className="mb-2">
-          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
-            KPI tháng
-          </p>
+        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
+              KPI tháng
+            </p>
 
-          <p className="mt-1 text-[12.5px] text-slate-500">
-            Nhập KPI mục tiêu + chọn nhóm Hunter/Famer cho từng PIC. Tỷ lệ % thực
-            đạt = số thực tế / KPI.
-            {savingKpiId && (
-              <span className="ml-2 font-semibold text-slate-400">
-                Đang lưu…
-              </span>
-            )}
-          </p>
+            <p className="mt-1 text-[12.5px] text-slate-500">
+              Nhập KPI mục tiêu + chọn nhóm Hunter/Famer cho từng PIC. Tỷ lệ %
+              thực đạt = số thực tế / KPI.
+              {savingKpiId && (
+                <span className="ml-2 font-semibold text-slate-400">
+                  Đang lưu…
+                </span>
+              )}
+            </p>
+          </div>
+
+          <div className="md:w-[220px]">
+            <label className="mb-1.5 block text-[13px] font-bold text-slate-600">
+              Số KOC có video tháng trước
+            </label>
+
+            <input
+              type="number"
+              inputMode="numeric"
+              value={kocVidPrev}
+              onChange={(event) => setKocVidPrev(event.target.value)}
+              onBlur={saveKocVidPrev}
+              placeholder="Nhập số"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10"
+            />
+
+            <p className="mt-1 text-[11px] font-medium text-slate-400">
+              Mẫu số cột &quot;% Video có DT&quot;
+              {savingKocVidPrev ? " · đang lưu…" : ""}
+            </p>
+          </div>
         </div>
 
         {/* 1 bảng trên (Hunter), 1 bảng dưới (Famer) - mỗi bảng full chiều rộng */}
