@@ -537,17 +537,19 @@ export default function MonthlyReportPage() {
       // Video có DT chỉ tính cho KOC có Booking date (videoRow = PIC khi có booking)
       videoRow.videosWithRevenue += parseNumber(koc.videos_with_revenue);
 
-      // KOC chốt mới = KOC có Booking date (koc.booking_date) trong tháng báo cáo
+      // KOC chốt mới / Booking mới = KOC có Booking date (booking_date) trong tháng báo cáo
       if (monthKeyOfBookingDate(koc.booking_date) === monthKey) {
         perfRow.kocChotMoi += 1;
+        perfRow.bookingMoi += 1;
       }
     });
 
     bookings.forEach((booking) => {
       const row = ensureRow(String(booking.employee_id || ""));
 
+      // Giá Cast vẫn lấy từ bảng bookings (booking tạo trong tháng).
+      // Booking mới đã chuyển sang đếm KOC có booking_date trong tháng (vòng lặp kocs).
       if (toVietnamDateKey(booking.created_at).slice(0, 7) === monthKey) {
-        row.bookingMoi += 1;
         row.giaCast += parseNumber(booking.cast_price);
       }
     });
