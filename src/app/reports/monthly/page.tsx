@@ -460,20 +460,24 @@ export default function MonthlyReportPage() {
     const prevMonthKey = previousMonthKey(monthKey);
 
     kocs.forEach((koc) => {
-      // KOC chỉ tính vào PIC có tên khi VỪA có PIC hợp lệ VỪA có ngày Booking.
-      // Còn lại (có PIC nhưng chưa Booking date; hoặc không có PIC) -> nhóm "Khác".
-      const countUnderPic =
-        employeeMap.has(String(koc.employee_id)) &&
-        hasBookingDate(koc.booking_date);
-      const row = countUnderPic
-        ? ensureRow(String(koc.employee_id))
-        : ensureRow("");
+      const isPic = employeeMap.has(String(koc.employee_id));
+
+      // picRow: Liên hệ/Phản hồi/Đồng ý/Từ chối tính theo PIC THẬT (không cần Booking date);
+      // KOC không có PIC -> "Khác".
+      const picRow = isPic ? ensureRow(String(koc.employee_id)) : ensureRow("");
+
+      // perfRow: Video/GMV/chốt/% Video DT/retention chỉ tính khi CÓ PIC hợp lệ + CÓ Booking date;
+      // còn lại (PIC nhưng chưa Booking date; hoặc không PIC) -> "Khác".
+      const perfRow =
+        isPic && hasBookingDate(koc.booking_date)
+          ? ensureRow(String(koc.employee_id))
+          : ensureRow("");
 
       // Retention: KOC có Booking THÁNG TRƯỚC -> mẫu số; nếu cũng có THÁNG NÀY -> tử số
       const bkMonths = bookingMonthsByKoc.get(String(koc.id));
       if (bkMonths && bkMonths.has(prevMonthKey)) {
-        row.retentionDenom += 1;
-        if (bkMonths.has(monthKey)) row.retentionNum += 1;
+        perfRow.retentionDenom += 1;
+        if (bkMonths.has(monthKey)) perfRow.retentionNum += 1;
       }
 
       const createdKey = toVietnamDateKey(koc.created_at);
@@ -482,9 +486,9 @@ export default function MonthlyReportPage() {
 
       // Liên hệ = KOC tạo mới trong tháng + KOC có CS trong tháng nhưng THÁNG TẠO khác tháng báo cáo
       if (createdKey.slice(0, 7) === monthKey) {
-        row.lienHe += 1;
+        picRow.lienHe += 1;
       } else if (contactKey.slice(0, 7) === monthKey) {
-        row.lienHe += 1;
+        picRow.lienHe += 1;
       }
 
       // Phản hồi: KOC tạo mới trong tháng và Status khác Chờ phản hồi & Đã phản hồi
@@ -492,23 +496,23 @@ export default function MonthlyReportPage() {
         createdKey.slice(0, 7) === monthKey &&
         !notRespondedStatuses.includes(status)
       ) {
-        row.phanHoi += 1;
+        picRow.phanHoi += 1;
       }
 
       // Đồng ý / Từ chối: KOC tạo mới trong tháng theo status
       if (createdKey.slice(0, 7) === monthKey) {
-        if (status === "Đã chốt") row.dongY += 1;
-        if (status === "Từ chối") row.tuChoi += 1;
+        if (status === "Đã chốt") picRow.dongY += 1;
+        if (status === "Từ chối") picRow.tuChoi += 1;
       }
 
-      // Video/GMV tính cùng row đã xác định ở trên (PIC nếu đủ điều kiện, ngược lại "Khác").
-      const videoRow = row;
+      // Video/GMV tính theo perfRow (PIC nếu có Booking date, ngược lại "Khác").
+      const videoRow = perfRow;
 
       // Tổng theo KOC phụ trách: Monthly Videos + GMV tháng
       const monthlyVideos = parseNumber(koc.monthly_videos);
 
       // % Video có DT (mới): đếm KOC của PIC CÓ video tháng này (monthly_videos > 0)
-      if (monthlyVideos > 0) row.kocWithVideo += 1;
+      if (monthlyVideos > 0) perfRow.kocWithVideo += 1;
       if (String(koc.tier || "").trim() === "Mới hoạt động") {
         videoRow.dailyVideoNew += monthlyVideos;
       } else {
@@ -533,17 +537,19 @@ export default function MonthlyReportPage() {
       // Video có DT chỉ tính cho KOC có Booking date (videoRow = PIC khi có booking)
       videoRow.videosWithRevenue += parseNumber(koc.videos_with_revenue);
 
-      // KOC chốt mới = KOC có Booking date (koc.booking_date) trong tháng báo cáo
+      // KOC chốt mới / Booking mới = KOC có Booking date (booking_date) trong tháng báo cáo
       if (monthKeyOfBookingDate(koc.booking_date) === monthKey) {
-        row.kocChotMoi += 1;
+        perfRow.kocChotMoi += 1;
+        perfRow.bookingMoi += 1;
       }
     });
 
     bookings.forEach((booking) => {
       const row = ensureRow(String(booking.employee_id || ""));
 
+      // Giá Cast vẫn lấy từ bảng bookings (booking tạo trong tháng).
+      // Booking mới đã chuyển sang đếm KOC có booking_date trong tháng (vòng lặp kocs).
       if (toVietnamDateKey(booking.created_at).slice(0, 7) === monthKey) {
-        row.bookingMoi += 1;
         row.giaCast += parseNumber(booking.cast_price);
       }
     });
