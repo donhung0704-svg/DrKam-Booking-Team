@@ -28,6 +28,11 @@ type ReportRow = {
   gmvNgay: number;
   // Video có DT (số video có doanh thu) của KOC có Booking date -> tính % Video có DT
   videosWithRevenue: number;
+  // % Video có DT (mới) = số KOC (của PIC) CÓ video tháng này / số KOC có video tháng trước.
+  // kocWithVideo = số KOC của PIC có monthly_videos > 0 trong tháng báo cáo (tử số).
+  kocWithVideo: number;
+  // kocVidPrevDenom = số KOC có video tháng trước (mẫu số) - 1 số chung nhập tay, copy vào mọi dòng.
+  kocVidPrevDenom: number;
   // Hunter KPI
   kocChotMoi: number; // KOC có Booking date trong tháng báo cáo
   // Retention: KOC có Booking tháng trước (denom) & vẫn có Booking tháng này (num)
@@ -137,11 +142,11 @@ function monthlyVideoTotal(r: ReportRow) {
   return r.dailyVideoNew + r.dailyVideoOld;
 }
 
-// % Video có DT = Tổng Video có DT / Tổng Monthly Videos (KOC có Booking date)
+// % Video có DT = số KOC (của PIC) có video tháng này / số KOC có video tháng trước.
+// Mẫu số (tháng trước) là 1 số chung nhập tay, đã copy vào từng dòng (kocVidPrevDenom).
 function videoCoDtPercent(r: ReportRow) {
-  const denom = monthlyVideoTotal(r);
-  if (denom <= 0) return 0;
-  return (r.videosWithRevenue / denom) * 100;
+  if (r.kocVidPrevDenom <= 0) return 0;
+  return (r.kocWithVideo / r.kocVidPrevDenom) * 100;
 }
 
 // Tỷ lệ retention KOC = KOC có Booking tháng trước & vẫn có Booking tháng này
@@ -173,7 +178,7 @@ const VIDEO_CO_DT_METRIC: MetricConfig = {
   label: "% Video có DT",
   actual: videoCoDtPercent,
   ratio: true,
-  denom: monthlyVideoTotal,
+  denom: (r) => r.kocVidPrevDenom,
   narrow: true,
 };
 
@@ -241,6 +246,11 @@ export default function MonthlyReportPage() {
 
   // Lọc cố định nhân sự hiển thị (null = chưa khởi tạo -> hiển thị tất cả)
   const [selectedPics, setSelectedPics] = useState<string[] | null>(null);
+
+  // Số KOC có video THÁNG TRƯỚC (mẫu số % Video có DT) - 1 số chung nhập tay,
+  // lưu DB theo tháng báo cáo (report_month_settings), dùng chung cả team.
+  const [kocVidPrev, setKocVidPrev] = useState<string>("");
+  const [savingKocVidPrev, setSavingKocVidPrev] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -334,6 +344,49 @@ export default function MonthlyReportPage() {
     }
   }, [employees, selectedPics]);
 
+  // Tải "Số KOC có video tháng trước" (mẫu số % Video có DT) theo tháng báo cáo
+  useEffect(() => {
+    let cancelled = false;
+    async function loadKocVidPrev() {
+      const { data, error } = await supabase
+        .from("report_month_settings")
+        .select("koc_vid_prev_month")
+        .eq("month", reportMonth)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error) {
+        // Bảng có thể chưa được tạo -> để trống, không chặn báo cáo
+        setKocVidPrev("");
+        return;
+      }
+      const value = data?.koc_vid_prev_month;
+      setKocVidPrev(value === null || value === undefined ? "" : String(value));
+    }
+    loadKocVidPrev();
+    return () => {
+      cancelled = true;
+    };
+  }, [reportMonth]);
+
+  // Lưu "Số KOC có video tháng trước" dùng chung cả team (DB, theo tháng)
+  async function saveKocVidPrev() {
+    setSavingKocVidPrev(true);
+    try {
+      const numeric = kocVidPrev.trim() === "" ? null : parseNumber(kocVidPrev);
+      const { error } = await supabase
+        .from("report_month_settings")
+        .upsert(
+          { month: reportMonth, koc_vid_prev_month: numeric },
+          { onConflict: "month" }
+        );
+      if (error) {
+        setMessage(`Lỗi lưu Số KOC có video tháng trước: ${error.message}`);
+      }
+    } finally {
+      setSavingKocVidPrev(false);
+    }
+  }
+
   const employeeMap = useMemo(() => {
     const map = new Map<string, DbRow>();
 
@@ -376,6 +429,8 @@ export default function MonthlyReportPage() {
           videoOther: 0,
           gmvNgay: 0,
           videosWithRevenue: 0,
+          kocWithVideo: 0,
+          kocVidPrevDenom: 0,
           kocChotMoi: 0,
           retentionDenom: 0,
           retentionNum: 0,
@@ -446,6 +501,9 @@ export default function MonthlyReportPage() {
 
       // Tổng theo KOC phụ trách: Monthly Videos + GMV tháng
       const monthlyVideos = parseNumber(koc.monthly_videos);
+
+      // % Video có DT (mới): đếm KOC của PIC CÓ video tháng này (monthly_videos > 0)
+      if (monthlyVideos > 0) row.kocWithVideo += 1;
       if (String(koc.tier || "").trim() === "Mới hoạt động") {
         videoRow.dailyVideoNew += monthlyVideos;
       } else {
@@ -488,6 +546,12 @@ export default function MonthlyReportPage() {
     const picFilterActive = selectedPics !== null;
     const selectedSet = new Set(selectedPics ?? []);
 
+    // Mẫu số % Video có DT = số KOC có video tháng trước (1 số chung nhập tay)
+    const prevDenom = parseNumber(kocVidPrev);
+    rowMap.forEach((row) => {
+      row.kocVidPrevDenom = prevDenom;
+    });
+
     return Array.from(rowMap.values())
       .filter((row) => {
         // Chỉ hiển thị nhân sự được chọn; nhóm "Chưa có PIC" hiện khi có số liệu
@@ -509,7 +573,7 @@ export default function MonthlyReportPage() {
         if (!b.isRealPic) return -1;
         return a.employeeName.localeCompare(b.employeeName, "vi");
       });
-  }, [bookings, kocs, employees, employeeMap, reportMonth, selectedPics]);
+  }, [bookings, kocs, employees, employeeMap, reportMonth, selectedPics, kocVidPrev]);
 
   const totals = useMemo(() => {
     return reportRows.reduce(
@@ -997,20 +1061,43 @@ export default function MonthlyReportPage() {
       </section>
 
       <section className="mt-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
-        <div className="mb-2">
-          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
-            KPI tháng
-          </p>
+        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
+              KPI tháng
+            </p>
 
-          <p className="mt-1 text-[12.5px] text-slate-500">
-            Nhập KPI mục tiêu + chọn nhóm Hunter/Famer cho từng PIC. Tỷ lệ % thực
-            đạt = số thực tế / KPI.
-            {savingKpiId && (
-              <span className="ml-2 font-semibold text-slate-400">
-                Đang lưu…
-              </span>
-            )}
-          </p>
+            <p className="mt-1 text-[12.5px] text-slate-500">
+              Nhập KPI mục tiêu + chọn nhóm Hunter/Famer cho từng PIC. Tỷ lệ %
+              thực đạt = số thực tế / KPI.
+              {savingKpiId && (
+                <span className="ml-2 font-semibold text-slate-400">
+                  Đang lưu…
+                </span>
+              )}
+            </p>
+          </div>
+
+          <div className="md:w-[220px]">
+            <label className="mb-1.5 block text-[13px] font-bold text-slate-600">
+              Số KOC có video tháng trước
+            </label>
+
+            <input
+              type="number"
+              inputMode="numeric"
+              value={kocVidPrev}
+              onChange={(event) => setKocVidPrev(event.target.value)}
+              onBlur={saveKocVidPrev}
+              placeholder="Nhập số"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff] focus:ring-4 focus:ring-[#3964ff]/10"
+            />
+
+            <p className="mt-1 text-[11px] font-medium text-slate-400">
+              Mẫu số cột &quot;% Video có DT&quot;
+              {savingKocVidPrev ? " · đang lưu…" : ""}
+            </p>
+          </div>
         </div>
 
         {/* 1 bảng trên (Hunter), 1 bảng dưới (Famer) - mỗi bảng full chiều rộng */}
