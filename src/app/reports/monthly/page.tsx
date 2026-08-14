@@ -222,7 +222,6 @@ const HUNTER_METRICS: MetricConfig[] = [
     cost: true,
   },
   VIDEO_CO_DT_METRIC,
-  RETENTION_METRIC,
 ];
 
 export default function MonthlyReportPage() {
