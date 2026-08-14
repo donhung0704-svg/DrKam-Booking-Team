@@ -30,6 +30,9 @@ type ReportRow = {
   videosWithRevenue: number;
   // Hunter KPI
   kocChotMoi: number; // KOC có Booking date trong tháng báo cáo
+  // Retention: KOC có Booking tháng trước (denom) & vẫn có Booking tháng này (num)
+  retentionDenom: number;
+  retentionNum: number;
   // Báo cáo tổng quát (KOC tạo mới trong tháng theo status)
   dongY: number; // status "Đã chốt"
   tuChoi: number; // status "Từ chối"
@@ -50,6 +53,7 @@ type KpiInput = {
   chiPhi: string;
   videoTruPov: string;
   videoCoDt: string;
+  retention: string;
 };
 
 // KPI của từng chỉ tiêu lưu vào cột tương ứng trong bảng employees
@@ -63,6 +67,7 @@ const KPI_COLUMN: Record<keyof KpiInput, string> = {
   chiPhi: "kpi_thang_chi_phi",
   videoTruPov: "kpi_thang_video_tru_pov",
   videoCoDt: "kpi_thang_video_co_dt",
+  retention: "kpi_thang_retention",
 };
 
 const EMPTY_KPI: KpiInput = {
@@ -75,6 +80,7 @@ const EMPTY_KPI: KpiInput = {
   chiPhi: "",
   videoTruPov: "",
   videoCoDt: "",
+  retention: "",
 };
 
 // Trọng số tiêu chuẩn (nhập tay) lưu vào cột ts_thang_* của employees
@@ -88,6 +94,7 @@ const WEIGHT_COLUMN: Record<keyof KpiInput, string> = {
   chiPhi: "ts_thang_chi_phi",
   videoTruPov: "ts_thang_video_tru_pov",
   videoCoDt: "ts_thang_video_co_dt",
+  retention: "ts_thang_retention",
 };
 
 // Ngưỡng: thực đạt/KPI < 70% -> trọng số thực tế = 0 (KHÔNG áp cho Chi phí)
@@ -137,6 +144,13 @@ function videoCoDtPercent(r: ReportRow) {
   return (r.videosWithRevenue / denom) * 100;
 }
 
+// Tỷ lệ retention KOC = KOC có Booking tháng trước & vẫn có Booking tháng này
+//                       / KOC có Booking tháng trước
+function retentionPercent(r: ReportRow) {
+  if (r.retentionDenom <= 0) return 0;
+  return (r.retentionNum / r.retentionDenom) * 100;
+}
+
 type MetricConfig = {
   field: keyof KpiInput;
   label: string;
@@ -147,6 +161,10 @@ type MetricConfig = {
   // ratio=true: "thực đạt" HIỂN THỊ chính giá trị % (Video DT / Monthly Videos),
   // không phải actual/kpi. Màu vẫn so với KPI mục tiêu.
   ratio?: boolean;
+  // Mẫu số của metric ratio: <=0 -> hiển thị "—". Mặc định Monthly Videos.
+  denom?: (row: ReportRow) => number;
+  // narrow=true: cột hẹp (~1/2 độ rộng) cho các chỉ số giá trị ngắn
+  narrow?: boolean;
 };
 
 // Chỉ số "% Video có DT" dùng chung cho cả Hunter và Famer
@@ -155,6 +173,18 @@ const VIDEO_CO_DT_METRIC: MetricConfig = {
   label: "% Video có DT",
   actual: videoCoDtPercent,
   ratio: true,
+  denom: monthlyVideoTotal,
+  narrow: true,
+};
+
+// Chỉ số "Tỷ lệ retention KOC" (ratio) — chỉ Famer
+const RETENTION_METRIC: MetricConfig = {
+  field: "retention",
+  label: "Tỷ lệ retention KOC",
+  actual: retentionPercent,
+  ratio: true,
+  denom: (r) => r.retentionDenom,
+  narrow: true,
 };
 
 // Famer: Video trừ POV + Doanh thu + % Video có DT
@@ -167,6 +197,7 @@ const FAMER_METRICS: MetricConfig[] = [
   },
   { field: "gmv", label: "Doanh thu", actual: (r) => r.gmvNgay, money: true },
   VIDEO_CO_DT_METRIC,
+  RETENTION_METRIC,
 ];
 
 // Hunter dùng 4 chỉ số riêng + % Video có DT
@@ -191,6 +222,7 @@ const HUNTER_METRICS: MetricConfig[] = [
     cost: true,
   },
   VIDEO_CO_DT_METRIC,
+  RETENTION_METRIC,
 ];
 
 export default function MonthlyReportPage() {
@@ -256,6 +288,7 @@ export default function MonthlyReportPage() {
         chiPhi: toKpiInput(employee.kpi_thang_chi_phi),
         videoTruPov: toKpiInput(employee.kpi_thang_video_tru_pov),
         videoCoDt: toKpiInput(employee.kpi_thang_video_co_dt),
+        retention: toKpiInput(employee.kpi_thang_retention),
       };
     });
 
@@ -345,6 +378,8 @@ export default function MonthlyReportPage() {
           gmvNgay: 0,
           videosWithRevenue: 0,
           kocChotMoi: 0,
+          retentionDenom: 0,
+          retentionNum: 0,
           dongY: 0,
           tuChoi: 0,
         });
@@ -358,8 +393,27 @@ export default function MonthlyReportPage() {
       ensureRow(String(employee.id));
     });
 
+    // Retention: tập tháng (YYYY-MM) mà mỗi KOC CÓ Booking (theo bookings.created_at)
+    const bookingMonthsByKoc = new Map<string, Set<string>>();
+    bookings.forEach((booking) => {
+      const kocId = String(booking.koc_id || "");
+      if (!kocId) return;
+      const bookingMonth = toVietnamDateKey(booking.created_at).slice(0, 7);
+      if (!bookingMonth) return;
+      if (!bookingMonthsByKoc.has(kocId)) bookingMonthsByKoc.set(kocId, new Set());
+      bookingMonthsByKoc.get(kocId)!.add(bookingMonth);
+    });
+    const prevMonthKey = previousMonthKey(monthKey);
+
     kocs.forEach((koc) => {
       const row = ensureRow(String(koc.employee_id || ""));
+
+      // Retention: KOC có Booking THÁNG TRƯỚC -> mẫu số; nếu cũng có THÁNG NÀY -> tử số
+      const bkMonths = bookingMonthsByKoc.get(String(koc.id));
+      if (bkMonths && bkMonths.has(prevMonthKey)) {
+        row.retentionDenom += 1;
+        if (bkMonths.has(monthKey)) row.retentionNum += 1;
+      }
 
       const createdKey = toVietnamDateKey(koc.created_at);
       const contactKey = toVietnamDateKey(koc.new_contact_date);
@@ -1207,10 +1261,8 @@ function KpiGroupTable({
                     let display: string;
 
                     if (metric.ratio) {
-                      display =
-                        monthlyVideoTotal(row) <= 0
-                          ? "—"
-                          : formatRatioPercent(actual);
+                      const denom = (metric.denom ?? monthlyVideoTotal)(row);
+                      display = denom <= 0 ? "—" : formatRatioPercent(actual);
                     } else if (metric.money) {
                       display = formatMoney(actual);
                     } else {
@@ -1241,7 +1293,7 @@ function KpiGroupTable({
                     // Metric ratio: HIỂN THỊ chính tỉ lệ %
                     // (Video DT / Monthly Videos), màu so với KPI mục tiêu.
                     if (metric.ratio) {
-                      const denom = monthlyVideoTotal(row);
+                      const denom = (metric.denom ?? monthlyVideoTotal)(row);
 
                       const ratioColor =
                         denom <= 0
@@ -1440,6 +1492,19 @@ function parseNumber(value: unknown) {
 }
 
 // Booking date được coi là "không trống" khi có giá trị thực (khác rỗng và "-")
+// Tháng trước của "YYYY-MM" -> "YYYY-MM"
+function previousMonthKey(monthKey: string) {
+  const match = String(monthKey || "").match(/^(\d{4})-(\d{2})$/);
+  if (!match) return "";
+  let year = Number(match[1]);
+  let month = Number(match[2]) - 1;
+  if (month < 1) {
+    month = 12;
+    year -= 1;
+  }
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
 function hasBookingDate(value: unknown) {
   const raw = String(value ?? "").trim();
   return raw !== "" && raw !== "-";
