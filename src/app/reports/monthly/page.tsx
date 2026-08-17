@@ -28,15 +28,11 @@ type ReportRow = {
   gmvNgay: number;
   // Video có DT (số video có doanh thu) của KOC có Booking date -> tính % Video có DT
   videosWithRevenue: number;
-  // % Video có DT (mới) = số KOC (của PIC) CÓ video tháng này / số KOC có video tháng trước.
-  // kocWithVideo = số KOC của PIC có monthly_videos > 0 trong tháng báo cáo (tử số).
-  kocWithVideo: number;
-  // kocVidPrevDenom = số KOC có video tháng trước (mẫu số) - 1 số chung nhập tay, copy vào mọi dòng.
+  // kocVidPrevDenom = Số KOC có video tháng trước (mẫu số của retention) - 1 số chung nhập tay.
   kocVidPrevDenom: number;
   // Hunter KPI
   kocChotMoi: number; // KOC có Booking date trong tháng báo cáo
-  // Retention (mới) = số KOC có Booking date của PIC có gmv_thang>0 (tử số).
-  // Mẫu số = kocVidPrevDenom (Số KOC có video tháng trước, dùng chung với % Video có DT).
+  // Retention = số KOC có Booking date của PIC có gmv_thang>0 (tử số) / kocVidPrevDenom (mẫu số).
   kocWithGmv: number;
   // Báo cáo tổng quát (KOC tạo mới trong tháng theo status)
   dongY: number; // status "Đã chốt"
@@ -142,11 +138,12 @@ function monthlyVideoTotal(r: ReportRow) {
   return r.dailyVideoNew + r.dailyVideoOld;
 }
 
-// % Video có DT = số KOC (của PIC) có video tháng này / số KOC có video tháng trước.
-// Mẫu số (tháng trước) là 1 số chung nhập tay, đã copy vào từng dòng (kocVidPrevDenom).
+// % Video có DT = Tổng Video có DT (videos_with_revenue) của KOC có Booking date
+//                 / Tổng Monthly Videos của KOC có Booking date (theo từng PIC).
 function videoCoDtPercent(r: ReportRow) {
-  if (r.kocVidPrevDenom <= 0) return 0;
-  return (r.kocWithVideo / r.kocVidPrevDenom) * 100;
+  const denom = monthlyVideoTotal(r);
+  if (denom <= 0) return 0;
+  return (r.videosWithRevenue / denom) * 100;
 }
 
 // Tỷ lệ retention KOC = số KOC có Booking date của PIC có gmv_thang>0
@@ -178,7 +175,7 @@ const VIDEO_CO_DT_METRIC: MetricConfig = {
   label: "% Video có DT",
   actual: videoCoDtPercent,
   ratio: true,
-  denom: (r) => r.kocVidPrevDenom,
+  denom: monthlyVideoTotal,
   narrow: true,
 };
 
@@ -429,7 +426,6 @@ export default function MonthlyReportPage() {
           videoOther: 0,
           gmvNgay: 0,
           videosWithRevenue: 0,
-          kocWithVideo: 0,
           kocVidPrevDenom: 0,
           kocChotMoi: 0,
           kocWithGmv: 0,
@@ -491,8 +487,6 @@ export default function MonthlyReportPage() {
       // Tổng theo KOC phụ trách: Monthly Videos + GMV tháng
       const monthlyVideos = parseNumber(koc.monthly_videos);
 
-      // % Video có DT (mới): đếm KOC của PIC CÓ video tháng này (monthly_videos > 0)
-      if (monthlyVideos > 0) perfRow.kocWithVideo += 1;
       if (String(koc.tier || "").trim() === "Mới hoạt động") {
         videoRow.dailyVideoNew += monthlyVideos;
       } else {
