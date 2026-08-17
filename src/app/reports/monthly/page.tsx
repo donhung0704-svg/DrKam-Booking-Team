@@ -35,9 +35,9 @@ type ReportRow = {
   kocVidPrevDenom: number;
   // Hunter KPI
   kocChotMoi: number; // KOC có Booking date trong tháng báo cáo
-  // Retention: KOC có Booking tháng trước (denom) & vẫn có Booking tháng này (num)
-  retentionDenom: number;
-  retentionNum: number;
+  // Retention (mới) = số KOC có Booking date của PIC có gmv_thang>0 (tử số).
+  // Mẫu số = kocVidPrevDenom (Số KOC có video tháng trước, dùng chung với % Video có DT).
+  kocWithGmv: number;
   // Báo cáo tổng quát (KOC tạo mới trong tháng theo status)
   dongY: number; // status "Đã chốt"
   tuChoi: number; // status "Từ chối"
@@ -149,11 +149,11 @@ function videoCoDtPercent(r: ReportRow) {
   return (r.kocWithVideo / r.kocVidPrevDenom) * 100;
 }
 
-// Tỷ lệ retention KOC = KOC có Booking tháng trước & vẫn có Booking tháng này
-//                       / KOC có Booking tháng trước
+// Tỷ lệ retention KOC = số KOC có Booking date của PIC có gmv_thang>0
+//                       / Số KOC có video tháng trước (mẫu số chung, nhập tay)
 function retentionPercent(r: ReportRow) {
-  if (r.retentionDenom <= 0) return 0;
-  return (r.retentionNum / r.retentionDenom) * 100;
+  if (r.kocVidPrevDenom <= 0) return 0;
+  return (r.kocWithGmv / r.kocVidPrevDenom) * 100;
 }
 
 type MetricConfig = {
@@ -188,7 +188,7 @@ const RETENTION_METRIC: MetricConfig = {
   label: "Tỷ lệ retention KOC",
   actual: retentionPercent,
   ratio: true,
-  denom: (r) => r.retentionDenom,
+  denom: (r) => r.kocVidPrevDenom,
   narrow: true,
 };
 
@@ -432,8 +432,7 @@ export default function MonthlyReportPage() {
           kocWithVideo: 0,
           kocVidPrevDenom: 0,
           kocChotMoi: 0,
-          retentionDenom: 0,
-          retentionNum: 0,
+          kocWithGmv: 0,
           dongY: 0,
           tuChoi: 0,
         });
@@ -446,18 +445,6 @@ export default function MonthlyReportPage() {
     employees.forEach((employee) => {
       ensureRow(String(employee.id));
     });
-
-    // Retention: tập tháng (YYYY-MM) mà mỗi KOC CÓ Booking (theo bookings.created_at)
-    const bookingMonthsByKoc = new Map<string, Set<string>>();
-    bookings.forEach((booking) => {
-      const kocId = String(booking.koc_id || "");
-      if (!kocId) return;
-      const bookingMonth = toVietnamDateKey(booking.created_at).slice(0, 7);
-      if (!bookingMonth) return;
-      if (!bookingMonthsByKoc.has(kocId)) bookingMonthsByKoc.set(kocId, new Set());
-      bookingMonthsByKoc.get(kocId)!.add(bookingMonth);
-    });
-    const prevMonthKey = previousMonthKey(monthKey);
 
     kocs.forEach((koc) => {
       const isPic = employeeMap.has(String(koc.employee_id));
@@ -472,13 +459,6 @@ export default function MonthlyReportPage() {
         isPic && hasBookingDate(koc.booking_date)
           ? ensureRow(String(koc.employee_id))
           : ensureRow("");
-
-      // Retention: KOC có Booking THÁNG TRƯỚC -> mẫu số; nếu cũng có THÁNG NÀY -> tử số
-      const bkMonths = bookingMonthsByKoc.get(String(koc.id));
-      if (bkMonths && bkMonths.has(prevMonthKey)) {
-        perfRow.retentionDenom += 1;
-        if (bkMonths.has(monthKey)) perfRow.retentionNum += 1;
-      }
 
       const createdKey = toVietnamDateKey(koc.created_at);
       const contactKey = toVietnamDateKey(koc.new_contact_date);
@@ -533,7 +513,10 @@ export default function MonthlyReportPage() {
         videoRow.videoOther += monthlyVideos;
       }
 
-      videoRow.gmvNgay += parseNumber(koc.gmv_thang);
+      const gmvThang = parseNumber(koc.gmv_thang);
+      videoRow.gmvNgay += gmvThang;
+      // Retention (mới): đếm KOC có Booking date của PIC có GMV tháng > 0 (tử số)
+      if (gmvThang > 0) perfRow.kocWithGmv += 1;
       // Video có DT chỉ tính cho KOC có Booking date (videoRow = PIC khi có booking)
       videoRow.videosWithRevenue += parseNumber(koc.videos_with_revenue);
 
@@ -1589,18 +1572,6 @@ function parseNumber(value: unknown) {
 }
 
 // Booking date được coi là "không trống" khi có giá trị thực (khác rỗng và "-")
-// Tháng trước của "YYYY-MM" -> "YYYY-MM"
-function previousMonthKey(monthKey: string) {
-  const match = String(monthKey || "").match(/^(\d{4})-(\d{2})$/);
-  if (!match) return "";
-  let year = Number(match[1]);
-  let month = Number(match[2]) - 1;
-  if (month < 1) {
-    month = 12;
-    year -= 1;
-  }
-  return `${year}-${String(month).padStart(2, "0")}`;
-}
 
 function hasBookingDate(value: unknown) {
   const raw = String(value ?? "").trim();
