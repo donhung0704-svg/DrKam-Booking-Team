@@ -104,23 +104,42 @@ export default function NewBookingPage() {
   const selectedKoc =
     kocs.find((koc) => String(koc.id) === String(selectedKocId)) || null;
 
-  // Khi đổi KOC (và đã có dữ liệu KOC) -> tự điền địa chỉ/SĐT giao hàng theo KOC
-  useEffect(() => {
-    if (!selectedKocId) {
+  // Điền PIC/địa chỉ/SĐT theo 1 KOC (dùng chung cho mở sẵn & đổi tay)
+  function prefillFromKoc(koc: DbRow | null | undefined) {
+    if (!koc) return;
+    prefilledKocRef.current = String(koc.id || "");
+    setDeliveryAddress(koc.address || "");
+    setRecipientPhone(koc.phone || "");
+    // PIC phụ trách của Booking = PIC phụ trách của KOC đó
+    setSelectedEmployeeId(koc.employee_id ? String(koc.employee_id) : "");
+  }
+
+  // Người dùng tự đổi KOC trong ô tìm kiếm -> điền lại theo KOC mới
+  function handleKocChange(kocId: string) {
+    setSelectedKocId(kocId);
+    if (!kocId) {
       prefilledKocRef.current = "";
+      setDeliveryAddress("");
+      setRecipientPhone("");
+      setSelectedEmployeeId("");
       return;
     }
-    if (!selectedKoc) return;
-    if (prefilledKocRef.current === selectedKocId) return;
+    if (kocId === prefilledKocRef.current) return;
+    const koc = kocs.find((item) => String(item.id) === String(kocId));
+    if (koc) prefillFromKoc(koc);
+  }
 
-    prefilledKocRef.current = selectedKocId;
-    setDeliveryAddress(selectedKoc.address || "");
-    setRecipientPhone(selectedKoc.phone || "");
-    // PIC phụ trách của Booking = PIC phụ trách của KOC đó
-    setSelectedEmployeeId(
-      selectedKoc.employee_id ? String(selectedKoc.employee_id) : ""
-    );
-  }, [selectedKocId, selectedKoc]);
+  // Mở từ ?koc_id=... : ngay khi KOC đó có mặt trong danh sách (do loadData
+  // hoặc fallback tải về) thì điền sẵn KOC + PIC + địa chỉ + SĐT. Không phụ
+  // thuộc thứ tự onChange của ô tìm kiếm nên luôn chắc chắn điền đủ.
+  useEffect(() => {
+    if (!initialKocId) return;
+    if (prefilledKocRef.current === initialKocId) return;
+    const koc = kocs.find((item) => String(item.id) === String(initialKocId));
+    if (!koc) return;
+    setSelectedKocId(String(koc.id));
+    prefillFromKoc(koc);
+  }, [initialKocId, kocs]);
 
   // Nếu mở từ Hồ sơ KOC (?koc_id=...) thì chọn sẵn KOC đó
   useEffect(() => {
@@ -311,7 +330,7 @@ export default function NewBookingPage() {
                 name="koc_id"
                 kocs={kocs}
                 defaultValue={initialKocId}
-                onChange={setSelectedKocId}
+                onChange={handleKocChange}
                 placeholder="Gõ ID TikTok/Tên FB để tìm KOC..."
               />
             </CompactField>
