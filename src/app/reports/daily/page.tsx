@@ -29,35 +29,6 @@ const notRespondedStatuses = ["Chờ phản hồi", "Đã phản hồi"];
 
 const PIC_FILTER_KEY = "drkam_report_pic_filter";
 
-type KpiInput = {
-  lienHe: string;
-  phanHoi: string;
-  bookingMoi: string;
-  gmv: string;
-};
-
-// KPI của từng chỉ tiêu lưu vào cột tương ứng trong bảng employees
-const KPI_COLUMN: Record<keyof KpiInput, string> = {
-  lienHe: "kpi_lien_he",
-  phanHoi: "kpi_phan_hoi",
-  bookingMoi: "kpi_booking_moi",
-  gmv: "kpi_gmv",
-};
-
-const EMPTY_KPI: KpiInput = {
-  lienHe: "",
-  phanHoi: "",
-  bookingMoi: "",
-  gmv: "",
-};
-
-const KPI_FIELDS: (keyof KpiInput)[] = [
-  "lienHe",
-  "phanHoi",
-  "bookingMoi",
-  "gmv",
-];
-
 export default function PicReportPage() {
   const [reportDate, setReportDate] = useState(getVietnamTodayDisplay());
 
@@ -67,9 +38,9 @@ export default function PicReportPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  // KPI ngày nhập tay theo từng PIC (lưu vào employees.kpi_*)
-  const [kpiInputs, setKpiInputs] = useState<Record<string, KpiInput>>({});
-  const [savingKpiId, setSavingKpiId] = useState("");
+  // Ghi chú CV theo từng PIC + ngày báo cáo (lưu ở bảng report_day_notes)
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [savingNoteId, setSavingNoteId] = useState("");
 
   // Lọc cố định nhân sự hiển thị (null = chưa khởi tạo -> hiển thị tất cả)
   const [selectedPics, setSelectedPics] = useState<string[] | null>(null);
@@ -104,21 +75,35 @@ export default function PicReportPage() {
     loadData();
   }, []);
 
-  // Khởi tạo KPI từ dữ liệu nhân sự
+  // Tải ghi chú CV của ngày báo cáo đang chọn
   useEffect(() => {
-    const map: Record<string, KpiInput> = {};
+    const dayKey = parseDisplayDateToKey(reportDate);
+    if (!dayKey) {
+      setNotes({});
+      return;
+    }
 
-    employees.forEach((employee) => {
-      map[String(employee.id)] = {
-        lienHe: toKpiInput(employee.kpi_lien_he),
-        phanHoi: toKpiInput(employee.kpi_phan_hoi),
-        bookingMoi: toKpiInput(employee.kpi_booking_moi),
-        gmv: toKpiInput(employee.kpi_gmv),
-      };
-    });
+    let cancelled = false;
 
-    setKpiInputs(map);
-  }, [employees]);
+    (async () => {
+      const { data, error } = await supabase
+        .from("report_day_notes")
+        .select("employee_id, note")
+        .eq("report_date", dayKey);
+
+      if (cancelled || error) return;
+
+      const map: Record<string, string> = {};
+      (data || []).forEach((row) => {
+        if (row.employee_id) map[String(row.employee_id)] = row.note || "";
+      });
+      setNotes(map);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reportDate]);
 
   // Tải lựa chọn nhân sự đã lưu
   useEffect(() => {
@@ -306,34 +291,34 @@ export default function PicReportPage() {
     window.localStorage.setItem(PIC_FILTER_KEY, JSON.stringify(next));
   }
 
-  function updateKpiInput(
-    employeeId: string,
-    field: keyof KpiInput,
-    value: string
-  ) {
-    setKpiInputs((prev) => ({
-      ...prev,
-      [employeeId]: { ...(prev[employeeId] || EMPTY_KPI), [field]: value },
-    }));
+  function updateNote(employeeId: string, value: string) {
+    setNotes((prev) => ({ ...prev, [employeeId]: value }));
   }
 
-  async function saveKpi(employeeId: string, field: keyof KpiInput) {
+  async function saveNote(employeeId: string) {
     if (!employeeId || employeeId === "no-pic") return;
 
-    const raw = (kpiInputs[employeeId]?.[field] ?? "").trim();
-    const value = raw === "" ? null : parseNumber(raw);
+    const dayKey = parseDisplayDateToKey(reportDate);
+    if (!dayKey) return;
 
-    setSavingKpiId(employeeId);
+    const note = (notes[employeeId] ?? "").trim();
 
-    const { error } = await supabase
-      .from("employees")
-      .update({ [KPI_COLUMN[field]]: value })
-      .eq("id", employeeId);
+    setSavingNoteId(employeeId);
 
-    setSavingKpiId("");
+    const { error } = await supabase.from("report_day_notes").upsert(
+      {
+        employee_id: employeeId,
+        report_date: dayKey,
+        note: note || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "employee_id,report_date" }
+    );
+
+    setSavingNoteId("");
 
     if (error) {
-      setMessage(`Lỗi lưu KPI: ${error.message}`);
+      setMessage(`Lỗi lưu ghi chú: ${error.message}`);
     }
   }
 
@@ -344,10 +329,9 @@ export default function PicReportPage() {
       "Phản hồi": row.phanHoi,
       "Booking mới": row.bookingMoi,
       "Giá Cast": row.giaCast,
-      "Daily Videos(T-1) (New KOCs)": row.dailyVideoNew,
-      "Daily Videos(T-1) (Old KOCs)": row.dailyVideoOld,
       "Daily Videos(T-1)": row.dailyVideoNew + row.dailyVideoOld,
       GMV: row.gmvNgay,
+      "Ghi chú CV": row.isRealPic ? notes[row.employeeId] || "" : "",
     }));
 
     if (exportRows.length === 0) {
@@ -362,10 +346,10 @@ export default function PicReportPage() {
       { wch: 10 },
       { wch: 10 },
       { wch: 12 },
-      { wch: 18 },
-      { wch: 18 },
       { wch: 16 },
       { wch: 16 },
+      { wch: 16 },
+      { wch: 40 },
     ];
 
     const workbook = XLSX.utils.book_new();
@@ -376,8 +360,6 @@ export default function PicReportPage() {
       `bao-cao-nhan-su-${reportDate.replaceAll("/", "-")}.xlsx`
     );
   }
-
-  const kpiRows = reportRows.filter((row) => row.isRealPic);
 
   return (
     <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-5 py-6 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
@@ -464,10 +446,9 @@ export default function PicReportPage() {
                 <Th>Phản hồi</Th>
                 <Th>Booking mới</Th>
                 <Th>Giá Cast</Th>
-                <Th>Daily Videos(T-1) (New KOCs)</Th>
-                <Th>Daily Videos(T-1) (Old KOCs)</Th>
                 <Th>Daily Videos(T-1)</Th>
                 <Th>GMV</Th>
+                <Th>Ghi chú CV</Th>
               </tr>
             </thead>
 
@@ -475,7 +456,7 @@ export default function PicReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={8}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -486,7 +467,7 @@ export default function PicReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={8}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -507,12 +488,25 @@ export default function PicReportPage() {
                     <Td>{row.phanHoi}</Td>
                     <Td>{row.bookingMoi}</Td>
                     <Td>{formatMoney(row.giaCast)}</Td>
-                    <Td>{formatNumber(row.dailyVideoNew)}</Td>
-                    <Td>{formatNumber(row.dailyVideoOld)}</Td>
                     <Td>
                       {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
                     </Td>
                     <Td>{formatMoney(row.gmvNgay)}</Td>
+                    <Td>
+                      {row.isRealPic ? (
+                        <input
+                          value={notes[row.employeeId] || ""}
+                          onChange={(event) =>
+                            updateNote(row.employeeId, event.target.value)
+                          }
+                          onBlur={() => saveNote(row.employeeId)}
+                          placeholder="Ghi chú công việc…"
+                          className="h-9 w-full min-w-[160px] rounded-lg border border-slate-200 bg-white px-2.5 text-left text-[13px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                        />
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </Td>
                   </tr>
                 ))}
 
@@ -528,154 +522,19 @@ export default function PicReportPage() {
                     {formatMoney(totals.giaCast)}
                   </td>
                   <td className="px-2 py-4 font-bold">
-                    {formatNumber(totals.dailyVideoNew)}
-                  </td>
-                  <td className="px-2 py-4 font-bold">
-                    {formatNumber(totals.dailyVideoOld)}
-                  </td>
-                  <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
                   </td>
                   <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
+                  </td>
+                  <td className="px-2 py-4 text-[12px] font-semibold text-slate-400">
+                    {savingNoteId ? "Đang lưu…" : ""}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
           </ResizeGroupContext.Provider>
-        </div>
-      </section>
-
-      <section className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 py-3">
-          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
-            KPI ngày
-          </p>
-
-          <p className="mt-1 text-[12.5px] text-slate-500">
-            Nhập KPI mục tiêu cho từng PIC. Tỷ lệ % thực đạt = số thực tế (bảng
-            Báo cáo ngày) / KPI.
-            {savingKpiId && (
-              <span className="ml-2 font-semibold text-slate-400">
-                Đang lưu…
-              </span>
-            )}
-          </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="report-table w-full min-w-[1100px] text-left text-sm">
-            <thead>
-              <tr className="bg-slate-50">
-                <th
-                  rowSpan={2}
-                  className="border-b border-r border-slate-200 px-5 py-3 text-[11px] font-black uppercase tracking-[0.06em] text-slate-700"
-                >
-                  PIC
-                </th>
-                <th
-                  colSpan={4}
-                  className="border-b border-r border-slate-200 px-5 py-2 text-center text-[11px] font-black uppercase tracking-[0.1em] text-blue-700"
-                >
-                  KPI
-                </th>
-                <th
-                  colSpan={4}
-                  className="border-b border-slate-200 px-5 py-2 text-center text-[11px] font-black uppercase tracking-[0.1em] text-emerald-700"
-                >
-                  Tỷ lệ % thực đạt
-                </th>
-              </tr>
-
-              <tr className="bg-slate-50">
-                <KpiTh>Liên hệ</KpiTh>
-                <KpiTh>Phản hồi</KpiTh>
-                <KpiTh>Booking mới</KpiTh>
-                <KpiTh borderRight>GMV</KpiTh>
-                <KpiTh>Liên hệ</KpiTh>
-                <KpiTh>Phản hồi</KpiTh>
-                <KpiTh>Booking mới</KpiTh>
-                <KpiTh>GMV</KpiTh>
-              </tr>
-            </thead>
-
-            <tbody>
-              {loading && (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="px-5 py-10 text-center text-slate-500"
-                  >
-                    Đang tải dữ liệu...
-                  </td>
-                </tr>
-              )}
-
-              {!loading && kpiRows.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="px-5 py-10 text-center text-slate-500"
-                  >
-                    Không có PIC.
-                  </td>
-                </tr>
-              )}
-
-              {!loading &&
-                kpiRows.map((row) => {
-                  const k = kpiInputs[row.employeeId] || EMPTY_KPI;
-                  const actual: Record<keyof KpiInput, number> = {
-                    lienHe: row.lienHe,
-                    phanHoi: row.phanHoi,
-                    bookingMoi: row.bookingMoi,
-                    gmv: row.gmvNgay,
-                  };
-
-                  return (
-                    <tr key={row.employeeId} className="hover:bg-slate-50">
-                      <Td>
-                        <span className="font-bold text-slate-950">
-                          {row.employeeName}
-                        </span>
-                      </Td>
-
-                      {KPI_FIELDS.map((field) => (
-                        <Td key={`kpi-${field}`}>
-                          <input
-                            value={k[field]}
-                            onChange={(event) =>
-                              updateKpiInput(
-                                row.employeeId,
-                                field,
-                                event.target.value
-                              )
-                            }
-                            onBlur={() => saveKpi(row.employeeId, field)}
-                            placeholder="KPI"
-                            className="h-9 w-full min-w-[90px] rounded-lg border border-slate-200 bg-white px-2.5 text-right text-[13px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
-                          />
-                        </Td>
-                      ))}
-
-                      {KPI_FIELDS.map((field) => (
-                        <Td key={`pct-${field}`}>
-                          <span
-                            className={`font-bold ${pctColor(
-                              actual[field],
-                              parseNumber(k[field])
-                            )}`}
-                          >
-                            {formatPercent(actual[field], parseNumber(k[field]))}
-                          </span>
-                        </Td>
-                      ))}
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
         </div>
       </section>
     </section>
@@ -696,48 +555,6 @@ function Td({ children }: { children: ReactNode }) {
       {children}
     </td>
   );
-}
-
-function KpiTh({
-  children,
-  borderRight,
-}: {
-  children: ReactNode;
-  borderRight?: boolean;
-}) {
-  return (
-    <th
-      className={`border-b border-slate-200 px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600 ${
-        borderRight ? "border-r" : ""
-      }`}
-    >
-      {children}
-    </th>
-  );
-}
-
-function toKpiInput(value: unknown) {
-  if (value === null || value === undefined || value === "") return "";
-  return String(value);
-}
-
-function formatPercent(actual: number, kpi: number) {
-  if (!kpi || kpi <= 0) return "—";
-
-  const pct = (actual / kpi) * 100;
-
-  return `${pct.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`;
-}
-
-function pctColor(actual: number, kpi: number) {
-  if (!kpi || kpi <= 0) return "text-slate-400";
-
-  const pct = (actual / kpi) * 100;
-
-  if (pct >= 100) return "text-emerald-600";
-  if (pct >= 70) return "text-orange-600";
-
-  return "text-red-600";
 }
 
 // Tải hết dữ liệu từ Supabase (mặc định trả tối đa 1000 dòng/lần -> phân trang)
