@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
 function mapLoginError(message: string) {
-  const msg = message.toLowerCase();
+  const msg = (message || "").toLowerCase();
 
   if (msg.includes("invalid login credentials")) {
     return "Email hoặc mật khẩu không đúng.";
@@ -15,11 +15,18 @@ function mapLoginError(message: string) {
     return "Email chưa được xác nhận. Vào Supabase Auth để confirm email.";
   }
 
-  if (msg.includes("network")) {
+  if (
+    msg.includes("database error granting user") ||
+    msg.includes("unexpected_failure")
+  ) {
+    return "Mật khẩu đúng nhưng Supabase Auth lỗi database khi cấp phiên (Database error granting user). Cần kiểm tra trigger trên auth.users hoặc Auth Hook trong Supabase.";
+  }
+
+  if (msg.includes("network") || msg.includes("fetch")) {
     return "Không kết nối được tới hệ thống. Vui lòng kiểm tra mạng.";
   }
 
-  return message;
+  return message || "Lỗi không xác định.";
 }
 
 export default function LoginPage() {
@@ -45,7 +52,12 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setMessage(`Đăng nhập lỗi: ${mapLoginError(error.message)}`);
+      // Một số lỗi 500 của Supabase Auth có message rỗng -> tránh hiện "{}"
+      const raw =
+        error.message && error.message.trim()
+          ? error.message
+          : `Mã lỗi ${(error as { status?: number }).status ?? ""} từ Supabase Auth`;
+      setMessage(`Đăng nhập lỗi: ${mapLoginError(raw)}`);
       setLoading(false);
       return;
     }
