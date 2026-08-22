@@ -651,6 +651,7 @@ async function loadAllKocsForBookingForm() {
       .from("koc")
       .select("id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link")
       .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
       .range(from, to);
 
     if (error) {
