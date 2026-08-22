@@ -5,7 +5,7 @@ import DatePickerInput from "@/components/DatePickerInput";
 import PicFilter from "@/components/PicFilter";
 import ResizableTh, { ResizeGroupContext } from "@/components/ResizableTh";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import * as XLSX from "xlsx";
 
@@ -494,14 +494,12 @@ export default function PicReportPage() {
                     <Td>{formatMoney(row.gmvNgay)}</Td>
                     <Td>
                       {row.isRealPic ? (
-                        <input
+                        <NoteTextarea
                           value={notes[row.employeeId] || ""}
-                          onChange={(event) =>
-                            updateNote(row.employeeId, event.target.value)
+                          onChange={(value) =>
+                            updateNote(row.employeeId, value)
                           }
                           onBlur={() => saveNote(row.employeeId)}
-                          placeholder="Ghi chú công việc…"
-                          className="h-9 w-full min-w-[160px] rounded-lg border border-slate-200 bg-white px-2.5 text-left text-[13px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
                         />
                       ) : (
                         <span className="text-slate-300">—</span>
@@ -554,6 +552,45 @@ function Td({ children }: { children: ReactNode }) {
     <td className="border-b border-slate-100 px-2 py-3 align-middle text-[13px]">
       {children}
     </td>
+  );
+}
+
+// Ô ghi chú: textarea tự giãn chiều cao theo nội dung, xuống dòng, không che chữ
+function NoteTextarea({
+  value,
+  onChange,
+  onBlur,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  function autoResize(el: HTMLTextAreaElement | null) {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }
+
+  // Giãn đúng chiều cao khi có sẵn nội dung (mở trang / đổi ngày)
+  useEffect(() => {
+    autoResize(ref.current);
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      rows={1}
+      onChange={(event) => {
+        onChange(event.target.value);
+        autoResize(event.currentTarget);
+      }}
+      onBlur={onBlur}
+      placeholder="Ghi chú công việc…"
+      className="block w-full min-h-[36px] resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-left text-[13px] leading-5 outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+    />
   );
 }
 
