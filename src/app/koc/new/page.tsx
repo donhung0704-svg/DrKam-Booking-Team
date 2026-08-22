@@ -116,6 +116,47 @@ export default function NewKocPage() {
       return;
     }
 
+    // Check trùng: so khớp ID TikTok/Tên FB không phân biệt hoa/thường & khoảng
+    // trắng (giống khóa so khớp khi import). Trùng -> CHẶN, không cho tạo.
+    const idText = payload.Id_tiktok_Ten_fb.trim();
+    const matchKey = idText.toLowerCase().replace(/\s+/g, " ");
+    // ilike coi "_" và "%" là ký tự đại diện -> nới rộng để chắc chắn bắt được
+    // dòng thật (khác hoa/thường, khác khoảng trắng), rồi lọc chính xác bằng JS.
+    const likePattern = idText.replace(/%/g, "_").replace(/\s+/g, "%");
+
+    const { data: dupCandidates, error: dupError } = await supabase
+      .from("koc")
+      .select("id, koc_code, Id_tiktok_Ten_fb, name")
+      .ilike("Id_tiktok_Ten_fb", likePattern)
+      .limit(50);
+
+    if (dupError) {
+      setMessage(`Lỗi kiểm tra trùng KOC: ${dupError.message}`);
+      setSaving(false);
+      return;
+    }
+
+    const duplicate = (dupCandidates || []).find(
+      (koc) =>
+        String(koc.Id_tiktok_Ten_fb || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, " ") === matchKey
+    );
+
+    if (duplicate) {
+      const label =
+        duplicate.Id_tiktok_Ten_fb ||
+        duplicate.name ||
+        duplicate.koc_code ||
+        duplicate.id;
+      setMessage(
+        `KOC "${label}" đã tồn tại (trùng ID TikTok/Tên FB). Không thể tạo trùng.`
+      );
+      setSaving(false);
+      return;
+    }
+
     const { error } = await supabase.from("koc").insert(payload);
 
     if (error) {
