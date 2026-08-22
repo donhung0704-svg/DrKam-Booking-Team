@@ -19,24 +19,29 @@ order by pg_total_relation_size(relid) desc
 limit 15;
 
 
--- BUOC 2: GIAI PHONG — xoa toan bo lich su (audit log).
--- TRUNCATE nhanh, giai phong dung luong ngay, khong can them dia trong.
--- (Mat lich su chinh sua cu — chap nhan de cuu dang nhap.)
+-- BUOC 2: GIAI PHONG — DB dang o READ-ONLY (vuot quota) nen phai TAM MO GHI
+-- ngay trong cung 1 lan chay. BOI DEN toan bo khoi duoi day roi bam RUN 1 lan:
+-- (dong "set session..." phai chay CUNG phien voi truncate thi moi co tac dung)
+
+set session characteristics as transaction read write;
 truncate table koc_history;
 truncate table bookings_history;
 
+-- Neu dong "set session characteristics..." bao loi, thu thay bang:
+--   set default_transaction_read_only = off;
+-- roi chay lai 2 dong truncate (van boi den + RUN 1 lan).
+
 -- --- (TUY CHON) Neu muon GIU lich su 7 ngay gan nhat thay vi xoa het:
---    thay 2 lenh truncate o tren bang 2 lenh delete duoi day:
--- delete from koc_history      where changed_at < now() - interval '7 days';
--- delete from bookings_history where changed_at < now() - interval '7 days';
+--   set session characteristics as transaction read write;
+--   delete from koc_history      where changed_at < now() - interval '7 days';
+--   delete from bookings_history where changed_at < now() - interval '7 days';
 
 
--- BUOC 3: Thu hoi dung luong dia thuc su (bat buoc sau truncate/delete)
-vacuum full koc_history;
-vacuum full bookings_history;
--- Neu van con lon, vacuum ca bang chinh:
--- vacuum full koc;
--- vacuum full bookings;
+-- BUOC 3: TRUNCATE da tra dung luong ngay (khong bat buoc vacuum).
+-- Neu van muon nen chat, chay rieng (cung can read write):
+--   set session characteristics as transaction read write;
+--   vacuum full koc_history;
+--   vacuum full bookings_history;
 
 
 -- BUOC 4: Kiem tra lai
