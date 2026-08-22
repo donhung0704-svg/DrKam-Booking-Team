@@ -129,6 +129,35 @@ export default function NewBookingPage() {
     if (kocId) setInitialKocId(kocId);
   }, []);
 
+  // Chắc chắn KOC mở từ ?koc_id=... luôn có trong danh sách: nếu chưa có
+  // (vì lý do gì đó) -> tải thẳng KOC đó theo id rồi ghép vào danh sách.
+  useEffect(() => {
+    if (!initialKocId) return;
+    if (kocs.some((koc) => String(koc.id) === String(initialKocId))) return;
+
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("koc")
+        .select(
+          "id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link, employee_id"
+        )
+        .eq("id", initialKocId)
+        .maybeSingle();
+
+      if (cancelled || !data) return;
+      setKocs((prev) =>
+        prev.some((koc) => String(koc.id) === String(data.id))
+          ? prev
+          : [data, ...prev]
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialKocId, kocs]);
+
   useEffect(() => {
     async function loadData() {
       const [kocResult, employeeResult] = await Promise.all([
