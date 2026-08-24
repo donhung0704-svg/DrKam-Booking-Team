@@ -331,6 +331,9 @@ export default function KocAdvancedTable({
   trailingActions,
   statsInfo,
   totalFilteredCount = 0,
+  filteredTotals = null,
+  filteredTotalsLoading = false,
+  sumFields = [],
   onBulkUpdateAllFiltered,
   onBulkDeleteAllFiltered,
   onExport,
@@ -348,6 +351,11 @@ export default function KocAdvancedTable({
   statsInfo?: ReactNode;
   // Tổng số KOC khớp bộ lọc hiện tại (tất cả các trang)
   totalFilteredCount?: number;
+  // Tổng các cột số của toàn bộ KOC khớp bộ lọc (mọi trang); null = đang tính
+  filteredTotals?: Record<string, number> | null;
+  filteredTotalsLoading?: boolean;
+  // Danh sách field số cần cộng tổng
+  sumFields?: string[];
   // Sửa / xóa toàn bộ KOC khớp bộ lọc (không chỉ trang hiện tại)
   onBulkUpdateAllFiltered?: (patch: DbRow) => Promise<string | null>;
   onBulkDeleteAllFiltered?: () => Promise<string | null>;
@@ -540,6 +548,22 @@ const orderedColumns = useMemo(() => {
       );
     });
   }, []);
+
+  // Set field số cần tính tổng (để biết cột nào hiện dòng Tổng)
+  const sumFieldSet = useMemo(() => new Set(sumFields), [sumFields]);
+
+  // Tổng các cột số của TRANG hiện tại (100 dòng đang xem)
+  const pageTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    sumFields.forEach((field) => {
+      totals[field] = kocs.reduce((sum, koc) => sum + toSumValue(koc[field]), 0);
+    });
+    return totals;
+  }, [kocs, sumFields]);
+
+  const hasSumColumn = orderedColumns.some(
+    (column) => column.field && sumFieldSet.has(column.field)
+  );
 
   const selectedCount = selectedIds.length;
 
@@ -1387,10 +1411,91 @@ const orderedColumns = useMemo(() => {
                 );
               })}
           </tbody>
+
+          {!loading && kocs.length > 0 && hasSumColumn && (
+            <tfoot>
+              {[
+                {
+                  key: "page",
+                  label: "Tổng trang này",
+                  values: pageTotals,
+                  loadingTotals: false,
+                },
+                {
+                  key: "filtered",
+                  label: "Tổng theo bộ lọc",
+                  values: filteredTotals,
+                  loadingTotals: filteredTotalsLoading,
+                },
+              ].map((totalRow) => (
+                <tr key={totalRow.key} className="bg-slate-100 font-bold">
+                  <td
+                    className="border-t-2 border-slate-300 px-2 py-2 text-center text-[12px] text-slate-700"
+                    style={{
+                      width: selectColumnWidth,
+                      minWidth: selectColumnWidth,
+                      maxWidth: selectColumnWidth,
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 60,
+                      background: "#f1f5f9",
+                      boxShadow: "1px 0 0 #cbd5e1",
+                    }}
+                  />
+
+                  {orderedColumns.map((column, columnIndex) => {
+                    const pinned = pinnedColumns.includes(column.key);
+                    const isSum = Boolean(
+                      column.field && sumFieldSet.has(column.field)
+                    );
+                    // Cột đầu tiên (không phải cột số) hiển thị nhãn dòng tổng
+                    const showLabel = columnIndex === 0 && !isSum;
+
+                    return (
+                      <td
+                        key={column.key}
+                        className="border-t-2 border-slate-300 px-2 py-2 text-[12px] text-slate-900"
+                        style={{
+                          width: getColumnWidth(column),
+                          minWidth: getColumnWidth(column),
+                          maxWidth: getColumnWidth(column),
+                          ...getStickyStyle(column),
+                          zIndex: pinned ? 40 : 1,
+                          background: "#f1f5f9",
+                          textAlign: isSum ? "right" : "left",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {isSum
+                          ? totalRow.loadingTotals || !totalRow.values
+                            ? "…"
+                            : formatSum(totalRow.values[column.field as string])
+                          : showLabel
+                            ? totalRow.label
+                            : ""}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tfoot>
+          )}
         </table>
       </div>
     </section>
   );
+}
+
+// Đọc số để cộng tổng (dấu chấm = ngăn cách nghìn)
+function toSumValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return 0;
+  const raw = String(value).trim().replace(/\./g, "").replace(/,/g, "");
+  const num = Number(raw);
+  return Number.isNaN(num) ? 0 : num;
+}
+
+function formatSum(value: number | undefined) {
+  return Number(value || 0).toLocaleString("vi-VN");
 }
 
 function BulkValueInput({
