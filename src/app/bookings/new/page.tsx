@@ -69,6 +69,10 @@ export default function NewBookingPage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
+  // Ngày dự kiến đăng mặc định = ngày tạo (hôm nay) + 7 ngày, vẫn sửa được
+  const [expectedPostDate, setExpectedPostDate] = useState(
+    getVietnamDatePlusDaysDisplay(7)
+  );
   const prefilledKocRef = useRef("");
 
   // Dòng hàng của đơn (mỗi sản phẩm 1 dòng)
@@ -374,7 +378,11 @@ export default function NewBookingPage() {
             </CompactField>
 
             <CompactField label="Ngày dự kiến đăng">
-              <DatePickerInput name="expected_post_date" />
+              <DatePickerInput
+                name="expected_post_date"
+                value={expectedPostDate}
+                onChange={setExpectedPostDate}
+              />
             </CompactField>
           </div>
         </CompactSection>
@@ -775,6 +783,24 @@ function getVietnamTodayDateKey() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(new Date());
+}
+
+// Trả về ngày (hôm nay theo giờ VN) + N ngày, định dạng dd/mm/yyyy để hiển thị
+// trong ô chọn ngày (DatePickerInput).
+function getVietnamDatePlusDaysDisplay(days: number) {
+  const todayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(new Date());
+
+  const [year, month, day] = todayKey.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + days);
+
+  const dd = String(date.getUTCDate()).padStart(2, "0");
+  const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const yyyy = date.getUTCFullYear();
+
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 // Trả về mốc thời gian tạo booking theo giờ Việt Nam, có cả giờ/phút/giây
