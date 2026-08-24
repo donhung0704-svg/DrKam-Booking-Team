@@ -73,9 +73,29 @@ const commissionOptions = [
   "1% tn 1% ads",
 ];
 const pageSizeOptions = [100, 200, 300];
+// Các cột số cần tính tổng (khớp cột type "number" của bảng KOC)
+const SUM_FIELDS = [
+  "follower",
+  "number_of_videos",
+  "monthly_videos",
+  "videos_with_revenue",
+  "gmv",
+  "gmv_thang",
+  "items_sold",
+  "items_returned",
+  "cast_price",
+];
 const visibleColumnsStorageKey = "drkam_koc_visible_columns_v5";
 // Giữ bộ lọc/sắp xếp/trang khi rời trang rồi quay lại (theo phiên tab)
 const filtersStorageKey = "drkam_koc_filters_v1";
+
+// Đọc số để cộng tổng: coi dấu chấm là ngăn cách nghìn (giống nơi khác trong app)
+function toSumNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return 0;
+  const raw = String(value).trim().replace(/\./g, "").replace(/,/g, "");
+  const num = Number(raw);
+  return Number.isNaN(num) ? 0 : num;
+}
 // Bộ lọc đã lưu giờ DÙNG CHUNG cả team -> lưu bảng filter_presets trong DB
 
 type FilterPreset = {
@@ -174,6 +194,13 @@ export default function KocListPage() {
   const [totalKocCount, setTotalKocCount] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(100);
+
+  // Tổng các cột số của TẤT CẢ KOC khớp bộ lọc (mọi trang)
+  const [filteredTotals, setFilteredTotals] = useState<Record<
+    string,
+    number
+  > | null>(null);
+  const [filteredTotalsLoading, setFilteredTotalsLoading] = useState(false);
 
   const [filterFieldKey, setFilterFieldKey] = useState(filterFields[0].key);
   const [filterOperator, setFilterOperator] = useState<FilterOperator>("contains");
@@ -405,6 +432,84 @@ export default function KocListPage() {
 
     loadKocs();
   }, [filtersHydrated, pageIndex, pageSize, activeFilters, sortState, reloadSignal]);
+
+  // Tính tổng các cột số của TẤT CẢ KOC khớp bộ lọc (không phụ thuộc trang).
+  // Chỉ tải lại khi ĐỔI bộ lọc (không chạy lại khi chuyển trang) để đỡ nặng.
+  useEffect(() => {
+    if (!filtersHydrated) return;
+
+    let cancelled = false;
+
+    async function loadFilteredTotals() {
+      setFilteredTotalsLoading(true);
+
+      // Đếm số dòng khớp bộ lọc
+      let countQuery = supabase
+        .from("koc")
+        .select("id", { count: "exact", head: true });
+      activeFilters.forEach((condition) => {
+        countQuery = applyConditionToQuery(countQuery, condition);
+      });
+
+      const { count, error: countError } = await countQuery;
+
+      if (cancelled) return;
+      if (countError) {
+        setFilteredTotals(null);
+        setFilteredTotalsLoading(false);
+        return;
+      }
+
+      const pageSizeInner = 1000;
+      const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSizeInner));
+      const selectCols = `id, ${SUM_FIELDS.join(", ")}`;
+      const totals: Record<string, number> = {};
+      SUM_FIELDS.forEach((field) => (totals[field] = 0));
+
+      const concurrency = 8;
+
+      for (let start = 0; start < totalPages; start += concurrency) {
+        const batch = [];
+        for (
+          let page = start;
+          page < Math.min(start + concurrency, totalPages);
+          page++
+        ) {
+          let q = supabase
+            .from("koc")
+            .select(selectCols)
+            .order("id", { ascending: true })
+            .range(page * pageSizeInner, page * pageSizeInner + pageSizeInner - 1);
+          activeFilters.forEach((condition) => {
+            q = applyConditionToQuery(q, condition);
+          });
+          batch.push(q);
+        }
+
+        const results = await Promise.all(batch);
+        if (cancelled) return;
+
+        for (const result of results) {
+          if (result.error) continue;
+          (result.data || []).forEach((row: DbRow) => {
+            SUM_FIELDS.forEach((field) => {
+              totals[field] += toSumNumber(row[field]);
+            });
+          });
+        }
+      }
+
+      if (cancelled) return;
+      setFilteredTotals(totals);
+      setFilteredTotalsLoading(false);
+    }
+
+    loadFilteredTotals();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [filtersHydrated, activeFilters, reloadSignal]);
 
   // Cập nhật TẤT CẢ KOC khớp bộ lọc hiện tại (mọi trang, không chỉ trang đang xem).
   // Chạy thẳng bằng điều kiện lọc nên không cần liệt kê id -> không vướng
@@ -960,6 +1065,9 @@ export default function KocListPage() {
         resetLayoutSignal={resetColumnSignal}
         loading={loading}
         totalFilteredCount={totalKocCount}
+        filteredTotals={filteredTotals}
+        filteredTotalsLoading={filteredTotalsLoading}
+        sumFields={SUM_FIELDS}
         onBulkUpdateAllFiltered={bulkUpdateAllFiltered}
         onBulkDeleteAllFiltered={bulkDeleteAllFiltered}
         leadingActions={
