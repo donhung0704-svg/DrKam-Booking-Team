@@ -112,35 +112,48 @@ function getVietnamMonthRangeIso(monthStart: string, nextMonth: string) {
   };
 }
 
+// Tải toàn bộ bảng lớn: đếm số dòng trước rồi tải các trang SONG SONG theo lô
+// (nhanh hơn nhiều so với tải tuần tự từng trang một trên bảng ~50k dòng).
 async function loadAllRows(
+  countQuery: PromiseLike<any>,
   fetchPage: (from: number, to: number) => PromiseLike<any>
 ) {
-  const allRows: DbRow[] = [];
-  const pageSize = 1000;
+  const { count, error: countError } = await countQuery;
 
-  for (let from = 0; ; from += pageSize) {
-    const to = from + pageSize - 1;
-    const result = await fetchPage(from, to);
-
-    if (result.error) {
-      return {
-        data: allRows,
-        error: result.error,
-      };
-    }
-
-    const rows = result.data || [];
-    allRows.push(...rows);
-
-    if (rows.length < pageSize) {
-      break;
-    }
+  if (countError) {
+    return { data: [] as DbRow[], error: countError };
   }
 
-  return {
-    data: allRows,
-    error: null,
-  };
+  const pageSize = 1000;
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+
+  const allRows: DbRow[] = [];
+  let firstError: any = null;
+
+  // Giới hạn số request chạy đồng thời để không mở quá nhiều kết nối cùng lúc
+  const concurrency = 8;
+
+  for (let start = 0; start < totalPages; start += concurrency) {
+    const batch = [];
+
+    for (let page = start; page < Math.min(start + concurrency, totalPages); page++) {
+      batch.push(fetchPage(page * pageSize, page * pageSize + pageSize - 1));
+    }
+
+    const results = await Promise.all(batch);
+
+    for (const result of results) {
+      if (result.error) {
+        firstError = firstError || result.error;
+        continue;
+      }
+      allRows.push(...(result.data || []));
+    }
+
+    if (firstError) break;
+  }
+
+  return { data: allRows, error: firstError };
 }
 
 function isDateInRange(value: unknown, startDate: string, endDate: string) {
@@ -226,20 +239,30 @@ export default async function Home() {
     paidBookingTotalResult,
     bookingThisMonthResult,
   ] = await Promise.all([
-    loadAllRows((from, to) =>
-      supabase
-        .from("koc")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(from, to)
+    loadAllRows(
+      supabase.from("koc").select("id", { count: "exact", head: true }),
+      (from, to) =>
+        supabase
+          .from("koc")
+          .select(
+            "id, created_at, status, new_contact_date, koc_code, tier, Id_tiktok_Ten_fb, name, phone"
+          )
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .range(from, to)
     ),
 
-    loadAllRows((from, to) =>
-      supabase
-        .from("bookings")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(from, to)
+    loadAllRows(
+      supabase.from("bookings").select("id", { count: "exact", head: true }),
+      (from, to) =>
+        supabase
+          .from("bookings")
+          .select(
+            "id, koc_id, employee_id, booking_type, expected_post_date, actual_post_date, status_booking, cast_price"
+          )
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .range(from, to)
     ),
 
     supabase
