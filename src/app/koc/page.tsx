@@ -440,63 +440,48 @@ export default function KocListPage() {
 
     let cancelled = false;
 
+    // Chờ một chút để câu tải danh sách trang chạy trước, tránh 2 câu quét
+    // nặng chạy cùng lúc gây "statement timeout".
+    const timer = setTimeout(loadFilteredTotals, 700);
+
     async function loadFilteredTotals() {
       setFilteredTotalsLoading(true);
 
-      // Đếm số dòng khớp bộ lọc
-      let countQuery = supabase
-        .from("koc")
-        .select("id", { count: "exact", head: true });
-      activeFilters.forEach((condition) => {
-        countQuery = applyConditionToQuery(countQuery, condition);
-      });
-
-      const { count, error: countError } = await countQuery;
-
-      if (cancelled) return;
-      if (countError) {
-        setFilteredTotals(null);
-        setFilteredTotalsLoading(false);
-        return;
-      }
-
       const pageSizeInner = 1000;
-      const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSizeInner));
       const selectCols = `id, ${SUM_FIELDS.join(", ")}`;
       const totals: Record<string, number> = {};
       SUM_FIELDS.forEach((field) => (totals[field] = 0));
 
-      const concurrency = 8;
+      // Không đếm trước (câu đếm rất nặng khi lọc ILIKE). Tải lần lượt từng
+      // trang cho tới khi trang trả về ít hơn pageSize -> đã hết dữ liệu.
+      for (let page = 0; ; page++) {
+        let q = supabase
+          .from("koc")
+          .select(selectCols)
+          .order("id", { ascending: true })
+          .range(page * pageSizeInner, page * pageSizeInner + pageSizeInner - 1);
+        activeFilters.forEach((condition) => {
+          q = applyConditionToQuery(q, condition);
+        });
 
-      for (let start = 0; start < totalPages; start += concurrency) {
-        const batch = [];
-        for (
-          let page = start;
-          page < Math.min(start + concurrency, totalPages);
-          page++
-        ) {
-          let q = supabase
-            .from("koc")
-            .select(selectCols)
-            .order("id", { ascending: true })
-            .range(page * pageSizeInner, page * pageSizeInner + pageSizeInner - 1);
-          activeFilters.forEach((condition) => {
-            q = applyConditionToQuery(q, condition);
-          });
-          batch.push(q);
-        }
+        const { data, error } = await q;
 
-        const results = await Promise.all(batch);
         if (cancelled) return;
-
-        for (const result of results) {
-          if (result.error) continue;
-          (result.data || []).forEach((row: DbRow) => {
-            SUM_FIELDS.forEach((field) => {
-              totals[field] += toSumNumber(row[field]);
-            });
-          });
+        if (error) {
+          // Lỗi (vd timeout) -> không hiển thị tổng bộ lọc, không chặn bảng
+          setFilteredTotals(null);
+          setFilteredTotalsLoading(false);
+          return;
         }
+
+        const rows: DbRow[] = data || [];
+        rows.forEach((row) => {
+          SUM_FIELDS.forEach((field) => {
+            totals[field] += toSumNumber(row[field]);
+          });
+        });
+
+        if (rows.length < pageSizeInner) break;
       }
 
       if (cancelled) return;
@@ -504,9 +489,8 @@ export default function KocListPage() {
       setFilteredTotalsLoading(false);
     }
 
-    loadFilteredTotals();
-
     return () => {
+      clearTimeout(timer);
       cancelled = true;
     };
   }, [filtersHydrated, activeFilters, reloadSignal]);
