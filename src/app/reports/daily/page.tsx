@@ -53,9 +53,12 @@ export default function PicReportPage() {
       try {
         // Supabase giới hạn 1000 dòng/lần -> phải phân trang để lấy đủ dữ liệu
         const [bookingRows, kocRows, employeeRows] = await Promise.all([
-          loadAllRows("bookings"),
-          loadAllRows("koc"),
-          loadAllRows("employees", (query) => query.eq("active", true)),
+          loadAllRows("bookings", "id, employee_id, created_at, cast_price"),
+          loadAllRows(
+            "koc",
+            "id, employee_id, created_at, new_contact_date, status, booking_date, number_of_videos, tier, gmv"
+          ),
+          loadAllRows("employees", "*", (query) => query.eq("active", true)),
         ]);
 
         setBookings(bookingRows);
@@ -595,34 +598,48 @@ function NoteTextarea({
 }
 
 // Tải hết dữ liệu từ Supabase (mặc định trả tối đa 1000 dòng/lần -> phân trang)
+// Tải hết dữ liệu: đếm số dòng trước rồi tải các trang SONG SONG theo lô
+// (nhanh hơn nhiều so với tải tuần tự, nhất là khi DB ở xa - Seoul).
+// columns: chỉ lấy cột cần dùng để giảm dung lượng truyền.
 async function loadAllRows(
   table: string,
+  columns: string = "*",
   applyFilter?: (query: any) => any
 ): Promise<DbRow[]> {
   const pageSize = 1000;
+
+  let countQuery: any = supabase
+    .from(table)
+    .select("id", { count: "exact", head: true });
+  if (applyFilter) countQuery = applyFilter(countQuery);
+
+  const { count, error: countError } = await countQuery;
+  if (countError) throw new Error(countError.message);
+
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
   const rows: DbRow[] = [];
-  let from = 0;
+  const concurrency = 8;
 
-  for (;;) {
-    let query: any = supabase.from(table).select("*");
-
-    if (applyFilter) {
-      query = applyFilter(query);
+  for (let start = 0; start < totalPages; start += concurrency) {
+    const batch = [];
+    for (
+      let page = start;
+      page < Math.min(start + concurrency, totalPages);
+      page++
+    ) {
+      let query: any = supabase.from(table).select(columns);
+      if (applyFilter) query = applyFilter(query);
+      query = query
+        .order("id", { ascending: true })
+        .range(page * pageSize, page * pageSize + pageSize - 1);
+      batch.push(query);
     }
 
-    query = query
-      .order("id", { ascending: true })
-      .range(from, from + pageSize - 1);
-
-    const { data, error } = await query;
-
-    if (error) throw new Error(error.message);
-
-    const batch: DbRow[] = data || [];
-    rows.push(...batch);
-
-    if (batch.length < pageSize) break;
-    from += pageSize;
+    const results = await Promise.all(batch);
+    for (const result of results) {
+      if (result.error) throw new Error(result.error.message);
+      rows.push(...((result.data as DbRow[]) || []));
+    }
   }
 
   return rows;
