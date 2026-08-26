@@ -5,7 +5,7 @@ import KocAdvancedTable from "@/components/KocAdvancedTable";
 import DatePickerInput from "@/components/DatePickerInput";
 import SavedFiltersDropdown from "@/components/SavedFiltersDropdown";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 
 type DbRow = Record<string, any>;
@@ -201,6 +201,10 @@ export default function KocListPage() {
     number
   > | null>(null);
   const [filteredTotalsLoading, setFilteredTotalsLoading] = useState(false);
+  // Điều phối để 2 câu quét nặng (danh sách + tổng bộ lọc) KHÔNG chạy song song
+  // trên server free (tránh statement timeout).
+  const mainBusyRef = useRef(false); // đang tải danh sách trang?
+  const queryGenRef = useRef(0); // tăng mỗi lần tải danh sách -> hủy tổng cũ
 
   const [filterFieldKey, setFilterFieldKey] = useState(filterFields[0].key);
   const [filterOperator, setFilterOperator] = useState<FilterOperator>("contains");
@@ -393,6 +397,10 @@ export default function KocListPage() {
       setLoading(true);
       setMessage("");
 
+      // Đánh dấu đang chạy (đồng bộ) + đổi generation để hủy câu tổng đang chạy
+      mainBusyRef.current = true;
+      queryGenRef.current += 1;
+
       const from = pageIndex * pageSize;
       const to = from + pageSize - 1;
 
@@ -431,6 +439,7 @@ export default function KocListPage() {
         setTotalKocCount(count || 0);
       }
 
+      mainBusyRef.current = false;
       setLoading(false);
     }
 
@@ -444,11 +453,19 @@ export default function KocListPage() {
 
     let cancelled = false;
 
-    // Chờ một chút để câu tải danh sách trang chạy trước, tránh 2 câu quét
-    // nặng chạy cùng lúc gây "statement timeout".
-    const timer = setTimeout(loadFilteredTotals, 700);
-
     async function loadFilteredTotals() {
+      // 1) Đợi câu tải DANH SÁCH chạy xong để KHÔNG chạy song song 2 câu quét
+      //    nặng (nguyên nhân statement timeout trên server free).
+      for (let i = 0; i < 100 && mainBusyRef.current; i++) {
+        await new Promise((r) => setTimeout(r, 150));
+        if (cancelled) return;
+      }
+      if (cancelled) return;
+
+      // 2) Ghi nhớ generation hiện tại; nếu có câu danh sách MỚI chạy giữa chừng
+      //    (đổi lọc/trang) -> hủy để tránh chồng lấn.
+      const myGen = queryGenRef.current;
+
       setFilteredTotalsLoading(true);
 
       const pageSizeInner = 1000;
@@ -470,7 +487,10 @@ export default function KocListPage() {
 
         const { data, error } = await q;
 
-        if (cancelled) return;
+        if (cancelled || myGen !== queryGenRef.current) {
+          setFilteredTotalsLoading(false);
+          return;
+        }
         if (error) {
           // Lỗi (vd timeout) -> không hiển thị tổng bộ lọc, không chặn bảng
           setFilteredTotals(null);
@@ -493,8 +513,9 @@ export default function KocListPage() {
       setFilteredTotalsLoading(false);
     }
 
+    loadFilteredTotals();
+
     return () => {
-      clearTimeout(timer);
       cancelled = true;
     };
   }, [filtersHydrated, activeFilters, reloadSignal]);
