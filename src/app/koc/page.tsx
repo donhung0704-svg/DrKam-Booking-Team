@@ -410,6 +410,10 @@ export default function KocListPage() {
           .order("created_at", { ascending: false });
       }
 
+      // Tie-break theo id (DUY NHẤT) -> phân trang ổn định, không để 1 KOC
+      // xuất hiện ở nhiều trang (nguyên nhân "KOC trùng" khi cột sắp xếp bị tie).
+      query = query.order("id", { ascending: true });
+
       query = query.range(from, to);
 
       activeFilters.forEach((condition) => {
