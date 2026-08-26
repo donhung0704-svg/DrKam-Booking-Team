@@ -118,8 +118,9 @@ export default function NewBookingPage() {
     setSelectedEmployeeId(koc.employee_id ? String(koc.employee_id) : "");
   }
 
-  // Người dùng tự đổi KOC trong ô tìm kiếm -> điền lại theo KOC mới
-  function handleKocChange(kocId: string) {
+  // Người dùng tự đổi KOC trong ô tìm kiếm -> điền lại theo KOC mới.
+  // Ở chế độ tìm server, KocSearchSelect gửi kèm object KOC (koc) đã chọn.
+  function handleKocChange(kocId: string, koc?: DbRow | null) {
     setSelectedKocId(kocId);
     if (!kocId) {
       prefilledKocRef.current = "";
@@ -128,9 +129,18 @@ export default function NewBookingPage() {
       setSelectedEmployeeId("");
       return;
     }
+    // Nhớ KOC vào danh sách để hiển thị (địa chỉ gốc, tên...)
+    if (koc) {
+      setKocs((prev) =>
+        prev.some((item) => String(item.id) === String(koc.id))
+          ? prev
+          : [koc, ...prev]
+      );
+    }
     if (kocId === prefilledKocRef.current) return;
-    const koc = kocs.find((item) => String(item.id) === String(kocId));
-    if (koc) prefillFromKoc(koc);
+    const found =
+      koc || kocs.find((item) => String(item.id) === String(kocId));
+    if (found) prefillFromKoc(found);
   }
 
   // Mở từ ?koc_id=... : ngay khi KOC đó có mặt trong danh sách (do loadData
@@ -182,19 +192,14 @@ export default function NewBookingPage() {
   }, [initialKocId, kocs]);
 
   useEffect(() => {
-    // Tải nhân sự RIÊNG và hiển thị NGAY (nhẹ, ~0.3s) - không đợi 49k KOC
+    // Chỉ tải nhân sự (nhẹ). KOC KHÔNG tải sẵn nữa -> tìm trực tiếp trên
+    // server khi gõ (xem searchKocs) nên form mở nhanh và luôn tìm được KOC.
     (async () => {
       const { data } = await supabase
         .from("employees")
         .select("id, employee_code, full_name, email, phone, role, active, manager_id")
         .limit(1000);
       setEmployees(data || []);
-    })();
-
-    // Tải danh sách KOC (song song, có thể lâu hơn) rồi cập nhật sau
-    (async () => {
-      const kocResult = await loadAllKocsForBookingForm();
-      setKocs(kocResult.data || []);
     })();
   }, []);
 
@@ -334,6 +339,7 @@ export default function NewBookingPage() {
                 kocs={kocs}
                 defaultValue={initialKocId}
                 onChange={handleKocChange}
+                onSearch={searchKocs}
                 placeholder="Gõ ID TikTok/Tên FB để tìm KOC..."
               />
             </CompactField>
@@ -600,54 +606,27 @@ export default function NewBookingPage() {
 }
 
 
-async function loadAllKocsForBookingForm() {
-  const pageSize = 1000;
-  const columns =
-    "id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link, employee_id";
+// Tìm KOC TRỰC TIẾP trên server theo từ khóa (ID TikTok/Tên FB, tên, SĐT).
+// Dùng index trigram nên nhanh; không cần tải sẵn toàn bộ KOC.
+async function searchKocs(keyword: string): Promise<DbRow[]> {
+  // Bỏ ký tự phá cú pháp bộ lọc .or() của PostgREST
+  const safe = keyword.trim().replace(/[(),]/g, " ").trim();
+  if (!safe) return [];
 
-  // Đếm số dòng trước rồi tải các trang SONG SONG theo lô (nhanh hơn nhiều
-  // so với tải tuần tự trên ~49k KOC, nhất là khi DB ở Seoul).
-  const { count, error: countError } = await supabase
+  const like = `%${safe}%`;
+
+  const { data, error } = await supabase
     .from("koc")
-    .select("id", { count: "exact", head: true });
+    .select(
+      "id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link, employee_id"
+    )
+    .or(
+      `Id_tiktok_Ten_fb.ilike.${like},name.ilike.${like},phone.ilike.${like}`
+    )
+    .limit(30);
 
-  if (countError) {
-    return { data: [], error: countError };
-  }
-
-  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
-  const allRows: DbRow[] = [];
-  const concurrency = 8;
-
-  for (let start = 0; start < totalPages; start += concurrency) {
-    const batch = [];
-    for (
-      let page = start;
-      page < Math.min(start + concurrency, totalPages);
-      page++
-    ) {
-      batch.push(
-        supabase
-          .from("koc")
-          .select(columns)
-          .order("id", { ascending: true })
-          .range(page * pageSize, page * pageSize + pageSize - 1)
-      );
-    }
-
-    const results = await Promise.all(batch);
-    for (const result of results) {
-      if (result.error) {
-        return { data: [], error: result.error };
-      }
-      allRows.push(...(result.data || []));
-    }
-  }
-
-  return {
-    data: allRows,
-    error: null,
-  };
+  if (error) return [];
+  return data || [];
 }
 
 function CompactSection({
