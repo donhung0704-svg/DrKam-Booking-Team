@@ -7,15 +7,18 @@
 --            CHUYEN booking cua cac dong thua sang dong giu (khong mat booking),
 --            roi XOA cac dong thua. Cuoi cung tao unique index chan trung tai phat.
 --
--- LAM 2 BUOC:
---   1) Chay PHAN A (xem truoc) de biet co bao nhieu nhom/dong se xoa.
---   2) Chay PHAN B (thuc thi) de don. PHAN B khong hoan tac duoc.
--- (Trong SQL Editor: boi den phan can chay roi bam Run.)
+-- CACH CHAY (moi buoc boi den roi bam Run):
+--   BUOC 1: xem truoc so luong (PHAN A)
+--   BUOC 2: chuyen booking (PHAN B1)
+--   BUOC 3: xoa dong thua (PHAN B2)
+--   BUOC 4: tao unique index chan trung (PHAN B3)
+--   BUOC 5: kiem tra (PHAN C) -> phai tra ve 0 dong
+-- Cac cau dung CTE tu chua (khong dung bang tam) nen chay rieng tung cau deu OK.
+-- Thu hang GIONG NHAU o B1 va B2 nen giu/xoa nhat quan.
 -- ============================================================
 
 
 -- =================== PHAN A: XEM TRUOC ===================
--- Bao nhieu nhom trung va bao nhieu dong thua se bi xoa?
 SELECT
   count(*)                 AS so_nhom_trung,
   sum(so_dong)             AS tong_dong_lien_quan,
@@ -29,57 +32,72 @@ FROM (
 ) t;
 
 
--- =================== PHAN B: THUC THI (don trung) ===================
--- Boi den TU dong "BEGIN;" DEN het roi bam Run.
-BEGIN;
-
--- Xep hang trong moi nhom trung: dong nhieu du lieu nhat -> thu_tu = 1 (GIU)
-CREATE TEMP TABLE _dedupe ON COMMIT DROP AS
+-- =================== PHAN B1: CHUYEN BOOKING sang dong GIU ===================
 WITH trung AS (
   SELECT lower(btrim("Id_tiktok_Ten_fb")) AS id_chuan
   FROM koc
   WHERE btrim(coalesce("Id_tiktok_Ten_fb", '')) <> ''
-  GROUP BY 1
-  HAVING count(*) > 1
-)
-SELECT
-  k.id,
-  lower(btrim(k."Id_tiktok_Ten_fb")) AS id_chuan,
-  row_number() OVER (
-    PARTITION BY lower(btrim(k."Id_tiktok_Ten_fb"))
-    ORDER BY
-      ( (k.gmv            IS NOT NULL AND k.gmv::text            <> '' AND k.gmv::text            <> '0')::int
-      + (k.gmv_thang      IS NOT NULL AND k.gmv_thang::text      <> '' AND k.gmv_thang::text      <> '0')::int
-      + (k.monthly_videos IS NOT NULL AND k.monthly_videos::text <> '' AND k.monthly_videos::text <> '0')::int
-      + (k.employee_id    IS NOT NULL)::int
-      + (k.booking_date   IS NOT NULL)::int
-      + (btrim(coalesce(k.name,  '')) <> '')::int
-      + (btrim(coalesce(k.phone, '')) <> '')::int
-      ) DESC,
-      k.created_at ASC
-  ) AS thu_tu
-FROM koc k
-JOIN trung t ON t.id_chuan = lower(btrim(k."Id_tiktok_Ten_fb"));
-
--- Chuyen Booking cua cac dong SE XOA sang dong duoc GIU
+  GROUP BY 1 HAVING count(*) > 1
+),
+xep_hang AS (
+  SELECT k.id, lower(btrim(k."Id_tiktok_Ten_fb")) AS id_chuan,
+    row_number() OVER (
+      PARTITION BY lower(btrim(k."Id_tiktok_Ten_fb"))
+      ORDER BY
+        ( (k.gmv            IS NOT NULL AND k.gmv::text            <> '' AND k.gmv::text            <> '0')::int
+        + (k.gmv_thang      IS NOT NULL AND k.gmv_thang::text      <> '' AND k.gmv_thang::text      <> '0')::int
+        + (k.monthly_videos IS NOT NULL AND k.monthly_videos::text <> '' AND k.monthly_videos::text <> '0')::int
+        + (k.employee_id    IS NOT NULL)::int
+        + (k.booking_date   IS NOT NULL)::int
+        + (btrim(coalesce(k.name,  '')) <> '')::int
+        + (btrim(coalesce(k.phone, '')) <> '')::int
+        ) DESC, k.created_at ASC, k.id ASC
+    ) AS thu_tu
+  FROM koc k JOIN trung t ON t.id_chuan = lower(btrim(k."Id_tiktok_Ten_fb"))
+),
+giu AS (SELECT id_chuan, id FROM xep_hang WHERE thu_tu = 1),
+bo  AS (SELECT id_chuan, id FROM xep_hang WHERE thu_tu > 1)
 UPDATE bookings b
-SET koc_id = g.id
-FROM _dedupe d
-JOIN _dedupe g ON g.id_chuan = d.id_chuan AND g.thu_tu = 1
-WHERE d.thu_tu > 1 AND b.koc_id = d.id;
+SET koc_id = giu.id
+FROM bo JOIN giu ON giu.id_chuan = bo.id_chuan
+WHERE b.koc_id = bo.id;
 
--- Xoa cac dong thua
-DELETE FROM koc WHERE id IN (SELECT id FROM _dedupe WHERE thu_tu > 1);
 
--- Chan trung TAI PHAT: cung ID (khong phan biet hoa/thuong + trim) chi 1 dong
+-- =================== PHAN B2: XOA cac dong thua ===================
+-- (Chay SAU PHAN B1. Khong hoan tac duoc.)
+WITH trung AS (
+  SELECT lower(btrim("Id_tiktok_Ten_fb")) AS id_chuan
+  FROM koc
+  WHERE btrim(coalesce("Id_tiktok_Ten_fb", '')) <> ''
+  GROUP BY 1 HAVING count(*) > 1
+),
+xep_hang AS (
+  SELECT k.id,
+    row_number() OVER (
+      PARTITION BY lower(btrim(k."Id_tiktok_Ten_fb"))
+      ORDER BY
+        ( (k.gmv            IS NOT NULL AND k.gmv::text            <> '' AND k.gmv::text            <> '0')::int
+        + (k.gmv_thang      IS NOT NULL AND k.gmv_thang::text      <> '' AND k.gmv_thang::text      <> '0')::int
+        + (k.monthly_videos IS NOT NULL AND k.monthly_videos::text <> '' AND k.monthly_videos::text <> '0')::int
+        + (k.employee_id    IS NOT NULL)::int
+        + (k.booking_date   IS NOT NULL)::int
+        + (btrim(coalesce(k.name,  '')) <> '')::int
+        + (btrim(coalesce(k.phone, '')) <> '')::int
+        ) DESC, k.created_at ASC, k.id ASC
+    ) AS thu_tu
+  FROM koc k JOIN trung t ON t.id_chuan = lower(btrim(k."Id_tiktok_Ten_fb"))
+)
+DELETE FROM koc
+WHERE id IN (SELECT id FROM xep_hang WHERE thu_tu > 1);
+
+
+-- =================== PHAN B3: CHAN TRUNG TAI PHAT ===================
 CREATE UNIQUE INDEX IF NOT EXISTS koc_id_tiktok_ten_fb_unique
   ON koc (lower(btrim("Id_tiktok_Ten_fb")))
   WHERE btrim(coalesce("Id_tiktok_Ten_fb", '')) <> '';
 
-COMMIT;
 
-
--- =================== KIEM TRA (phai tra ve 0 dong) ===================
+-- =================== PHAN C: KIEM TRA (phai tra ve 0 dong) ===================
 SELECT lower(btrim("Id_tiktok_Ten_fb")) AS id_chuan, count(*)
 FROM koc
 WHERE btrim(coalesce("Id_tiktok_Ten_fb", '')) <> ''
