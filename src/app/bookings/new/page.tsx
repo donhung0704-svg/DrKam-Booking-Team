@@ -182,21 +182,20 @@ export default function NewBookingPage() {
   }, [initialKocId, kocs]);
 
   useEffect(() => {
-    async function loadData() {
-      const [kocResult, employeeResult] = await Promise.all([
-        loadAllKocsForBookingForm(),
+    // Tải nhân sự RIÊNG và hiển thị NGAY (nhẹ, ~0.3s) - không đợi 49k KOC
+    (async () => {
+      const { data } = await supabase
+        .from("employees")
+        .select("id, employee_code, full_name, email, phone, role, active, manager_id")
+        .limit(1000);
+      setEmployees(data || []);
+    })();
 
-        supabase
-          .from("employees")
-          .select("id, employee_code, full_name, email, phone, role, active, manager_id")
-          .limit(1000),
-      ]);
-
+    // Tải danh sách KOC (song song, có thể lâu hơn) rồi cập nhật sau
+    (async () => {
+      const kocResult = await loadAllKocsForBookingForm();
       setKocs(kocResult.data || []);
-      setEmployees(employeeResult.data || []);
-    }
-
-    loadData();
+    })();
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -602,33 +601,46 @@ export default function NewBookingPage() {
 
 
 async function loadAllKocsForBookingForm() {
-  const allRows: DbRow[] = [];
   const pageSize = 1000;
+  const columns =
+    "id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link, employee_id";
 
-  for (let from = 0; ; from += pageSize) {
-    const to = from + pageSize - 1;
+  // Đếm số dòng trước rồi tải các trang SONG SONG theo lô (nhanh hơn nhiều
+  // so với tải tuần tự trên ~49k KOC, nhất là khi DB ở Seoul).
+  const { count, error: countError } = await supabase
+    .from("koc")
+    .select("id", { count: "exact", head: true });
 
-    const { data, error } = await supabase
-      .from("koc")
-      .select(
-        "id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link, employee_id"
-      )
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: true })
-      .range(from, to);
+  if (countError) {
+    return { data: [], error: countError };
+  }
 
-    if (error) {
-      return {
-        data: [],
-        error,
-      };
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+  const allRows: DbRow[] = [];
+  const concurrency = 8;
+
+  for (let start = 0; start < totalPages; start += concurrency) {
+    const batch = [];
+    for (
+      let page = start;
+      page < Math.min(start + concurrency, totalPages);
+      page++
+    ) {
+      batch.push(
+        supabase
+          .from("koc")
+          .select(columns)
+          .order("id", { ascending: true })
+          .range(page * pageSize, page * pageSize + pageSize - 1)
+      );
     }
 
-    const rows = data || [];
-    allRows.push(...rows);
-
-    if (rows.length < pageSize) {
-      break;
+    const results = await Promise.all(batch);
+    for (const result of results) {
+      if (result.error) {
+        return { data: [], error: result.error };
+      }
+      allRows.push(...(result.data || []));
     }
   }
 
