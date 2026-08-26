@@ -1518,48 +1518,61 @@ function pctColor(actual: number, kpi: number, cost = false) {
 // Tải hết dữ liệu: đếm số dòng trước rồi tải các trang SONG SONG theo lô
 // (nhanh hơn nhiều so với tải tuần tự, nhất là khi DB ở xa - Seoul).
 // columns: chỉ lấy cột cần dùng để giảm dung lượng truyền.
+// Tải hết dữ liệu nhanh & KHÔNG timeout: chia không gian id (UUID) thành 8 dải
+// theo ký tự đầu, mỗi dải phân trang KEYSET (WHERE id > id_cuối) riêng, 8 dải
+// chạy SONG SONG. Keyset dùng index id nên mỗi trang nhẹ (không quét OFFSET),
+// 8 dải song song rút ngắn thời gian còn ~1/8. columns PHẢI có "id".
 async function loadAllRows(
   table: string,
   columns: string = "*",
   applyFilter?: (query: any) => any
 ): Promise<DbRow[]> {
   const pageSize = 1000;
+  // Ranh giới 8 dải là UUID hợp lệ (cột id kiểu uuid) theo ký tự hex đầu.
+  const starts = [
+    "00000000-0000-0000-0000-000000000000",
+    "20000000-0000-0000-0000-000000000000",
+    "40000000-0000-0000-0000-000000000000",
+    "60000000-0000-0000-0000-000000000000",
+    "80000000-0000-0000-0000-000000000000",
+    "a0000000-0000-0000-0000-000000000000",
+    "c0000000-0000-0000-0000-000000000000",
+    "e0000000-0000-0000-0000-000000000000",
+  ];
 
-  let countQuery: any = supabase
-    .from(table)
-    .select("id", { count: "exact", head: true });
-  if (applyFilter) countQuery = applyFilter(countQuery);
+  async function loadRange(lo: string, hi: string | null): Promise<DbRow[]> {
+    const out: DbRow[] = [];
+    let lastId: string | null = null;
 
-  const { count, error: countError } = await countQuery;
-  if (countError) throw new Error(countError.message);
-
-  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
-  const rows: DbRow[] = [];
-  const concurrency = 8;
-
-  for (let start = 0; start < totalPages; start += concurrency) {
-    const batch = [];
-    for (
-      let page = start;
-      page < Math.min(start + concurrency, totalPages);
-      page++
-    ) {
-      let query: any = supabase.from(table).select(columns);
-      if (applyFilter) query = applyFilter(query);
-      query = query
+    for (;;) {
+      let query: any = supabase
+        .from(table)
+        .select(columns)
         .order("id", { ascending: true })
-        .range(page * pageSize, page * pageSize + pageSize - 1);
-      batch.push(query);
+        .limit(pageSize);
+
+      if (applyFilter) query = applyFilter(query);
+      query = lastId === null ? query.gte("id", lo) : query.gt("id", lastId);
+      if (hi !== null) query = query.lt("id", hi);
+
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+
+      const batch: DbRow[] = data || [];
+      out.push(...batch);
+
+      if (batch.length < pageSize) break;
+      lastId = String(batch[batch.length - 1].id);
     }
 
-    const results = await Promise.all(batch);
-    for (const result of results) {
-      if (result.error) throw new Error(result.error.message);
-      rows.push(...((result.data as DbRow[]) || []));
-    }
+    return out;
   }
 
-  return rows;
+  const results = await Promise.all(
+    starts.map((lo, i) => loadRange(lo, starts[i + 1] ?? null))
+  );
+
+  return results.flat();
 }
 
 function getEmployeeDisplayName(employee?: DbRow | null) {
