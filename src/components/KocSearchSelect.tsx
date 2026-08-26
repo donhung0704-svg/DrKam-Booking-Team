@@ -10,7 +10,10 @@ type KocSearchSelectProps = {
   defaultValue?: string | null;
   placeholder?: string;
   disabled?: boolean;
-  onChange?: (kocId: string) => void;
+  onChange?: (kocId: string, koc?: DbRow | null) => void;
+  // Nếu có: tìm KOC TRỰC TIẾP trên server khi gõ (không cần tải sẵn toàn bộ KOC).
+  // Trả về danh sách KOC khớp từ khóa.
+  onSearch?: (query: string) => Promise<DbRow[]>;
 };
 
 export default function KocSearchSelect({
@@ -20,6 +23,7 @@ export default function KocSearchSelect({
   placeholder = "Gõ ID TikTok/Tên FB để tìm KOC...",
   disabled,
   onChange,
+  onSearch,
 }: KocSearchSelectProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -27,18 +31,33 @@ export default function KocSearchSelect({
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
 
-  // Báo cho form cha khi KOC được chọn/đổi/xóa (kể cả lần đầu)
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
-  useEffect(() => {
-    onChangeRef.current?.(selectedId);
-  }, [selectedId]);
+  // Chế độ server: kết quả tìm + trạng thái đang tìm
+  const [serverResults, setServerResults] = useState<DbRow[]>([]);
+  const [searching, setSearching] = useState(false);
+  // Giữ object của KOC đã chọn (để hiển thị "Đã chọn" kể cả khi tìm server)
+  const [selectedKocObj, setSelectedKocObj] = useState<DbRow | null>(null);
 
+  // KOC đang chọn: ưu tiên object đã chọn, rồi tới danh sách props, rồi kết quả server
   const selectedKoc = useMemo(() => {
     if (!selectedId) return null;
+    if (selectedKocObj && String(selectedKocObj.id) === String(selectedId)) {
+      return selectedKocObj;
+    }
+    return (
+      kocs.find((koc) => String(koc.id) === String(selectedId)) ||
+      serverResults.find((koc) => String(koc.id) === String(selectedId)) ||
+      null
+    );
+  }, [kocs, serverResults, selectedId, selectedKocObj]);
 
-    return kocs.find((koc) => String(koc.id) === String(selectedId)) || null;
-  }, [kocs, selectedId]);
+  // Báo cho form cha khi KOC được chọn/đổi/xóa (kèm object nếu có)
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const selectedKocRef = useRef<DbRow | null>(null);
+  selectedKocRef.current = selectedKoc;
+  useEffect(() => {
+    onChangeRef.current?.(selectedId, selectedKocRef.current);
+  }, [selectedId]);
 
   useEffect(() => {
     if (!selectedKoc) return;
@@ -66,7 +85,47 @@ export default function KocSearchSelect({
     };
   }, [selectedKoc]);
 
+  // Tìm KOC trên server (debounce) khi ở chế độ onSearch
+  useEffect(() => {
+    if (!onSearch || !open) return;
+
+    const keyword = query.trim();
+
+    // Không tìm khi ô đang hiển thị đúng tên KOC đã chọn (vừa chọn xong)
+    if (selectedKoc && keyword === getKocDisplayName(selectedKoc)) return;
+
+    if (keyword.length < 2) {
+      setServerResults([]);
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
+    let cancelled = false;
+
+    const timer = setTimeout(async () => {
+      try {
+        const results = await onSearch(keyword);
+        if (!cancelled) setServerResults(results || []);
+      } catch {
+        if (!cancelled) setServerResults([]);
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query, open, onSearch, selectedKoc]);
+
   const filteredKocs = useMemo(() => {
+    // Chế độ server: dùng thẳng kết quả server
+    if (onSearch) {
+      return serverResults.slice(0, 30);
+    }
+
     const keyword = normalizeSearchText(query);
 
     if (!keyword) {
@@ -90,7 +149,7 @@ export default function KocSearchSelect({
         return haystack.includes(keyword);
       })
       .slice(0, 30);
-  }, [kocs, query]);
+  }, [kocs, query, onSearch, serverResults]);
 
   function handleInputChange(value: string) {
     setQuery(value);
@@ -98,10 +157,13 @@ export default function KocSearchSelect({
 
     if (!value.trim()) {
       setSelectedId("");
+      setSelectedKocObj(null);
     }
   }
 
   function handleSelect(koc: DbRow) {
+    setSelectedKocObj(koc);
+    selectedKocRef.current = koc;
     setSelectedId(String(koc.id || ""));
     setQuery(getKocDisplayName(koc));
     setOpen(false);
@@ -109,7 +171,9 @@ export default function KocSearchSelect({
 
   function clearSelectedKoc() {
     setSelectedId("");
+    setSelectedKocObj(null);
     setQuery("");
+    setServerResults([]);
     setOpen(true);
   }
 
@@ -158,31 +222,46 @@ export default function KocSearchSelect({
 
       {open && !disabled && (
         <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 max-h-[260px] overflow-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl">
-          {filteredKocs.length === 0 && (
-            <div className="px-3 py-3 text-[12.5px] font-semibold text-red-600">
-              Không tìm thấy KOC. Kiểm tra lại ID TikTok/Tên FB.
+          {searching && (
+            <div className="px-3 py-3 text-[12.5px] font-semibold text-slate-500">
+              Đang tìm KOC...
             </div>
           )}
 
-          {filteredKocs.map((koc) => (
-            <button
-              key={koc.id}
-              type="button"
-              onClick={() => handleSelect(koc)}
-              className={`block w-full rounded-xl px-3 py-2 text-left text-[12.5px] hover:bg-blue-50 ${
-                String(koc.id) === selectedId ? "bg-blue-50" : ""
-              }`}
-            >
-              <span className="block font-black text-slate-950">
-                {koc.Id_tiktok_Ten_fb || koc.name || koc.koc_code || "Chưa rõ ID"}
-              </span>
+          {!searching && onSearch && query.trim().length < 2 && (
+            <div className="px-3 py-3 text-[12.5px] font-semibold text-slate-500">
+              Gõ ít nhất 2 ký tự để tìm KOC.
+            </div>
+          )}
 
-              <span className="mt-0.5 block text-[11px] font-semibold text-slate-400">
-                {[koc.name, koc.koc_code, koc.phone].filter(Boolean).join(" · ") ||
-                  "Không có thông tin phụ"}
-              </span>
-            </button>
-          ))}
+          {!searching &&
+            filteredKocs.length === 0 &&
+            (!onSearch || query.trim().length >= 2) && (
+              <div className="px-3 py-3 text-[12.5px] font-semibold text-red-600">
+                Không tìm thấy KOC. Kiểm tra lại ID TikTok/Tên FB.
+              </div>
+            )}
+
+          {!searching &&
+            filteredKocs.map((koc) => (
+              <button
+                key={koc.id}
+                type="button"
+                onClick={() => handleSelect(koc)}
+                className={`block w-full rounded-xl px-3 py-2 text-left text-[12.5px] hover:bg-blue-50 ${
+                  String(koc.id) === selectedId ? "bg-blue-50" : ""
+                }`}
+              >
+                <span className="block font-black text-slate-950">
+                  {koc.Id_tiktok_Ten_fb || koc.name || koc.koc_code || "Chưa rõ ID"}
+                </span>
+
+                <span className="mt-0.5 block text-[11px] font-semibold text-slate-400">
+                  {[koc.name, koc.koc_code, koc.phone].filter(Boolean).join(" · ") ||
+                    "Không có thông tin phụ"}
+                </span>
+              </button>
+            ))}
         </div>
       )}
     </div>
@@ -215,7 +294,7 @@ function normalizeSearchText(value: unknown) {
 function removeVietnamese(value: string) {
   return value
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/đ/g, "d")
     .replace(/Đ/g, "D");
 }

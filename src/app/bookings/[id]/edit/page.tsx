@@ -143,6 +143,18 @@ export default function EditBookingPage() {
     setRecipientPhone(selectedKoc.phone || "");
   }, [selectedKocId, selectedKoc]);
 
+  // KocSearchSelect (chế độ tìm server) gửi kèm object KOC -> nhớ vào danh sách
+  function handleKocChange(kocId: string, koc?: DbRow | null) {
+    setSelectedKocId(kocId);
+    if (koc) {
+      setKocs((prev) =>
+        prev.some((item) => String(item.id) === String(koc.id))
+          ? prev
+          : [koc, ...prev]
+      );
+    }
+  }
+
   function addItem() {
     setItems((prev) => [
       ...prev,
@@ -173,10 +185,8 @@ export default function EditBookingPage() {
       setLoading(true);
       setMessage("");
 
-      const [bookingResult, kocResult, employeeResult] = await Promise.all([
+      const [bookingResult, employeeResult] = await Promise.all([
         supabase.from("bookings").select("*").eq("id", id).single(),
-
-        loadAllKocsForBookingForm(),
 
         supabase
           .from("employees")
@@ -191,8 +201,20 @@ export default function EditBookingPage() {
         setBooking(bookingResult.data);
       }
 
-      setKocs(kocResult.data || []);
       setEmployees(employeeResult.data || []);
+
+      // Chỉ tải KOC hiện tại của booking để hiển thị sẵn (KOC khác tìm server).
+      const kocId = bookingResult.data?.koc_id;
+      if (kocId) {
+        const { data: kocData } = await supabase
+          .from("koc")
+          .select(
+            "id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link, employee_id"
+          )
+          .eq("id", kocId)
+          .maybeSingle();
+        if (kocData) setKocs([kocData]);
+      }
 
       setLoading(false);
     }
@@ -343,7 +365,8 @@ export default function EditBookingPage() {
                 name="koc_id"
                 kocs={kocs}
                 defaultValue={booking.koc_id || ""}
-                onChange={setSelectedKocId}
+                onChange={handleKocChange}
+                onSearch={searchKocs}
                 placeholder="Gõ ID TikTok/Tên FB để tìm KOC..."
               />
             </Field>
@@ -640,39 +663,26 @@ export default function EditBookingPage() {
 }
 
 
-async function loadAllKocsForBookingForm() {
-  const allRows: DbRow[] = [];
-  const pageSize = 1000;
+// Tìm KOC TRỰC TIẾP trên server theo từ khóa (ID TikTok/Tên FB, tên, SĐT).
+// Dùng index trigram nên nhanh; không cần tải sẵn toàn bộ KOC.
+async function searchKocs(keyword: string): Promise<DbRow[]> {
+  const safe = keyword.trim().replace(/[(),]/g, " ").trim();
+  if (!safe) return [];
 
-  for (let from = 0; ; from += pageSize) {
-    const to = from + pageSize - 1;
+  const like = `%${safe}%`;
 
-    const { data, error } = await supabase
-      .from("koc")
-      .select("id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link")
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: true })
-      .range(from, to);
+  const { data, error } = await supabase
+    .from("koc")
+    .select(
+      "id, koc_code, Id_tiktok_Ten_fb, name, phone, address, tiktok_link, employee_id"
+    )
+    .or(
+      `Id_tiktok_Ten_fb.ilike.${like},name.ilike.${like},phone.ilike.${like}`
+    )
+    .limit(30);
 
-    if (error) {
-      return {
-        data: [],
-        error,
-      };
-    }
-
-    const rows = data || [];
-    allRows.push(...rows);
-
-    if (rows.length < pageSize) {
-      break;
-    }
-  }
-
-  return {
-    data: allRows,
-    error: null,
-  };
+  if (error) return [];
+  return data || [];
 }
 
 function FormSection({
