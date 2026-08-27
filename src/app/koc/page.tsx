@@ -400,6 +400,7 @@ export default function KocListPage() {
       // Đánh dấu đang chạy (đồng bộ) + đổi generation để hủy câu tổng đang chạy
       mainBusyRef.current = true;
       queryGenRef.current += 1;
+      const myGen = queryGenRef.current;
 
       const from = pageIndex * pageSize;
       const to = from + pageSize - 1;
@@ -429,6 +430,10 @@ export default function KocListPage() {
       });
 
       const { data, error, count } = await query;
+
+      // Chỉ nhận kết quả của câu MỚI NHẤT. Câu cũ (vd bị timeout, trả về muộn)
+      // -> bỏ qua để không ghi đè lỗi lên kết quả đúng của câu mới.
+      if (myGen !== queryGenRef.current) return;
 
       if (error) {
         setMessage(`Lỗi tải danh sách KOC: ${error.message}`);
