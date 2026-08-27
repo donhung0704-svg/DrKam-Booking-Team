@@ -39,9 +39,6 @@ type ReportRow = {
   tuChoi: number; // status "Từ chối"
 };
 
-// Status được coi là "chưa phản hồi" -> không tính vào cột Phản hồi
-const notRespondedStatuses = ["Chờ phản hồi", "Đã phản hồi"];
-
 const PIC_FILTER_KEY = "drkam_report_pic_filter";
 
 type KpiInput = {
@@ -470,11 +467,9 @@ export default function MonthlyReportPage() {
         picRow.lienHe += 1;
       }
 
-      // Phản hồi: KOC tạo mới trong tháng và Status khác Chờ phản hồi & Đã phản hồi
-      if (
-        createdKey.slice(0, 7) === monthKey &&
-        !notRespondedStatuses.includes(status)
-      ) {
+      // Phản hồi = KOC có NGÀY CHĂM SÓC (new_contact_date) trong tháng báo cáo
+      // và Tình trạng KHÁC "Chờ phản hồi".
+      if (contactKey.slice(0, 7) === monthKey && status !== "Chờ phản hồi") {
         picRow.phanHoi += 1;
       }
 
