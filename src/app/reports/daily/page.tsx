@@ -24,9 +24,6 @@ type ReportRow = {
   gmvNgay: number;
 };
 
-// Status được coi là "chưa phản hồi" -> không tính vào cột Phản hồi
-const notRespondedStatuses = ["Chờ phản hồi", "Đã phản hồi"];
-
 const PIC_FILTER_KEY = "drkam_report_pic_filter";
 
 export default function PicReportPage() {
@@ -200,8 +197,9 @@ export default function PicReportPage() {
         picRow.lienHe += 1;
       }
 
-      // Phản hồi: KOC tạo mới trong ngày và Status khác Chờ phản hồi & Đã phản hồi
-      if (createdKey === dayKey && !notRespondedStatuses.includes(status)) {
+      // Phản hồi = KOC có NGÀY CHĂM SÓC (new_contact_date) = ngày báo cáo
+      // và Tình trạng KHÁC "Chờ phản hồi".
+      if (contactKey === dayKey && status !== "Chờ phản hồi") {
         picRow.phanHoi += 1;
       }
 
