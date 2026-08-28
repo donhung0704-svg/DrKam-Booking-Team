@@ -1220,22 +1220,44 @@ function FilterValueInput({
   }
 
   if (operator === "in") {
+    const selectedSet = new Set(value ? value.split(",").filter(Boolean) : []);
+    const options = getSelectOptions(field, employees, campaigns);
+
+    function toggleValue(optionValue: string) {
+      const next = new Set(selectedSet);
+      if (next.has(optionValue)) next.delete(optionValue);
+      else next.add(optionValue);
+      onChange(Array.from(next).join(","));
+    }
+
     return (
       <div>
         <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">{label}</label>
-        <select
-          multiple
-          value={value ? value.split(",").filter(Boolean) : []}
-          onChange={(event) => {
-            const values = Array.from(event.currentTarget.selectedOptions).map((option) => option.value);
-            onChange(values.join(","));
-          }}
-          className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-[#3964ff]"
-        >
-          {getSelectOptions(field, employees, campaigns).map((option) => (
-            <option key={option.value} value={option.value}>{option.label}</option>
+        <div className="max-h-44 space-y-0.5 overflow-auto rounded-xl border border-slate-200 bg-white p-2">
+          {options.length === 0 && (
+            <div className="px-1 py-1 text-[12.5px] text-slate-400">
+              Không có lựa chọn.
+            </div>
+          )}
+          {options.map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] hover:bg-slate-50"
+            >
+              <input
+                type="checkbox"
+                checked={selectedSet.has(option.value)}
+                onChange={() => toggleValue(option.value)}
+                className="h-4 w-4 accent-[#3964ff]"
+              />
+              <span>{option.label}</span>
+            </label>
           ))}
-        </select>
+        </div>
+        <p className="mt-1 text-[11px] font-semibold text-slate-400">
+          Tích chọn nhiều mục để lọc theo nhiều giá trị.
+          {selectedSet.size > 0 && ` Đã chọn: ${selectedSet.size}.`}
+        </p>
       </div>
     );
   }
