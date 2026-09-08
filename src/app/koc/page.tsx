@@ -85,7 +85,9 @@ const SUM_FIELDS = [
   "items_returned",
   "cast_price",
 ];
-const visibleColumnsStorageKey = "drkam_koc_visible_columns_v5";
+// v6: thêm cột "TT cần chăm sóc" -> reset hiển thị cột về mặc định cho cả
+// người dùng cũ (để cột mới xuất hiện).
+const visibleColumnsStorageKey = "drkam_koc_visible_columns_v6";
 // Giữ bộ lọc/sắp xếp/trang khi rời trang rồi quay lại (theo phiên tab)
 const filtersStorageKey = "drkam_koc_filters_v1";
 
@@ -147,6 +149,7 @@ const columnOptions: ColumnOption[] = [
   { key: "follower", label: "Follower", defaultVisible: true },
   { key: "tier", label: "Tier", defaultVisible: true },
   { key: "status", label: "Status", defaultVisible: true },
+  { key: "tt_can_cham_soc", label: "TT cần chăm sóc", defaultVisible: true },
   { key: "platform", label: "Nền tảng", defaultVisible: true },
   { key: "channel_type", label: "Channel type", defaultVisible: true },
   { key: "email", label: "Email" },
