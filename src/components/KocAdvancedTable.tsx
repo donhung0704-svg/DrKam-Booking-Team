@@ -60,6 +60,11 @@ const commissionOptions = [
 ];
 const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 const platformOptions = ["TikTok", "FB", "Shopee"];
+const careStatusOptions = [
+  "Pust thêm vid",
+  "Pust thêm vid + kịch bản",
+  "Pust kịch bản",
+];
 
 const defaultColumns: ColumnConfig[] = [
   {
@@ -112,6 +117,14 @@ const defaultColumns: ColumnConfig[] = [
     type: "select",
     options: statusOptions,
     width: 135,
+  },
+  {
+    key: "tt_can_cham_soc",
+    label: "TT cần chăm sóc",
+    field: "tt_can_cham_soc",
+    type: "select",
+    options: careStatusOptions,
+    width: 175,
   },
   {
     key: "platform",
@@ -306,6 +319,7 @@ const defaultVisibleColumnKeys = [
   "follower",
   "tier",
   "status",
+  "tt_can_cham_soc",
   "platform",
   "channel_type",
   "phone",
