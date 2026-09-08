@@ -33,12 +33,15 @@ const orderStatusOptions = [
 
 const productOptions = [
   "Nước súc miệng CYK",
-  "Nước súc miệng Postbiotic",
+  "Nước súc miệng Postbiotic 450ml",
+  "Nước súc miệng Postbiotic 150ml",
   "Xịt miệng Plus",
   "Gel cạo lưỡi bạc hà",
   "Gel cạo lưỡi dưa lưới",
-  "Kem đánh răng bạc hà",
-  "Kem đánh răng cam",
+  "Kem đánh răng bạc hà 110g",
+  "Kem đánh răng bạc hà 60g",
+  "Kem đánh răng cam 110g",
+  "Kem đánh răng cam 60g",
   "Bàn chải ULTRASOFT",
   "Bộ cạo lưỡi nhựa",
 ];
