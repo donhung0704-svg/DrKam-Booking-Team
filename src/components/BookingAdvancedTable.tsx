@@ -363,14 +363,20 @@ export default function BookingAdvancedTable({
   }, [visibleColumnKeys]);
 
   const orderedColumns = useMemo(() => {
-    return (
+    const visible = (
       columnOrder
         .map((key) => columnMap.get(key))
         .filter(Boolean) as ColumnConfig[]
     ).filter(
       (column) => !visibleColumnKeySet || visibleColumnKeySet.has(column.key)
     );
-  }, [columnOrder, columnMap, visibleColumnKeySet]);
+
+    // Gom cột ĐÃ GHIM về đầu để vị trí sticky-left khớp vị trí hiển thị thực
+    // -> không bị chồng thanh ghim lên nhau.
+    const pinned = visible.filter((c) => pinnedColumns.includes(c.key));
+    const unpinned = visible.filter((c) => !pinnedColumns.includes(c.key));
+    return [...pinned, ...unpinned];
+  }, [columnOrder, columnMap, visibleColumnKeySet, pinnedColumns]);
 
   const editableColumns = useMemo(() => {
     return defaultColumns.filter((column) => {
@@ -941,7 +947,7 @@ export default function BookingAdvancedTable({
       </div>
       )}
 
-      <div className="booking-advanced-scroll max-h-[calc(100vh-375px)] overflow-auto">
+      <div className="booking-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto">
         <table
           className="booking-advanced-table text-left text-sm"
           style={{ minWidth: `${tableWidth}px`, width: `${tableWidth}px` }}

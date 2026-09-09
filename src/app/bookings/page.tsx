@@ -1040,37 +1040,32 @@ export default function BookingListPage() {
         )}
 
         {showColumnPanel && (
-          <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-[12px] font-black uppercase tracking-[0.18em] text-red-600">
-                  Hiển thị cột
-                </p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-500">
-                  Bỏ tick các cột không cần để bảng gọn hơn. Cài đặt được lưu
-                  riêng cho tài khoản của bạn.
-                </p>
-              </div>
+          <div className="relative z-20 mt-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-red-600">
+                Hiển thị cột
+                <span className="ml-2 font-semibold normal-case tracking-normal text-slate-400">
+                  Bỏ tick cột không cần để bảng gọn hơn.
+                </span>
+              </p>
 
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => saveVisibleColumns(allColumnKeys)}
-                  className="h-8 rounded-lg bg-slate-900 px-3 text-[12px] font-bold text-white"
-                >
-                  Hiện tất cả
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => saveVisibleColumns(allColumnKeys)}
+                className="h-7 rounded-md bg-slate-900 px-2.5 text-[11.5px] font-bold text-white"
+              >
+                Hiện tất cả
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {columnOptions.map((column) => {
                 const checked = visibleColumnKeys.includes(column.key);
 
                 return (
                   <label
                     key={column.key}
-                    className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-bold transition ${
+                    className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1 text-[11.5px] font-semibold transition ${
                       checked
                         ? "border-slate-200 bg-white text-slate-800"
                         : "border-transparent bg-slate-100 text-slate-400"
@@ -1080,9 +1075,9 @@ export default function BookingListPage() {
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleColumn(column.key)}
-                      className="h-4 w-4 shrink-0 accent-red-600"
+                      className="h-3.5 w-3.5 shrink-0 accent-red-600"
                     />
-                    {column.label}
+                    <span className="truncate">{column.label}</span>
                   </label>
                 );
               })}

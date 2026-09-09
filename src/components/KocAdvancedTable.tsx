@@ -546,11 +546,17 @@ export default function KocAdvancedTable({
   }, [visibleColumnKeys]);
 
 const orderedColumns = useMemo(() => {
-    return columnOrder
+    const visible = columnOrder
       .map((key) => columnMap.get(key))
       .filter((column): column is ColumnConfig => column !== undefined)
       .filter((column) => visibleColumnKeySet.has(column.key));
-  }, [columnOrder, columnMap, visibleColumnKeySet]);
+
+    // Gom các cột ĐÃ GHIM về đầu (giữ thứ tự tương đối) để vị trí sticky-left
+    // khớp với vị trí hiển thị thực -> không bị chồng thanh ghim lên nhau.
+    const pinned = visible.filter((c) => pinnedColumns.includes(c.key));
+    const unpinned = visible.filter((c) => !pinnedColumns.includes(c.key));
+    return [...pinned, ...unpinned];
+  }, [columnOrder, columnMap, visibleColumnKeySet, pinnedColumns]);
 
   const editableColumns = useMemo(() => {
     return defaultColumns.filter((column) => {
@@ -1200,7 +1206,7 @@ const orderedColumns = useMemo(() => {
         )}
       </div>
 
-      <div className="koc-advanced-scroll max-h-[calc(100vh-375px)] overflow-auto">
+      <div className="koc-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto">
         <table
           className="koc-advanced-table text-left text-sm"
           style={{ minWidth: `${tableWidth}px`, width: `${tableWidth}px` }}

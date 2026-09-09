@@ -1043,30 +1043,32 @@ export default function KocListPage() {
         )}
 
         {showColumnPanel && (
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-[12px] font-black uppercase tracking-[0.18em] text-red-600">Hiển thị cột</p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-500">Tick trường muốn hiện trên bảng. Các trường ẩn vẫn lọc được bình thường.</p>
-              </div>
+          <div className="relative z-20 mt-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-red-600">
+                Hiển thị cột
+                <span className="ml-2 font-semibold normal-case tracking-normal text-slate-400">
+                  Tick cột muốn hiện; cột ẩn vẫn lọc được.
+                </span>
+              </p>
 
-              <div className="flex gap-2">
-                <button type="button" onClick={showDefaultColumns} className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700">Mặc định</button>
-                <button type="button" onClick={showAllColumns} className="h-8 rounded-lg bg-slate-900 px-3 text-[12px] font-bold text-white">Hiện tất cả</button>
+              <div className="flex gap-1.5">
+                <button type="button" onClick={showDefaultColumns} className="h-7 rounded-md border border-slate-200 bg-white px-2.5 text-[11.5px] font-bold text-slate-700">Mặc định</button>
+                <button type="button" onClick={showAllColumns} className="h-7 rounded-md bg-slate-900 px-2.5 text-[11.5px] font-bold text-white">Hiện tất cả</button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {columnOptions.map((column) => (
-                <label key={column.key} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-bold text-slate-700">
+                <label key={column.key} className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11.5px] font-semibold text-slate-700">
                   <input
                     type="checkbox"
                     checked={visibleColumnKeys.includes(column.key)}
                     disabled={column.key === "action"}
                     onChange={() => toggleColumn(column.key)}
-                    className="h-4 w-4 accent-red-600"
+                    className="h-3.5 w-3.5 shrink-0 accent-red-600"
                   />
-                  {column.label}
+                  <span className="truncate">{column.label}</span>
                 </label>
               ))}
             </div>
