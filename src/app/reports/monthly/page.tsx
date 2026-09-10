@@ -473,8 +473,9 @@ export default function MonthlyReportPage() {
         picRow.phanHoi += 1;
       }
 
-      // Đồng ý / Từ chối: KOC tạo mới trong tháng theo status
-      if (createdKey.slice(0, 7) === monthKey) {
+      // Đồng ý / Từ chối: KOC có NGÀY CHĂM SÓC trong tháng theo status
+      // (đồng bộ với Phản hồi -> phễu đúng: Đồng ý ≤ Phản hồi ≤ Liên hệ).
+      if (contactKey.slice(0, 7) === monthKey) {
         if (status === "Đã chốt") picRow.dongY += 1;
         if (status === "Từ chối") picRow.tuChoi += 1;
       }
@@ -938,8 +939,9 @@ export default function MonthlyReportPage() {
             Báo cáo tổng quát
           </p>
           <p className="mt-1 text-[12.5px] text-slate-500">
-            Phễu Liên hệ → Phản hồi → Đồng ý (status Đã chốt) / Từ chối. Đồng ý,
-            Từ chối tính trên KOC tạo mới trong tháng.
+            Phễu Liên hệ → Phản hồi → Đồng ý (status Đã chốt) / Từ chối. Phản
+            hồi / Đồng ý / Từ chối tính trên KOC có ngày chăm sóc trong tháng
+            (Phản hồi: status ≠ Chờ phản hồi).
           </p>
         </div>
 
