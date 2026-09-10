@@ -112,48 +112,57 @@ function getVietnamMonthRangeIso(monthStart: string, nextMonth: string) {
   };
 }
 
-// Tải toàn bộ bảng lớn: đếm số dòng trước rồi tải các trang SONG SONG theo lô
-// (nhanh hơn nhiều so với tải tuần tự từng trang một trên bảng ~50k dòng).
-async function loadAllRows(
-  countQuery: PromiseLike<any>,
-  fetchPage: (from: number, to: number) => PromiseLike<any>
-) {
-  const { count, error: countError } = await countQuery;
-
-  if (countError) {
-    return { data: [] as DbRow[], error: countError };
-  }
-
+// Tải hết dữ liệu bằng KEYSET theo 8 dải id (UUID) chạy SONG SONG.
+// Keyset (id > id_cuối) dùng index id nên mỗi trang nhẹ & nhanh, không bị
+// nặng như OFFSET trang cao -> mở Dashboard nhanh hơn, không timeout.
+async function loadAllRows(supabase: any, table: string, columns: string) {
   const pageSize = 1000;
-  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+  const starts = [
+    "00000000-0000-0000-0000-000000000000",
+    "20000000-0000-0000-0000-000000000000",
+    "40000000-0000-0000-0000-000000000000",
+    "60000000-0000-0000-0000-000000000000",
+    "80000000-0000-0000-0000-000000000000",
+    "a0000000-0000-0000-0000-000000000000",
+    "c0000000-0000-0000-0000-000000000000",
+    "e0000000-0000-0000-0000-000000000000",
+  ];
 
-  const allRows: DbRow[] = [];
-  let firstError: any = null;
+  async function loadRange(lo: string, hi: string | null) {
+    const out: DbRow[] = [];
+    let lastId: string | null = null;
 
-  // Giới hạn số request chạy đồng thời để không mở quá nhiều kết nối cùng lúc
-  const concurrency = 8;
+    for (;;) {
+      let query: any = supabase
+        .from(table)
+        .select(columns)
+        .order("id", { ascending: true })
+        .limit(pageSize);
 
-  for (let start = 0; start < totalPages; start += concurrency) {
-    const batch = [];
+      query = lastId === null ? query.gte("id", lo) : query.gt("id", lastId);
+      if (hi !== null) query = query.lt("id", hi);
 
-    for (let page = start; page < Math.min(start + concurrency, totalPages); page++) {
-      batch.push(fetchPage(page * pageSize, page * pageSize + pageSize - 1));
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const batch: DbRow[] = data || [];
+      out.push(...batch);
+
+      if (batch.length < pageSize) break;
+      lastId = String(batch[batch.length - 1].id);
     }
 
-    const results = await Promise.all(batch);
-
-    for (const result of results) {
-      if (result.error) {
-        firstError = firstError || result.error;
-        continue;
-      }
-      allRows.push(...(result.data || []));
-    }
-
-    if (firstError) break;
+    return out;
   }
 
-  return { data: allRows, error: firstError };
+  try {
+    const results = await Promise.all(
+      starts.map((lo, i) => loadRange(lo, starts[i + 1] ?? null))
+    );
+    return { data: results.flat(), error: null as any };
+  } catch (error) {
+    return { data: [] as DbRow[], error };
+  }
 }
 
 function isDateInRange(value: unknown, startDate: string, endDate: string) {
@@ -240,29 +249,15 @@ export default async function Home() {
     bookingThisMonthResult,
   ] = await Promise.all([
     loadAllRows(
-      supabase.from("koc").select("id", { count: "exact", head: true }),
-      (from, to) =>
-        supabase
-          .from("koc")
-          .select(
-            "id, created_at, status, new_contact_date, koc_code, tier, Id_tiktok_Ten_fb, name, phone"
-          )
-          .order("created_at", { ascending: false })
-          .order("id", { ascending: false })
-          .range(from, to)
+      supabase,
+      "koc",
+      "id, created_at, status, new_contact_date, koc_code, tier, Id_tiktok_Ten_fb, name, phone"
     ),
 
     loadAllRows(
-      supabase.from("bookings").select("id", { count: "exact", head: true }),
-      (from, to) =>
-        supabase
-          .from("bookings")
-          .select(
-            "id, koc_id, employee_id, booking_type, expected_post_date, actual_post_date, status_booking, cast_price"
-          )
-          .order("created_at", { ascending: false })
-          .order("id", { ascending: false })
-          .range(from, to)
+      supabase,
+      "bookings",
+      "id, koc_id, employee_id, booking_type, expected_post_date, actual_post_date, status_booking, cast_price"
     ),
 
     supabase
