@@ -6,7 +6,7 @@
 -- 2 lop bao ve chong phinh (nguyen nhan tung khoa DB):
 --   1) Trigger BO QUA thao tac hang loat (>50 dong/lan) -> IMPORT khong sinh log.
 --      (Import ghi theo lo 500 dong -> tu dong bi bo qua. Sua tay 1 dong -> van ghi.)
---   2) pg_cron TU DONG XOA log cu hon 7 NGAY, chay moi gio.
+--   2) pg_cron TU DONG XOA log cu hon 3 NGAY, chay moi gio.
 -- => Chi giu log cua cac lan SUA TAY gan day; import khong bao gio dong lai.
 -- ============================================================
 
@@ -97,15 +97,15 @@ grant select on koc_history      to anon, authenticated;
 grant select on bookings_history to anon, authenticated;
 
 
--- ---------------- 4) pg_cron: TU DONG XOA log cu hon 7 NGAY ----------------
+-- ---------------- 4) pg_cron: TU DONG XOA log cu hon 3 NGAY ----------------
 create extension if not exists pg_cron;
 
--- Moi gio, xoa log cu hon 7 ngay. (Chay lai file se tu ghi de job cung ten.)
--- Muon doi thoi gian giu: sua '7 days' -> vd '1 hour' hoac '30 days' (2 cho).
+-- Moi gio, xoa log cu hon 3 ngay. (Chay lai file se tu ghi de job cung ten.)
+-- Muon doi thoi gian giu: sua '3 days' -> vd '1 hour' hoac '30 days' (2 cho).
 select cron.schedule('purge_koc_history', '0 * * * *',
-  $$delete from public.koc_history where changed_at < now() - interval '7 days'$$);
+  $$delete from public.koc_history where changed_at < now() - interval '3 days'$$);
 select cron.schedule('purge_bookings_history', '0 * * * *',
-  $$delete from public.bookings_history where changed_at < now() - interval '7 days'$$);
+  $$delete from public.bookings_history where changed_at < now() - interval '3 days'$$);
 
 
 -- ---------------- 5) Kiem tra ----------------
