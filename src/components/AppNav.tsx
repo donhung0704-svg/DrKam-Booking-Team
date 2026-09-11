@@ -30,7 +30,7 @@ export default function AppNav({
   onToggle?: () => void;
 }) {
   const pathname = usePathname();
-  const { isShipper } = useUserRole();
+  const { isShipper, isIntern, displayName } = useUserRole();
 
   // Shipper chỉ thấy mục Danh sách Booking
   const items = isShipper
@@ -139,15 +139,27 @@ export default function AppNav({
             <div className="flex items-center gap-3">
               <div className="hidden text-right md:block">
                 <p className="text-sm font-black text-slate-950">
-                  {isShipper ? "shipper" : "admin"}
+                  {isIntern
+                    ? displayName || "TTS"
+                    : isShipper
+                      ? "shipper"
+                      : "admin"}
                 </p>
                 <p className="text-[12px] font-black uppercase tracking-[0.12em] text-red-600">
-                  {isShipper ? "Giao hàng" : "Admin"}
+                  {isIntern
+                    ? "Thực tập sinh"
+                    : isShipper
+                      ? "Giao hàng"
+                      : "Admin"}
                 </p>
               </div>
 
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-sm font-black text-white ring-4 ring-slate-100">
-                {isShipper ? "GH" : "AD"}
+                {isIntern
+                  ? (displayName || "TTS").slice(0, 2).toUpperCase()
+                  : isShipper
+                    ? "GH"
+                    : "AD"}
               </div>
             </div>
 

@@ -28,14 +28,29 @@ export function getRoleFromUser(user: unknown): PortalRole {
 export function useUserRole() {
   const [role, setRole] = useState<PortalRole | null>(null);
   const [email, setEmail] = useState<string>("");
+  // Tên PIC gán với tài khoản intern (nhân sự có email trùng) -> hiển thị thay "admin"
+  const [displayName, setDisplayName] = useState<string>("");
 
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!active) return;
-      setRole(getRoleFromUser(data.user));
-      setEmail(String(data.user?.email || "").toLowerCase());
+      const r = getRoleFromUser(data.user);
+      const mail = String(data.user?.email || "").toLowerCase();
+      setRole(r);
+      setEmail(mail);
+
+      // intern: lấy tên nhân sự (PIC) theo email để hiển thị
+      if (r === "intern" && mail) {
+        const { data: emp } = await supabase
+          .from("employees")
+          .select("full_name")
+          .ilike("email", mail)
+          .limit(1)
+          .maybeSingle();
+        if (active && emp?.full_name) setDisplayName(String(emp.full_name));
+      }
     });
 
     return () => {
@@ -46,6 +61,7 @@ export function useUserRole() {
   return {
     role,
     email,
+    displayName,
     loaded: role !== null,
     isShipper: role === "shipper",
     isIntern: role === "intern",
