@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase/client";
 import KocAdvancedTable from "@/components/KocAdvancedTable";
 import DatePickerInput from "@/components/DatePickerInput";
 import SavedFiltersDropdown from "@/components/SavedFiltersDropdown";
+import { useUserRole } from "@/lib/useUserRole";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
@@ -187,6 +188,7 @@ const sortableFields = filterFields.filter(
 );
 
 export default function KocListPage() {
+  const { isIntern } = useUserRole();
   const [kocs, setKocs] = useState<DbRow[]>([]);
   const [campaigns, setCampaigns] = useState<DbRow[]>([]);
   const [employees, setEmployees] = useState<DbRow[]>([]);
@@ -1087,6 +1089,7 @@ export default function KocListPage() {
         filteredTotals={filteredTotals}
         filteredTotalsLoading={filteredTotalsLoading}
         sumFields={SUM_FIELDS}
+        canDelete={!isIntern}
         onBulkUpdateAllFiltered={bulkUpdateAllFiltered}
         onBulkDeleteAllFiltered={bulkDeleteAllFiltered}
         leadingActions={

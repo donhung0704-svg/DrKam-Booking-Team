@@ -229,6 +229,7 @@ export default function BookingAdvancedTable({
   onBulkDeleteAllFiltered,
   onBookingUpdated,
   onBookingDeleted,
+  canDelete = true,
 }: {
   bookings: DbRow[];
   kocs: DbRow[];
@@ -236,6 +237,8 @@ export default function BookingAdvancedTable({
   loading: boolean;
   resetLayoutSignal?: number;
   restricted?: boolean;
+  // false -> ẩn nút Xóa (vd tài khoản TTS/intern không được xóa)
+  canDelete?: boolean;
   visibleColumnKeys?: string[];
   leadingActions?: ReactNode;
   trailingActions?: ReactNode;
@@ -864,14 +867,16 @@ export default function BookingAdvancedTable({
               Sửa Booking
             </Link>
 
-            <button
-              type="button"
-              disabled={bulkDeleting}
-              onClick={bulkDeleteSelectedRows}
-              className="flex h-9 items-center rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {bulkDeleting ? "Đang xóa..." : "Xóa Booking"}
-            </button>
+            {canDelete && (
+              <button
+                type="button"
+                disabled={bulkDeleting}
+                onClick={bulkDeleteSelectedRows}
+                className="flex h-9 items-center rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {bulkDeleting ? "Đang xóa..." : "Xóa Booking"}
+              </button>
+            )}
           </div>
         )}
 
@@ -933,14 +938,16 @@ export default function BookingAdvancedTable({
               Xóa trắng trường
             </button>
 
-            <button
-              type="button"
-              disabled={bulkDeleting || targetCount === 0}
-              onClick={bulkDeleteSelectedRows}
-              className="h-9 rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {bulkDeleting ? "Đang xóa..." : "Xóa booking đã chọn"}
-            </button>
+            {canDelete && (
+              <button
+                type="button"
+                disabled={bulkDeleting || targetCount === 0}
+                onClick={bulkDeleteSelectedRows}
+                className="h-9 rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {bulkDeleting ? "Đang xóa..." : "Xóa booking đã chọn"}
+              </button>
+            )}
           </div>
           </div>
         )}

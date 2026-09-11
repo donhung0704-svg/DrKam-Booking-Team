@@ -136,7 +136,7 @@ const filterOperators = [
 ];
 
 export default function BookingListPage() {
-  const { isShipper } = useUserRole();
+  const { isShipper, isIntern } = useUserRole();
 
   const [bookings, setBookings] = useState<DbRow[]>([]);
   const [kocs, setKocs] = useState<DbRow[]>([]);
@@ -1116,6 +1116,7 @@ export default function BookingListPage() {
         employees={employees}
         loading={loading}
         restricted={isShipper}
+        canDelete={!isIntern}
         visibleColumnKeys={visibleColumnKeys}
         resetLayoutSignal={resetColumnSignal}
         totalFilteredCount={totalBookingCount}
