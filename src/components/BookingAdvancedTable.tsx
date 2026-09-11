@@ -738,10 +738,12 @@ export default function BookingAdvancedTable({
     setBulkDeleting(true);
     setError("");
 
-    const { error: deleteError } = await supabase
+    // .select() -> chỉ bỏ khỏi UI các dòng ĐÃ xóa thật (RLS chặn -> 0 dòng).
+    const { data: deletedRows, error: deleteError } = await supabase
       .from("bookings")
       .delete()
-      .in("id", selectedIds);
+      .in("id", selectedIds)
+      .select("id");
 
     if (deleteError) {
       setError(`Lỗi xóa booking hàng loạt: ${deleteError.message}`);
@@ -749,8 +751,24 @@ export default function BookingAdvancedTable({
       return;
     }
 
+    const deletedIds = (deletedRows || []).map((row) => String(row.id));
+
+    if (deletedIds.length === 0) {
+      setError(
+        "Không xóa được booking nào. Tài khoản của bạn không có quyền xóa dữ liệu."
+      );
+      setBulkDeleting(false);
+      return;
+    }
+
+    if (deletedIds.length < selectedIds.length) {
+      setError(
+        `Chỉ xóa được ${deletedIds.length}/${selectedIds.length} booking (còn lại không thuộc quyền của bạn).`
+      );
+    }
+
     if (onBookingDeleted) {
-      onBookingDeleted(selectedIds);
+      onBookingDeleted(deletedIds);
       setSelectedIds([]);
       setBulkDeleting(false);
       return;

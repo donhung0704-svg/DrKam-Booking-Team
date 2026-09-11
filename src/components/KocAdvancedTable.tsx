@@ -941,10 +941,13 @@ const orderedColumns = useMemo(() => {
     setBulkDeleting(true);
     setError("");
 
-    const { error: deleteError } = await supabase
+    // .select() -> lấy đúng các dòng ĐÃ xóa thật. Nếu RLS chặn (vd tài khoản
+    // TTS), delete trả 0 dòng (không lỗi) -> KHÔNG bỏ dòng khỏi UI, báo rõ.
+    const { data: deletedRows, error: deleteError } = await supabase
       .from("koc")
       .delete()
-      .in("id", selectedIds);
+      .in("id", selectedIds)
+      .select("id");
 
     if (deleteError) {
       setError(`Lỗi xóa KOC hàng loạt: ${deleteError.message}`);
@@ -952,8 +955,24 @@ const orderedColumns = useMemo(() => {
       return;
     }
 
+    const deletedIds = (deletedRows || []).map((row) => String(row.id));
+
+    if (deletedIds.length === 0) {
+      setError(
+        "Không xóa được KOC nào. Tài khoản của bạn không có quyền xóa dữ liệu."
+      );
+      setBulkDeleting(false);
+      return;
+    }
+
+    if (deletedIds.length < selectedIds.length) {
+      setError(
+        `Chỉ xóa được ${deletedIds.length}/${selectedIds.length} KOC (các KOC còn lại không thuộc quyền của bạn).`
+      );
+    }
+
     if (onKocDeleted) {
-      onKocDeleted(selectedIds);
+      onKocDeleted(deletedIds);
       setSelectedIds([]);
       setBulkDeleting(false);
       return;
