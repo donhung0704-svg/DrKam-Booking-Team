@@ -18,12 +18,14 @@ const columnStyles = [
 export default function BookingPipeline({
   bookings,
   kocMap,
+  employeeMap,
   statuses,
   onStatusChange,
   onFieldChange,
 }: {
   bookings: DbRow[];
   kocMap: Map<string, DbRow>;
+  employeeMap?: Map<string, DbRow>;
   statuses: string[];
   onStatusChange: (bookingId: string, newStatus: string) => void;
   // Sửa trực tiếp trên card (Ngày dự kiến đăng / Ngày thực tế đăng)
@@ -128,6 +130,14 @@ export default function BookingPipeline({
                 const kocName =
                   koc?.name || koc?.Id_tiktok_Ten_fb || "Chưa rõ KOC";
                 const tiktok = koc?.Id_tiktok_Ten_fb || "";
+                const employee = booking.employee_id
+                  ? employeeMap?.get(String(booking.employee_id))
+                  : null;
+                const picName = employee
+                  ? employee.full_name ||
+                    employee.employee_code ||
+                    "Chưa rõ PIC"
+                  : "Chưa có PIC";
                 const value =
                   Number(booking.order_value) || Number(booking.cast_price) || 0;
 
@@ -177,6 +187,18 @@ export default function BookingPipeline({
                         {booking.product}
                       </p>
                     )}
+                    <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold">
+                      <span className="text-slate-400">PIC:</span>
+                      <span
+                        className={`truncate rounded px-1.5 py-0.5 ${
+                          employee
+                            ? "bg-blue-50 text-[#3964ff]"
+                            : "bg-slate-100 text-slate-400"
+                        }`}
+                      >
+                        {picName}
+                      </span>
+                    </p>
                     {value > 0 && (
                       <p className="mt-1 text-[12px] font-black text-emerald-600">
                         {compactMoney(value)}
