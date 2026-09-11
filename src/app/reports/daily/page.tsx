@@ -197,9 +197,12 @@ export default function PicReportPage() {
         picRow.lienHe += 1;
       }
 
-      // Phản hồi = KOC có NGÀY CHĂM SÓC (new_contact_date) = ngày báo cáo
+      // Phản hồi = KOC (có NGÀY CHĂM SÓC = ngày báo cáo HOẶC TẠO MỚI trong ngày)
       // và Tình trạng KHÁC "Chờ phản hồi".
-      if (contactKey === dayKey && status !== "Chờ phản hồi") {
+      if (
+        (contactKey === dayKey || createdKey === dayKey) &&
+        status !== "Chờ phản hồi"
+      ) {
         picRow.phanHoi += 1;
       }
 

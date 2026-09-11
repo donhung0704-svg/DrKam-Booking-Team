@@ -467,9 +467,13 @@ export default function MonthlyReportPage() {
         picRow.lienHe += 1;
       }
 
-      // Phản hồi = KOC có NGÀY CHĂM SÓC (new_contact_date) trong tháng báo cáo
+      // Phản hồi = KOC (có NGÀY CHĂM SÓC trong tháng HOẶC TẠO MỚI trong tháng)
       // và Tình trạng KHÁC "Chờ phản hồi".
-      if (contactKey.slice(0, 7) === monthKey && status !== "Chờ phản hồi") {
+      if (
+        (contactKey.slice(0, 7) === monthKey ||
+          createdKey.slice(0, 7) === monthKey) &&
+        status !== "Chờ phản hồi"
+      ) {
         picRow.phanHoi += 1;
       }
 
@@ -940,8 +944,8 @@ export default function MonthlyReportPage() {
           </p>
           <p className="mt-1 text-[12.5px] text-slate-500">
             Phễu Liên hệ → Phản hồi → Đồng ý (status Đã chốt) / Từ chối. Phản
-            hồi / Đồng ý / Từ chối tính trên KOC có ngày chăm sóc trong tháng
-            (Phản hồi: status ≠ Chờ phản hồi).
+            hồi = KOC có ngày chăm sóc HOẶC tạo mới trong tháng, status ≠ Chờ
+            phản hồi. Đồng ý / Từ chối tính trên KOC có ngày chăm sóc trong tháng.
           </p>
         </div>
 
