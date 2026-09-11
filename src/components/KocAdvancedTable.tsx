@@ -353,6 +353,7 @@ export default function KocAdvancedTable({
   onExport,
   onKocUpdated,
   onKocDeleted,
+  canDelete = true,
 }: {
   kocs?: DbRow[];
   campaigns?: DbRow[];
@@ -376,6 +377,8 @@ export default function KocAdvancedTable({
   onExport: () => void;
   onKocUpdated: (id: string, patch: DbRow) => void;
   onKocDeleted?: (ids: string[]) => void;
+  // false -> ẩn nút Xóa (vd tài khoản TTS/intern không được xóa)
+  canDelete?: boolean;
 }) {
   const router = useRouter();
 
@@ -1061,14 +1064,16 @@ const orderedColumns = useMemo(() => {
               Sửa KOC
             </Link>
 
-            <button
-              type="button"
-              disabled={bulkDeleting}
-              onClick={bulkDeleteSelectedRows}
-              className="flex h-9 items-center rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {bulkDeleting ? "Đang xóa..." : "Xóa KOC"}
-            </button>
+            {canDelete && (
+              <button
+                type="button"
+                disabled={bulkDeleting}
+                onClick={bulkDeleteSelectedRows}
+                className="flex h-9 items-center rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {bulkDeleting ? "Đang xóa..." : "Xóa KOC"}
+              </button>
+            )}
           </div>
         )}
 
@@ -1189,18 +1194,20 @@ const orderedColumns = useMemo(() => {
                 : "Xóa trắng trường"}
             </button>
 
-            <button
-              type="button"
-              disabled={bulkDeleting || targetCount === 0}
-              onClick={bulkDeleteSelectedRows}
-              className="h-9 rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {bulkDeleting
-                ? "Đang xóa..."
-                : scopeAll
-                  ? `Xóa ${totalFilteredCount.toLocaleString("vi-VN")} KOC theo bộ lọc`
-                  : "Xóa KOC đã chọn"}
-            </button>
+            {canDelete && (
+              <button
+                type="button"
+                disabled={bulkDeleting || targetCount === 0}
+                onClick={bulkDeleteSelectedRows}
+                className="h-9 rounded-xl bg-red-600 px-4 text-[12.5px] font-black text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {bulkDeleting
+                  ? "Đang xóa..."
+                  : scopeAll
+                    ? `Xóa ${totalFilteredCount.toLocaleString("vi-VN")} KOC theo bộ lọc`
+                    : "Xóa KOC đã chọn"}
+              </button>
+            )}
           </div>
           </div>
         )}

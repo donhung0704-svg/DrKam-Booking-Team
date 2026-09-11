@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import DatePickerInput from "@/components/DatePickerInput";
+import { useUserRole } from "@/lib/useUserRole";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
@@ -43,6 +44,14 @@ export default function NewKocPage() {
   const [employees, setEmployees] = useState<DbRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  // TTS (intern): PIC bị khoá = nhân sự có email trùng email đăng nhập.
+  const { isIntern, email } = useUserRole();
+  const internEmployee = isIntern
+    ? employees.find(
+        (e) => String(e.email || "").toLowerCase() === email && email
+      )
+    : null;
 
   useEffect(() => {
     async function loadData() {
@@ -224,17 +233,33 @@ export default function NewKocPage() {
             </CompactField>
 
             <CompactField label="PIC phụ trách">
-              <select
-                name="employee_id"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
-              >
-                <option value="">Chưa có PIC</option>
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {getEmployeeDisplayName(employee)}
-                  </option>
-                ))}
-              </select>
+              {isIntern ? (
+                // TTS: PIC khoá theo tài khoản; không đổi được
+                <>
+                  <input
+                    type="hidden"
+                    name="employee_id"
+                    value={internEmployee?.id || ""}
+                  />
+                  <div className="flex h-8 w-full items-center rounded-lg border border-slate-200 bg-slate-100 px-2.5 text-[12.5px] font-semibold text-slate-600">
+                    {internEmployee
+                      ? getEmployeeDisplayName(internEmployee)
+                      : "Chưa có PIC gán cho tài khoản (liên hệ admin)"}
+                  </div>
+                </>
+              ) : (
+                <select
+                  name="employee_id"
+                  className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                >
+                  <option value="">Chưa có PIC</option>
+                  {employees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {getEmployeeDisplayName(employee)}
+                    </option>
+                  ))}
+                </select>
+              )}
             </CompactField>
 
             <CompactField label="Tên KOC">

@@ -3,6 +3,7 @@
 import { supabase } from "@/lib/supabase/client";
 import DatePickerInput from "@/components/DatePickerInput";
 import KocSearchSelect from "@/components/KocSearchSelect";
+import { useUserRole } from "@/lib/useUserRole";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
@@ -111,14 +112,32 @@ export default function NewBookingPage() {
   const selectedKoc =
     kocs.find((koc) => String(koc.id) === String(selectedKocId)) || null;
 
+  // TTS (intern): PIC của Booking bị khoá = nhân sự có email trùng email đăng nhập.
+  const { isIntern, email } = useUserRole();
+  const internEmployee = isIntern
+    ? employees.find(
+        (e) => String(e.email || "").toLowerCase() === email && email
+      )
+    : null;
+
+  // Ép PIC = PIC của TTS (không lấy theo PIC của KOC)
+  useEffect(() => {
+    if (isIntern && internEmployee) {
+      setSelectedEmployeeId(String(internEmployee.id));
+    }
+  }, [isIntern, internEmployee?.id]);
+
   // Điền PIC/địa chỉ/SĐT theo 1 KOC (dùng chung cho mở sẵn & đổi tay)
   function prefillFromKoc(koc: DbRow | null | undefined) {
     if (!koc) return;
     prefilledKocRef.current = String(koc.id || "");
     setDeliveryAddress(koc.address || "");
     setRecipientPhone(koc.phone || "");
-    // PIC phụ trách của Booking = PIC phụ trách của KOC đó
-    setSelectedEmployeeId(koc.employee_id ? String(koc.employee_id) : "");
+    // PIC phụ trách của Booking = PIC phụ trách của KOC đó.
+    // TTS: giữ PIC của TTS, KHÔNG lấy theo KOC.
+    if (!isIntern) {
+      setSelectedEmployeeId(koc.employee_id ? String(koc.employee_id) : "");
+    }
   }
 
   // Người dùng tự đổi KOC trong ô tìm kiếm -> điền lại theo KOC mới.
@@ -348,19 +367,35 @@ export default function NewBookingPage() {
             </CompactField>
 
             <CompactField label="PIC phụ trách">
-              <select
-                name="employee_id"
-                value={selectedEmployeeId}
-                onChange={(event) => setSelectedEmployeeId(event.target.value)}
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
-              >
-                <option value="">Không chọn PIC</option>
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {getEmployeeDisplayName(employee)}
-                  </option>
-                ))}
-              </select>
+              {isIntern ? (
+                // TTS: PIC khoá theo tài khoản, không đổi được
+                <>
+                  <input
+                    type="hidden"
+                    name="employee_id"
+                    value={internEmployee?.id || ""}
+                  />
+                  <div className="flex h-8 w-full items-center rounded-lg border border-slate-200 bg-slate-100 px-2.5 text-[12.5px] font-semibold text-slate-600">
+                    {internEmployee
+                      ? getEmployeeDisplayName(internEmployee)
+                      : "Chưa có PIC gán cho tài khoản (liên hệ admin)"}
+                  </div>
+                </>
+              ) : (
+                <select
+                  name="employee_id"
+                  value={selectedEmployeeId}
+                  onChange={(event) => setSelectedEmployeeId(event.target.value)}
+                  className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                >
+                  <option value="">Không chọn PIC</option>
+                  {employees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {getEmployeeDisplayName(employee)}
+                    </option>
+                  ))}
+                </select>
+              )}
             </CompactField>
 
             <CompactField label="Loại booking">
