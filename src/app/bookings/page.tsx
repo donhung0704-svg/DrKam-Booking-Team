@@ -1102,6 +1102,7 @@ export default function BookingListPage() {
           <BookingPipeline
             bookings={sortedBookings}
             kocMap={kocMap}
+            employeeMap={employeeMap}
             statuses={statusBookingOptions}
             onStatusChange={handlePipelineStatusChange}
             onFieldChange={handlePipelineFieldChange}
