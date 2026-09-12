@@ -1837,6 +1837,7 @@ function CellEditor({
       initial={formatInputValue(column, value)}
       saving={saving}
       onSave={onSave}
+      multiline={column.key === "note" || column.key === "address"}
     />
   );
 }
@@ -1846,27 +1847,52 @@ function EditableCopyText({
   initial,
   saving,
   onSave,
+  multiline = false,
 }: {
   initial: string;
   saving: boolean;
   onSave: (value: unknown) => void;
+  // multiline=true: textarea tự giãn theo nội dung (Note/Address) -> xem đủ nhiều dòng
+  multiline?: boolean;
 }) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<any>(null);
   const [copied, setCopied] = useState(false);
+
+  function autoResize(el: HTMLTextAreaElement | null) {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }
+
+  useEffect(() => {
+    if (multiline) autoResize(inputRef.current as HTMLTextAreaElement);
+  }, [initial, multiline]);
 
   return (
     <div className="group/cell relative">
-      <input
-        ref={inputRef}
-        defaultValue={initial}
-        onBlur={(event) => onSave(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.currentTarget.blur();
-          }
-        }}
-        className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
-      />
+      {multiline ? (
+        <textarea
+          ref={inputRef}
+          defaultValue={initial}
+          rows={1}
+          onInput={(event) => autoResize(event.currentTarget)}
+          onBlur={(event) => onSave(event.target.value)}
+          placeholder="Ghi chú…"
+          className="block min-h-8 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-transparent px-2 py-1.5 pr-6 text-[12px] leading-5 outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        />
+      ) : (
+        <input
+          ref={inputRef}
+          defaultValue={initial}
+          onBlur={(event) => onSave(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.currentTarget.blur();
+            }
+          }}
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        />
+      )}
 
       <button
         type="button"
