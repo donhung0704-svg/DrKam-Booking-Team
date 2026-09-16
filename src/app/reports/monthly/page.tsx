@@ -482,8 +482,12 @@ export default function MonthlyReportPage() {
         picRow.dongY += 1;
       }
 
-      // Từ chối = KOC có ngày chăm sóc trong tháng và status "Từ chối".
-      if (contactKey.slice(0, 7) === monthKey && status === "Từ chối") {
+      // Từ chối = KOC có ngày chăm sóc HOẶC tạo mới trong tháng, status "Từ chối".
+      if (
+        (contactKey.slice(0, 7) === monthKey ||
+          createdKey.slice(0, 7) === monthKey) &&
+        status === "Từ chối"
+      ) {
         picRow.tuChoi += 1;
       }
 
@@ -949,7 +953,7 @@ export default function MonthlyReportPage() {
             Phễu Liên hệ → Phản hồi → Đồng ý / Từ chối. Phản hồi = KOC có ngày
             chăm sóc HOẶC tạo mới trong tháng, status ≠ Chờ phản hồi. Đồng ý =
             KOC có Booking date trong tháng. Từ chối = KOC có ngày chăm sóc
-            trong tháng, status Từ chối.
+            HOẶC tạo mới trong tháng, status Từ chối.
           </p>
         </div>
 
