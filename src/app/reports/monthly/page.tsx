@@ -477,11 +477,18 @@ export default function MonthlyReportPage() {
         picRow.phanHoi += 1;
       }
 
-      // Đồng ý / Từ chối: KOC có NGÀY CHĂM SÓC trong tháng theo status
-      // (đồng bộ với Phản hồi -> phễu đúng: Đồng ý ≤ Phản hồi ≤ Liên hệ).
-      if (contactKey.slice(0, 7) === monthKey) {
-        if (status === "Đã chốt") picRow.dongY += 1;
-        if (status === "Từ chối") picRow.tuChoi += 1;
+      // Đồng ý = KOC có NGÀY BOOKING (booking_date) trong tháng báo cáo.
+      if (monthKeyOfBookingDate(koc.booking_date) === monthKey) {
+        picRow.dongY += 1;
+      }
+
+      // Từ chối = KOC có ngày chăm sóc HOẶC tạo mới trong tháng, status "Từ chối".
+      if (
+        (contactKey.slice(0, 7) === monthKey ||
+          createdKey.slice(0, 7) === monthKey) &&
+        status === "Từ chối"
+      ) {
+        picRow.tuChoi += 1;
       }
 
       // Video/GMV tính theo perfRow (PIC nếu có Booking date, ngược lại "Khác").
@@ -943,9 +950,10 @@ export default function MonthlyReportPage() {
             Báo cáo tổng quát
           </p>
           <p className="mt-1 text-[12.5px] text-slate-500">
-            Phễu Liên hệ → Phản hồi → Đồng ý (status Đã chốt) / Từ chối. Phản
-            hồi = KOC có ngày chăm sóc HOẶC tạo mới trong tháng, status ≠ Chờ
-            phản hồi. Đồng ý / Từ chối tính trên KOC có ngày chăm sóc trong tháng.
+            Phễu Liên hệ → Phản hồi → Đồng ý / Từ chối. Phản hồi = KOC có ngày
+            chăm sóc HOẶC tạo mới trong tháng, status ≠ Chờ phản hồi. Đồng ý =
+            KOC có Booking date trong tháng. Từ chối = KOC có ngày chăm sóc
+            HOẶC tạo mới trong tháng, status Từ chối.
           </p>
         </div>
 
