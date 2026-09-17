@@ -264,13 +264,18 @@ export default function PicReportPage() {
   const totals = useMemo(() => {
     return reportRows.reduce(
       (total, row) => {
-        total.lienHe += row.lienHe;
-        total.phanHoi += row.phanHoi;
-        total.bookingMoi += row.bookingMoi;
-        total.giaCast += row.giaCast;
+        // SỐ VIDEO: cộng CẢ dòng "Khác".
         total.dailyVideoNew += row.dailyVideoNew;
         total.dailyVideoOld += row.dailyVideoOld;
-        total.gmvNgay += row.gmvNgay;
+
+        // Các cột còn lại: BỎ dòng "Khác" (chỉ cộng PIC có tên).
+        if (row.isRealPic) {
+          total.lienHe += row.lienHe;
+          total.phanHoi += row.phanHoi;
+          total.bookingMoi += row.bookingMoi;
+          total.giaCast += row.giaCast;
+          total.gmvNgay += row.gmvNgay;
+        }
 
         return total;
       },
