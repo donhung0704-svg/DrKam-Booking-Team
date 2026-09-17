@@ -576,10 +576,7 @@ export default function MonthlyReportPage() {
   const totals = useMemo(() => {
     return reportRows.reduce(
       (total, row) => {
-        total.lienHe += row.lienHe;
-        total.phanHoi += row.phanHoi;
-        total.bookingMoi += row.bookingMoi;
-        total.giaCast += row.giaCast;
+        // SỐ VIDEO: cộng CẢ dòng "Khác".
         total.dailyVideoNew += row.dailyVideoNew;
         total.dailyVideoOld += row.dailyVideoOld;
         total.videoPov += row.videoPov;
@@ -587,9 +584,17 @@ export default function MonthlyReportPage() {
         total.videoAi += row.videoAi;
         total.videoReal += row.videoReal;
         total.videoOther += row.videoOther;
-        total.gmvNgay += row.gmvNgay;
-        total.dongY += row.dongY;
-        total.tuChoi += row.tuChoi;
+
+        // Các cột còn lại: BỎ dòng "Khác" (chỉ cộng PIC có tên).
+        if (row.isRealPic) {
+          total.lienHe += row.lienHe;
+          total.phanHoi += row.phanHoi;
+          total.bookingMoi += row.bookingMoi;
+          total.giaCast += row.giaCast;
+          total.gmvNgay += row.gmvNgay;
+          total.dongY += row.dongY;
+          total.tuChoi += row.tuChoi;
+        }
 
         return total;
       },
