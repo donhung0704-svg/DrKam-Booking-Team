@@ -477,8 +477,15 @@ export default function MonthlyReportPage() {
         picRow.phanHoi += 1;
       }
 
-      // Đồng ý = KOC có NGÀY BOOKING (booking_date) trong tháng báo cáo.
-      if (monthKeyOfBookingDate(koc.booking_date) === monthKey) {
+      // Đồng ý = KOC có NGÀY BOOKING (booking_date) trong tháng
+      //          HOẶC status "Trùng KOC" (có ngày chăm sóc/tạo mới trong tháng).
+      const inMonthContactOrCreated =
+        contactKey.slice(0, 7) === monthKey ||
+        createdKey.slice(0, 7) === monthKey;
+      if (
+        monthKeyOfBookingDate(koc.booking_date) === monthKey ||
+        (status === "Trùng KOC" && inMonthContactOrCreated)
+      ) {
         picRow.dongY += 1;
       }
 
@@ -957,8 +964,9 @@ export default function MonthlyReportPage() {
           <p className="mt-1 text-[12.5px] text-slate-500">
             Phễu Liên hệ → Phản hồi → Đồng ý / Từ chối. Phản hồi = KOC có ngày
             chăm sóc HOẶC tạo mới trong tháng, status ≠ Chờ phản hồi. Đồng ý =
-            KOC có Booking date trong tháng. Từ chối = KOC có ngày chăm sóc
-            HOẶC tạo mới trong tháng, status Từ chối.
+            KOC có Booking date trong tháng HOẶC status Trùng KOC (có ngày chăm
+            sóc/tạo mới trong tháng). Từ chối = KOC có ngày chăm sóc HOẶC tạo
+            mới trong tháng, status Từ chối.
           </p>
         </div>
 
