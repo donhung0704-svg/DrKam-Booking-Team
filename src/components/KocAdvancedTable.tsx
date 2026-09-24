@@ -72,35 +72,35 @@ const defaultColumns: ColumnConfig[] = [
     label: "PIC phụ trách",
     field: "employee_id",
     type: "select",
-    width: 116,
+    width: 97,
   },
   {
     key: "Id_tiktok_Ten_fb",
     label: "ID TikTok/Tên FB",
     field: "Id_tiktok_Ten_fb",
     type: "text",
-    width: 146,
+    width: 121,
   },
   {
     key: "koc_code",
     label: "Mã KOC",
     field: "koc_code",
     type: "readonly",
-    width: 104,
+    width: 87,
   },
   {
     key: "name",
     label: "Tên KOC",
     field: "name",
     type: "text",
-    width: 134,
+    width: 111,
   },
   {
     key: "follower",
     label: "Follower",
     field: "follower",
     type: "number",
-    width: 88,
+    width: 73,
   },
   {
     key: "tier",
@@ -108,7 +108,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "tier",
     type: "select",
     options: tierOptions,
-    width: 106,
+    width: 89,
   },
   {
     key: "status",
@@ -116,7 +116,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "status",
     type: "select",
     options: statusOptions,
-    width: 112,
+    width: 93,
   },
   {
     key: "tt_can_cham_soc",
@@ -124,7 +124,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "tt_can_cham_soc",
     type: "select",
     options: careStatusOptions,
-    width: 146,
+    width: 121,
   },
   {
     key: "platform",
@@ -132,7 +132,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "platform",
     type: "multiselect",
     options: platformOptions,
-    width: 138,
+    width: 115,
   },
   {
     key: "channel_type",
@@ -140,112 +140,112 @@ const defaultColumns: ColumnConfig[] = [
     field: "channel_type",
     type: "select",
     options: channelTypeOptions,
-    width: 116,
+    width: 97,
   },
   {
     key: "email",
     label: "Email",
     field: "email",
     type: "text",
-    width: 138,
+    width: 115,
   },
   {
     key: "phone",
     label: "SĐT/Zalo",
     field: "phone",
     type: "text",
-    width: 112,
+    width: 93,
   },
   {
     key: "address",
     label: "Address",
     field: "address",
     type: "text",
-    width: 176,
+    width: 145,
   },
   {
     key: "note",
     label: "Note",
     field: "note",
     type: "text",
-    width: 192,
+    width: 159,
   },
   {
     key: "booking_date",
     label: "Booking date",
     field: "booking_date",
     type: "date",
-    width: 106,
+    width: 89,
   },
   {
     key: "date_of_birth",
     label: "Date of birth",
     field: "date_of_birth",
     type: "date",
-    width: 106,
+    width: 89,
   },
   {
     key: "number_of_videos",
     label: "Daily Videos(T-1)",
     field: "number_of_videos",
     type: "number",
-    width: 116,
+    width: 97,
   },
   {
     key: "monthly_videos",
     label: "Monthly Videos",
     field: "monthly_videos",
     type: "number",
-    width: 116,
+    width: 97,
   },
   {
     key: "videos_with_revenue",
     label: "Video có DT",
     field: "videos_with_revenue",
     type: "number",
-    width: 106,
+    width: 89,
   },
   {
     key: "campaign_id",
     label: "Campaign name",
     field: "campaign_id",
     type: "select",
-    width: 146,
+    width: 121,
   },
   {
     key: "gmv",
     label: "GMV ngày",
     field: "gmv",
     type: "number",
-    width: 96,
+    width: 81,
   },
   {
     key: "gmv_thang",
     label: "GMV tháng",
     field: "gmv_thang",
     type: "number",
-    width: 96,
+    width: 81,
   },
   {
     key: "items_sold",
     label: "Món bán ra",
     field: "items_sold",
     type: "number",
-    width: 96,
+    width: 81,
   },
   {
     key: "items_returned",
     label: "Món hoàn",
     field: "items_returned",
     type: "number",
-    width: 92,
+    width: 77,
   },
   {
     // Tỷ lệ hoàn = Món hoàn / Món bán ra (tính sẵn, không sửa)
     key: "return_rate",
     label: "Tỷ lệ hoàn",
     type: "readonly",
-    width: 86,
+    width: 71,
   },
   {
     key: "commission_type",
@@ -253,7 +253,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "commission_type",
     type: "select",
     options: commissionOptions,
-    width: 116,
+    width: 97,
   },
   {
     key: "marital_status",
@@ -261,56 +261,56 @@ const defaultColumns: ColumnConfig[] = [
     field: "marital_status",
     type: "select",
     options: maritalStatusOptions,
-    width: 116,
+    width: 97,
   },
   {
     key: "cast_price",
     label: "Giá cast",
     field: "cast_price",
     type: "number",
-    width: 96,
+    width: 81,
   },
   {
     key: "created_at",
     label: "Ngày tạo",
     field: "created_at",
     type: "readonly",
-    width: 104,
+    width: 87,
   },
   {
     key: "new_contact_date",
     label: "CS gần nhất",
     field: "new_contact_date",
     type: "date",
-    width: 104,
+    width: 87,
   },
   {
     key: "time_contact",
     label: "Time liên hệ",
     field: "new_contact_date",
     type: "readonly",
-    width: 96,
+    width: 81,
   },
   {
     key: "facebook_link",
     label: "Link Facebook",
     field: "facebook_link",
     type: "text",
-    width: 154,
+    width: 127,
   },
   {
     key: "tiktok_link",
     label: "Link TikTok",
     field: "tiktok_link",
     type: "text",
-    width: 154,
+    width: 127,
   },
 ];
 
 const selectColumnWidth = 52;
 const storageKeyOrder = "drkam_koc_column_order_v2";
 const storageKeyPinned = "drkam_koc_pinned_columns_v2";
-const storageKeyWidths = "drkam_koc_column_widths_v2";
+const storageKeyWidths = "drkam_koc_column_widths_v3";
 const defaultVisibleColumnKeys = [
   "employee_id",
   "Id_tiktok_Ten_fb",
@@ -1297,7 +1297,7 @@ const orderedColumns = useMemo(() => {
                           togglePin(column.key);
                         }}
                         title={pinned ? "Bỏ cố định cột" : "Cố định cột"}
-                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[12px] ${
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] ${
                           pinned
                             ? "bg-red-50 text-red-600"
                             : "bg-white text-slate-400 hover:text-slate-700"

@@ -61,31 +61,31 @@ const orderStatusOptions = [
 ];
 
 const defaultColumns: ColumnConfig[] = [
-  { key: "koc_id", label: "ID TikTok/Tên FB", field: "koc_id", type: "readonly", width: 154 },
+  { key: "koc_id", label: "ID TikTok/Tên FB", field: "koc_id", type: "readonly", width: 127 },
   {
     key: "koc_name",
     label: "Tên KOC",
     type: "readonly",
-    width: 134,
+    width: 111,
   },
   {
     key: "koc_address",
     label: "Địa chỉ",
     type: "readonly",
-    width: 176,
+    width: 145,
   },
   {
     key: "koc_phone",
     label: "SĐT/Zalo",
     type: "readonly",
-    width: 112,
+    width: 93,
   },
   {
     key: "employee_id",
     label: "PIC phụ trách",
     field: "employee_id",
     type: "select",
-    width: 104,
+    width: 87,
   },
   {
     key: "booking_type",
@@ -93,7 +93,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "booking_type",
     type: "select",
     options: bookingTypeOptions,
-    width: 124,
+    width: 103,
   },
   {
     key: "status_booking",
@@ -101,35 +101,35 @@ const defaultColumns: ColumnConfig[] = [
     field: "status_booking",
     type: "select",
     options: statusBookingOptions,
-    width: 120,
+    width: 99,
   },
   {
     key: "cast_price",
     label: "Giá cast",
     field: "cast_price",
     type: "number",
-    width: 88,
+    width: 73,
   },
   {
     key: "created_at",
     label: "Ngày tạo booking",
     field: "created_at",
     type: "readonly",
-    width: 112,
+    width: 93,
   },
   {
     key: "expected_post_date",
     label: "Ngày dự kiến đăng",
     field: "expected_post_date",
     type: "date",
-    width: 112,
+    width: 93,
   },
   {
     key: "actual_post_date",
     label: "Ngày đăng thực tế",
     field: "actual_post_date",
     type: "date",
-    width: 112,
+    width: 93,
   },
   {
     key: "product",
@@ -137,56 +137,56 @@ const defaultColumns: ColumnConfig[] = [
     field: "product",
     type: "multiselect",
     options: productOptions,
-    width: 220,
+    width: 181,
   },
   {
     key: "order_items",
     label: "Chi tiết SP",
     field: "order_items",
     type: "readonly",
-    width: 208,
+    width: 171,
   },
   {
     key: "quantity",
     label: "Số lượng",
     field: "quantity",
     type: "number",
-    width: 78,
+    width: 65,
   },
   {
     key: "order_value",
     label: "Giá trị đơn",
     field: "order_value",
     type: "number",
-    width: 96,
+    width: 81,
   },
   {
     key: "delivery_address",
     label: "Địa chỉ giao hàng",
     field: "delivery_address",
     type: "text",
-    width: 192,
+    width: 159,
   },
   {
     key: "recipient_phone",
     label: "SĐT nhận hàng",
     field: "recipient_phone",
     type: "text",
-    width: 112,
+    width: 93,
   },
   {
     key: "ship_date",
     label: "Ngày gửi",
     field: "ship_date",
     type: "date",
-    width: 106,
+    width: 89,
   },
   {
     key: "tracking_code",
     label: "Mã vận đơn",
     field: "tracking_code",
     type: "text",
-    width: 128,
+    width: 107,
   },
   {
     key: "order_status",
@@ -194,21 +194,21 @@ const defaultColumns: ColumnConfig[] = [
     field: "order_status",
     type: "select",
     options: orderStatusOptions,
-    width: 128,
+    width: 107,
   },
   {
     key: "note",
     label: "Ghi chú",
     field: "note",
     type: "text",
-    width: 192,
+    width: 159,
   },
 ];
 
 const selectColumnWidth = 52;
 const storageKeyOrder = "drkam_booking_column_order_v4";
 const storageKeyPinned = "drkam_booking_pinned_columns_v4";
-const storageKeyWidths = "drkam_booking_column_widths_v2";
+const storageKeyWidths = "drkam_booking_column_widths_v3";
 
 // Trường mà tài khoản "shipper" được phép sửa (còn lại chỉ xem)
 const SHIPPER_EDITABLE_KEYS = ["ship_date", "tracking_code", "order_status"];
@@ -1039,7 +1039,7 @@ export default function BookingAdvancedTable({
                           togglePin(column.key);
                         }}
                         title={pinned ? "Bỏ cố định cột" : "Cố định cột"}
-                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[12px] ${
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] ${
                           pinned
                             ? "bg-red-50 text-red-600"
                             : "bg-white text-slate-400 hover:text-slate-700"
