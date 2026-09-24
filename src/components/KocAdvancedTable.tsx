@@ -72,35 +72,35 @@ const defaultColumns: ColumnConfig[] = [
     label: "PIC phụ trách",
     field: "employee_id",
     type: "select",
-    width: 145,
+    width: 116,
   },
   {
     key: "Id_tiktok_Ten_fb",
     label: "ID TikTok/Tên FB",
     field: "Id_tiktok_Ten_fb",
     type: "text",
-    width: 175,
+    width: 146,
   },
   {
     key: "koc_code",
     label: "Mã KOC",
     field: "koc_code",
     type: "readonly",
-    width: 125,
+    width: 104,
   },
   {
     key: "name",
     label: "Tên KOC",
     field: "name",
     type: "text",
-    width: 165,
+    width: 134,
   },
   {
     key: "follower",
     label: "Follower",
     field: "follower",
     type: "number",
-    width: 105,
+    width: 88,
   },
   {
     key: "tier",
@@ -108,7 +108,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "tier",
     type: "select",
     options: tierOptions,
-    width: 130,
+    width: 106,
   },
   {
     key: "status",
@@ -116,7 +116,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "status",
     type: "select",
     options: statusOptions,
-    width: 135,
+    width: 112,
   },
   {
     key: "tt_can_cham_soc",
@@ -124,7 +124,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "tt_can_cham_soc",
     type: "select",
     options: careStatusOptions,
-    width: 175,
+    width: 146,
   },
   {
     key: "platform",
@@ -132,7 +132,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "platform",
     type: "multiselect",
     options: platformOptions,
-    width: 170,
+    width: 138,
   },
   {
     key: "channel_type",
@@ -140,112 +140,112 @@ const defaultColumns: ColumnConfig[] = [
     field: "channel_type",
     type: "select",
     options: channelTypeOptions,
-    width: 145,
+    width: 116,
   },
   {
     key: "email",
     label: "Email",
     field: "email",
     type: "text",
-    width: 170,
+    width: 138,
   },
   {
     key: "phone",
     label: "SĐT/Zalo",
     field: "phone",
     type: "text",
-    width: 135,
+    width: 112,
   },
   {
     key: "address",
     label: "Address",
     field: "address",
     type: "text",
-    width: 220,
+    width: 176,
   },
   {
     key: "note",
     label: "Note",
     field: "note",
     type: "text",
-    width: 240,
+    width: 192,
   },
   {
     key: "booking_date",
     label: "Booking date",
     field: "booking_date",
     type: "date",
-    width: 130,
+    width: 106,
   },
   {
     key: "date_of_birth",
     label: "Date of birth",
     field: "date_of_birth",
     type: "date",
-    width: 130,
+    width: 106,
   },
   {
     key: "number_of_videos",
     label: "Daily Videos(T-1)",
     field: "number_of_videos",
     type: "number",
-    width: 145,
+    width: 116,
   },
   {
     key: "monthly_videos",
     label: "Monthly Videos",
     field: "monthly_videos",
     type: "number",
-    width: 145,
+    width: 116,
   },
   {
     key: "videos_with_revenue",
     label: "Video có DT",
     field: "videos_with_revenue",
     type: "number",
-    width: 130,
+    width: 106,
   },
   {
     key: "campaign_id",
     label: "Campaign name",
     field: "campaign_id",
     type: "select",
-    width: 175,
+    width: 146,
   },
   {
     key: "gmv",
     label: "GMV ngày",
     field: "gmv",
     type: "number",
-    width: 115,
+    width: 96,
   },
   {
     key: "gmv_thang",
     label: "GMV tháng",
     field: "gmv_thang",
     type: "number",
-    width: 115,
+    width: 96,
   },
   {
     key: "items_sold",
     label: "Món bán ra",
     field: "items_sold",
     type: "number",
-    width: 115,
+    width: 96,
   },
   {
     key: "items_returned",
     label: "Món hoàn",
     field: "items_returned",
     type: "number",
-    width: 110,
+    width: 92,
   },
   {
     // Tỷ lệ hoàn = Món hoàn / Món bán ra (tính sẵn, không sửa)
     key: "return_rate",
     label: "Tỷ lệ hoàn",
     type: "readonly",
-    width: 100,
+    width: 86,
   },
   {
     key: "commission_type",
@@ -253,7 +253,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "commission_type",
     type: "select",
     options: commissionOptions,
-    width: 145,
+    width: 116,
   },
   {
     key: "marital_status",
@@ -261,56 +261,56 @@ const defaultColumns: ColumnConfig[] = [
     field: "marital_status",
     type: "select",
     options: maritalStatusOptions,
-    width: 145,
+    width: 116,
   },
   {
     key: "cast_price",
     label: "Giá cast",
     field: "cast_price",
     type: "number",
-    width: 115,
+    width: 96,
   },
   {
     key: "created_at",
     label: "Ngày tạo",
     field: "created_at",
     type: "readonly",
-    width: 125,
+    width: 104,
   },
   {
     key: "new_contact_date",
     label: "CS gần nhất",
     field: "new_contact_date",
     type: "date",
-    width: 125,
+    width: 104,
   },
   {
     key: "time_contact",
     label: "Time liên hệ",
     field: "new_contact_date",
     type: "readonly",
-    width: 115,
+    width: 96,
   },
   {
     key: "facebook_link",
     label: "Link Facebook",
     field: "facebook_link",
     type: "text",
-    width: 190,
+    width: 154,
   },
   {
     key: "tiktok_link",
     label: "Link TikTok",
     field: "tiktok_link",
     type: "text",
-    width: 190,
+    width: 154,
   },
 ];
 
 const selectColumnWidth = 52;
 const storageKeyOrder = "drkam_koc_column_order_v2";
 const storageKeyPinned = "drkam_koc_pinned_columns_v2";
-const storageKeyWidths = "drkam_koc_column_widths_v1";
+const storageKeyWidths = "drkam_koc_column_widths_v2";
 const defaultVisibleColumnKeys = [
   "employee_id",
   "Id_tiktok_Ten_fb",
@@ -1240,7 +1240,7 @@ const orderedColumns = useMemo(() => {
           <thead>
             <tr>
               <th
-                className="border-b border-slate-200 bg-slate-50 px-2 py-2 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
+                className="border-b border-slate-200 bg-slate-50 px-1 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                 style={{
                   width: selectColumnWidth,
                   minWidth: selectColumnWidth,
@@ -1272,7 +1272,7 @@ const orderedColumns = useMemo(() => {
                     onDragStart={() => setDraggingColumn(column.key)}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={() => handleDrop(column.key)}
-                    className="border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
+                    className="border-b border-slate-200 bg-slate-50 px-1 py-1.5 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                     style={{
                       width: getColumnWidth(column),
                       minWidth: getColumnWidth(column),
@@ -1397,7 +1397,7 @@ const orderedColumns = useMemo(() => {
                     }`}
                   >
                     <td
-                      className="border-b border-slate-100 bg-white px-2 py-1.5 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                      className="border-b border-slate-100 bg-white px-1 py-1 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
                       style={{
                         width: selectColumnWidth,
                         minWidth: selectColumnWidth,
@@ -1424,7 +1424,7 @@ const orderedColumns = useMemo(() => {
                       return (
                         <td
                           key={column.key}
-                          className="border-b border-slate-100 bg-white px-2 py-1.5 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                          className="border-b border-slate-100 bg-white px-1 py-1 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
                           style={{
                             width: getColumnWidth(column),
                             minWidth: getColumnWidth(column),
@@ -1687,7 +1687,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getPicColorStyle(String(value || ""))}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] font-semibold outline-none hover:border-slate-200 focus:border-[#3964ff]"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-semibold outline-none hover:border-slate-200 focus:border-[#3964ff]"
         >
           <option value="">Chưa có PIC</option>
           {employees.map((employee) => (
@@ -1713,7 +1713,7 @@ function CellEditor({
         <select
           value={currentValue}
           onChange={(event) => onSave(event.target.value || null)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
 
@@ -1774,7 +1774,7 @@ function CellEditor({
             if (event.key === "Enter") event.currentTarget.blur();
           }}
           placeholder="Chọn hoặc tự ghi"
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
         {saving && <SavingDot />}
       </div>
@@ -1788,7 +1788,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
           {(column.options || []).map((option) => (
@@ -1824,7 +1824,7 @@ function CellEditor({
           name={`${column.key}_${String(value || "")}`}
           value={formatInputValue(column, value)}
           onChange={(nextValue) => onSave(nextValue)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
 
         {saving && <SavingDot />}
@@ -1878,7 +1878,7 @@ function EditableCopyText({
           onInput={(event) => autoResize(event.currentTarget)}
           onBlur={(event) => onSave(event.target.value)}
           placeholder="Ghi chú…"
-          className="block min-h-8 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-transparent px-2 py-1.5 pr-6 text-[12px] leading-5 outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="block min-h-8 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 pr-6 text-[12px] leading-5 outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
       ) : (
         <input
@@ -1890,7 +1890,7 @@ function EditableCopyText({
               event.currentTarget.blur();
             }
           }}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
       )}
 
@@ -2042,7 +2042,7 @@ function MultiSelectDropdown({
         className={`flex w-full items-center justify-between gap-2 rounded-lg border text-left font-semibold outline-none transition ${
           compact
             ? "h-9 border-slate-200 bg-white px-3 text-[12.5px]"
-            : "h-8 border-transparent bg-transparent px-2 text-[12px] hover:border-slate-200 hover:bg-white"
+            : "h-8 border-transparent bg-transparent px-1.5 text-[12px] hover:border-slate-200 hover:bg-white"
         } ${open ? "border-[#3964ff] bg-white ring-2 ring-[#3964ff]/10" : ""}`}
       >
         <span
