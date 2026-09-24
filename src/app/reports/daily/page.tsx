@@ -17,7 +17,8 @@ type ReportRow = {
   isRealPic: boolean;
   lienHe: number;
   phanHoi: number;
-  bookingMoi: number;
+  kocMoi: number; // Số KOC có Booking date = ngày báo cáo
+  bookingMoi: number; // Số booking TẠO MỚI trong ngày (bảng bookings)
   giaCast: number;
   dailyVideoNew: number;
   dailyVideoOld: number;
@@ -156,6 +157,7 @@ export default function PicReportPage() {
           isRealPic: Boolean(employee),
           lienHe: 0,
           phanHoi: 0,
+          kocMoi: 0,
           bookingMoi: 0,
           giaCast: 0,
           dailyVideoNew: 0,
@@ -206,9 +208,9 @@ export default function PicReportPage() {
         picRow.phanHoi += 1;
       }
 
-      // Booking mới = số KOC có ngày Booking (booking_date) = ngày báo cáo
+      // KOC mới = số KOC có ngày Booking (booking_date) = ngày báo cáo
       if (toVietnamDateKey(koc.booking_date) === dayKey) {
-        perfRow.bookingMoi += 1;
+        perfRow.kocMoi += 1;
       }
 
       // Video/GMV tính theo perfRow (PIC nếu có Booking date, ngược lại "Khác").
@@ -228,9 +230,10 @@ export default function PicReportPage() {
     bookings.forEach((booking) => {
       const row = ensureRow(String(booking.employee_id || ""));
 
-      // Giá Cast vẫn lấy từ bảng bookings (booking tạo trong ngày).
-      // Booking mới đã chuyển sang đếm KOC có booking_date = ngày báo cáo (ở vòng lặp kocs).
+      // Booking mới = số booking TẠO MỚI trong ngày (created_at = ngày báo cáo).
+      // Giá Cast cũng lấy từ booking tạo trong ngày.
       if (toVietnamDateKey(booking.created_at) === dayKey) {
+        row.bookingMoi += 1;
         row.giaCast += parseNumber(booking.cast_price);
       }
     });
@@ -273,6 +276,7 @@ export default function PicReportPage() {
         if (row.isRealPic) {
           total.lienHe += row.lienHe;
           total.phanHoi += row.phanHoi;
+          total.kocMoi += row.kocMoi;
           total.bookingMoi += row.bookingMoi;
           total.giaCast += row.giaCast;
         }
@@ -282,6 +286,7 @@ export default function PicReportPage() {
       {
         lienHe: 0,
         phanHoi: 0,
+        kocMoi: 0,
         bookingMoi: 0,
         giaCast: 0,
         dailyVideoNew: 0,
@@ -337,6 +342,7 @@ export default function PicReportPage() {
       "Liên hệ": row.lienHe,
       "Phản hồi": row.phanHoi,
       "Booking mới": row.bookingMoi,
+      "KOC mới": row.kocMoi,
       "Giá Cast": row.giaCast,
       "Daily Videos(T-1)": row.dailyVideoNew + row.dailyVideoOld,
       GMV: row.gmvNgay,
@@ -355,6 +361,7 @@ export default function PicReportPage() {
       { wch: 10 },
       { wch: 10 },
       { wch: 12 },
+      { wch: 10 },
       { wch: 16 },
       { wch: 16 },
       { wch: 16 },
@@ -454,6 +461,7 @@ export default function PicReportPage() {
                 <Th>Liên hệ</Th>
                 <Th>Phản hồi</Th>
                 <Th>Booking mới</Th>
+                <Th>KOC mới</Th>
                 <Th>Giá Cast</Th>
                 <Th>Daily Videos(T-1)</Th>
                 <Th>GMV</Th>
@@ -465,7 +473,7 @@ export default function PicReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -476,7 +484,7 @@ export default function PicReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -496,6 +504,7 @@ export default function PicReportPage() {
                     <Td>{row.lienHe}</Td>
                     <Td>{row.phanHoi}</Td>
                     <Td>{row.bookingMoi}</Td>
+                    <Td>{row.kocMoi}</Td>
                     <Td>{formatMoney(row.giaCast)}</Td>
                     <Td>
                       {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
@@ -525,6 +534,7 @@ export default function PicReportPage() {
                   <td className="px-2 py-4 font-bold">{totals.lienHe}</td>
                   <td className="px-2 py-4 font-bold">{totals.phanHoi}</td>
                   <td className="px-2 py-4 font-bold">{totals.bookingMoi}</td>
+                  <td className="px-2 py-4 font-bold">{totals.kocMoi}</td>
                   <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.giaCast)}
                   </td>
