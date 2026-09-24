@@ -61,31 +61,31 @@ const orderStatusOptions = [
 ];
 
 const defaultColumns: ColumnConfig[] = [
-  { key: "koc_id", label: "ID TikTok/Tên FB", field: "koc_id", type: "readonly", width: 190 },
+  { key: "koc_id", label: "ID TikTok/Tên FB", field: "koc_id", type: "readonly", width: 154 },
   {
     key: "koc_name",
     label: "Tên KOC",
     type: "readonly",
-    width: 165,
+    width: 134,
   },
   {
     key: "koc_address",
     label: "Địa chỉ",
     type: "readonly",
-    width: 220,
+    width: 176,
   },
   {
     key: "koc_phone",
     label: "SĐT/Zalo",
     type: "readonly",
-    width: 135,
+    width: 112,
   },
   {
     key: "employee_id",
     label: "PIC phụ trách",
     field: "employee_id",
     type: "select",
-    width: 125,
+    width: 104,
   },
   {
     key: "booking_type",
@@ -93,7 +93,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "booking_type",
     type: "select",
     options: bookingTypeOptions,
-    width: 155,
+    width: 124,
   },
   {
     key: "status_booking",
@@ -101,35 +101,35 @@ const defaultColumns: ColumnConfig[] = [
     field: "status_booking",
     type: "select",
     options: statusBookingOptions,
-    width: 150,
+    width: 120,
   },
   {
     key: "cast_price",
     label: "Giá cast",
     field: "cast_price",
     type: "number",
-    width: 105,
+    width: 88,
   },
   {
     key: "created_at",
     label: "Ngày tạo booking",
     field: "created_at",
     type: "readonly",
-    width: 135,
+    width: 112,
   },
   {
     key: "expected_post_date",
     label: "Ngày dự kiến đăng",
     field: "expected_post_date",
     type: "date",
-    width: 135,
+    width: 112,
   },
   {
     key: "actual_post_date",
     label: "Ngày đăng thực tế",
     field: "actual_post_date",
     type: "date",
-    width: 135,
+    width: 112,
   },
   {
     key: "product",
@@ -137,56 +137,56 @@ const defaultColumns: ColumnConfig[] = [
     field: "product",
     type: "multiselect",
     options: productOptions,
-    width: 275,
+    width: 220,
   },
   {
     key: "order_items",
     label: "Chi tiết SP",
     field: "order_items",
     type: "readonly",
-    width: 260,
+    width: 208,
   },
   {
     key: "quantity",
     label: "Số lượng",
     field: "quantity",
     type: "number",
-    width: 95,
+    width: 78,
   },
   {
     key: "order_value",
     label: "Giá trị đơn",
     field: "order_value",
     type: "number",
-    width: 120,
+    width: 96,
   },
   {
     key: "delivery_address",
     label: "Địa chỉ giao hàng",
     field: "delivery_address",
     type: "text",
-    width: 240,
+    width: 192,
   },
   {
     key: "recipient_phone",
     label: "SĐT nhận hàng",
     field: "recipient_phone",
     type: "text",
-    width: 140,
+    width: 112,
   },
   {
     key: "ship_date",
     label: "Ngày gửi",
     field: "ship_date",
     type: "date",
-    width: 130,
+    width: 106,
   },
   {
     key: "tracking_code",
     label: "Mã vận đơn",
     field: "tracking_code",
     type: "text",
-    width: 160,
+    width: 128,
   },
   {
     key: "order_status",
@@ -194,21 +194,21 @@ const defaultColumns: ColumnConfig[] = [
     field: "order_status",
     type: "select",
     options: orderStatusOptions,
-    width: 160,
+    width: 128,
   },
   {
     key: "note",
     label: "Ghi chú",
     field: "note",
     type: "text",
-    width: 240,
+    width: 192,
   },
 ];
 
 const selectColumnWidth = 52;
 const storageKeyOrder = "drkam_booking_column_order_v4";
 const storageKeyPinned = "drkam_booking_pinned_columns_v4";
-const storageKeyWidths = "drkam_booking_column_widths_v1";
+const storageKeyWidths = "drkam_booking_column_widths_v2";
 
 // Trường mà tài khoản "shipper" được phép sửa (còn lại chỉ xem)
 const SHIPPER_EDITABLE_KEYS = ["ship_date", "tracking_code", "order_status"];
@@ -981,7 +981,7 @@ export default function BookingAdvancedTable({
             <tr>
               {!restricted && (
               <th
-                className="border-b border-slate-200 bg-slate-50 px-2 py-2 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
+                className="border-b border-slate-200 bg-slate-50 px-1 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                 style={{
                   width: selectColumnWidth,
                   minWidth: selectColumnWidth,
@@ -1014,7 +1014,7 @@ export default function BookingAdvancedTable({
                     onDragStart={() => setDraggingColumn(column.key)}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={() => handleDrop(column.key)}
-                    className="border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
+                    className="border-b border-slate-200 bg-slate-50 px-1 py-1.5 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                     style={{
                       width: getColumnWidth(column),
                       minWidth: getColumnWidth(column),
@@ -1141,7 +1141,7 @@ export default function BookingAdvancedTable({
                   >
                     {!restricted && (
                     <td
-                      className="border-b border-slate-100 bg-white px-2 py-1.5 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                      className="border-b border-slate-100 bg-white px-1 py-1 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
                       style={{
                         width: selectColumnWidth,
                         minWidth: selectColumnWidth,
@@ -1172,7 +1172,7 @@ export default function BookingAdvancedTable({
                       return (
                         <td
                           key={column.key}
-                          className="border-b border-slate-100 bg-white px-2 py-1.5 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                          className="border-b border-slate-100 bg-white px-1 py-1 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
                           style={{
                             width: getColumnWidth(column),
                             minWidth: getColumnWidth(column),
@@ -1431,7 +1431,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">Chưa rõ KOC</option>
           {kocs.map((koc) => (
@@ -1452,7 +1452,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">Chưa có PIC</option>
           {employees.map((employee) => (
@@ -1490,7 +1490,7 @@ function CellEditor({
           value={currentValue}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, currentValue)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
 
@@ -1516,7 +1516,7 @@ function CellEditor({
           name={`${column.key}_${String(value || "")}`}
           value={formatInputValue(column, value)}
           onChange={(nextValue) => onSave(nextValue)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
 
         {saving && <SavingDot />}
@@ -1557,7 +1557,7 @@ function EditableCopyText({
             event.currentTarget.blur();
           }
         }}
-        className="h-8 w-full rounded-lg border border-transparent bg-transparent px-2 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
       />
 
       <button
@@ -1790,7 +1790,7 @@ function ProductMultiSelect({
         className={`flex w-full items-center justify-between gap-2 rounded-lg border text-left font-semibold outline-none transition ${
           compact
             ? "h-9 border-slate-200 bg-white px-3 text-[12.5px]"
-            : "h-8 border-transparent bg-transparent px-2 text-[12px] hover:border-slate-200 hover:bg-white"
+            : "h-8 border-transparent bg-transparent px-1.5 text-[12px] hover:border-slate-200 hover:bg-white"
         } ${open ? "border-[#3964ff] bg-white ring-2 ring-[#3964ff]/10" : ""}`}
       >
         <span
