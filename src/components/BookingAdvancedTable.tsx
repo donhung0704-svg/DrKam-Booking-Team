@@ -61,31 +61,31 @@ const orderStatusOptions = [
 ];
 
 const defaultColumns: ColumnConfig[] = [
-  { key: "koc_id", label: "ID TikTok/Tên FB", field: "koc_id", type: "readonly", width: 127 },
+  { key: "koc_id", label: "ID TikTok/Tên FB", field: "koc_id", type: "readonly", width: 150 },
   {
     key: "koc_name",
     label: "Tên KOC",
     type: "readonly",
-    width: 111,
+    width: 130,
   },
   {
     key: "koc_address",
     label: "Địa chỉ",
     type: "readonly",
-    width: 145,
+    width: 172,
   },
   {
     key: "koc_phone",
     label: "SĐT/Zalo",
     type: "readonly",
-    width: 93,
+    width: 108,
   },
   {
     key: "employee_id",
     label: "PIC phụ trách",
     field: "employee_id",
     type: "select",
-    width: 87,
+    width: 110,
   },
   {
     key: "booking_type",
@@ -93,7 +93,7 @@ const defaultColumns: ColumnConfig[] = [
     field: "booking_type",
     type: "select",
     options: bookingTypeOptions,
-    width: 103,
+    width: 118,
   },
   {
     key: "status_booking",
@@ -101,35 +101,35 @@ const defaultColumns: ColumnConfig[] = [
     field: "status_booking",
     type: "select",
     options: statusBookingOptions,
-    width: 99,
+    width: 120,
   },
   {
     key: "cast_price",
     label: "Giá cast",
     field: "cast_price",
     type: "number",
-    width: 73,
+    width: 88,
   },
   {
     key: "created_at",
     label: "Ngày tạo booking",
     field: "created_at",
     type: "readonly",
-    width: 93,
+    width: 118,
   },
   {
     key: "expected_post_date",
     label: "Ngày dự kiến đăng",
     field: "expected_post_date",
     type: "date",
-    width: 93,
+    width: 118,
   },
   {
     key: "actual_post_date",
     label: "Ngày đăng thực tế",
     field: "actual_post_date",
     type: "date",
-    width: 93,
+    width: 118,
   },
   {
     key: "product",
@@ -137,56 +137,56 @@ const defaultColumns: ColumnConfig[] = [
     field: "product",
     type: "multiselect",
     options: productOptions,
-    width: 181,
+    width: 200,
   },
   {
     key: "order_items",
     label: "Chi tiết SP",
     field: "order_items",
     type: "readonly",
-    width: 171,
+    width: 190,
   },
   {
     key: "quantity",
     label: "Số lượng",
     field: "quantity",
     type: "number",
-    width: 65,
+    width: 80,
   },
   {
     key: "order_value",
     label: "Giá trị đơn",
     field: "order_value",
     type: "number",
-    width: 81,
+    width: 96,
   },
   {
     key: "delivery_address",
     label: "Địa chỉ giao hàng",
     field: "delivery_address",
     type: "text",
-    width: 159,
+    width: 180,
   },
   {
     key: "recipient_phone",
     label: "SĐT nhận hàng",
     field: "recipient_phone",
     type: "text",
-    width: 93,
+    width: 110,
   },
   {
     key: "ship_date",
     label: "Ngày gửi",
     field: "ship_date",
     type: "date",
-    width: 89,
+    width: 100,
   },
   {
     key: "tracking_code",
     label: "Mã vận đơn",
     field: "tracking_code",
     type: "text",
-    width: 107,
+    width: 120,
   },
   {
     key: "order_status",
@@ -194,21 +194,21 @@ const defaultColumns: ColumnConfig[] = [
     field: "order_status",
     type: "select",
     options: orderStatusOptions,
-    width: 107,
+    width: 130,
   },
   {
     key: "note",
     label: "Ghi chú",
     field: "note",
     type: "text",
-    width: 159,
+    width: 180,
   },
 ];
 
 const selectColumnWidth = 52;
 const storageKeyOrder = "drkam_booking_column_order_v4";
 const storageKeyPinned = "drkam_booking_pinned_columns_v4";
-const storageKeyWidths = "drkam_booking_column_widths_v3";
+const storageKeyWidths = "drkam_booking_column_widths_v4";
 
 // Trường mà tài khoản "shipper" được phép sửa (còn lại chỉ xem)
 const SHIPPER_EDITABLE_KEYS = ["ship_date", "tracking_code", "order_status"];
