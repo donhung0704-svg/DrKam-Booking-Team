@@ -27,7 +27,6 @@ const statusOptions = [
   "Đã chốt",
   "Từ chối",
   "Trùng KOC",
-  "Dừng CS",
 ];
 
 const channelTypeOptions = ["Người thật", "AI", "Unbox", "POV"];
