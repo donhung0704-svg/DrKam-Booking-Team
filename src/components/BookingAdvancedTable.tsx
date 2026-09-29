@@ -1141,7 +1141,7 @@ export default function BookingAdvancedTable({
                   >
                     {!restricted && (
                     <td
-                      className="border-b border-slate-100 bg-white px-1 py-1 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                      className="border-b border-slate-100 bg-white px-1 py-0.5 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
                       style={{
                         width: selectColumnWidth,
                         minWidth: selectColumnWidth,
@@ -1172,7 +1172,7 @@ export default function BookingAdvancedTable({
                       return (
                         <td
                           key={column.key}
-                          className="border-b border-slate-100 bg-white px-1 py-1 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                          className="border-b border-slate-100 bg-white px-1 py-0.5 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
                           style={{
                             width: getColumnWidth(column),
                             minWidth: getColumnWidth(column),
@@ -1431,7 +1431,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">Chưa rõ KOC</option>
           {kocs.map((koc) => (
@@ -1452,7 +1452,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">Chưa có PIC</option>
           {employees.map((employee) => (
@@ -1490,7 +1490,7 @@ function CellEditor({
           value={currentValue}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, currentValue)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
 
@@ -1516,7 +1516,7 @@ function CellEditor({
           name={`${column.key}_${String(value || "")}`}
           value={formatInputValue(column, value)}
           onChange={(nextValue) => onSave(nextValue)}
-          className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
 
         {saving && <SavingDot />}
@@ -1557,7 +1557,7 @@ function EditableCopyText({
             event.currentTarget.blur();
           }
         }}
-        className="h-8 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
       />
 
       <button
@@ -1790,7 +1790,7 @@ function ProductMultiSelect({
         className={`flex w-full items-center justify-between gap-2 rounded-lg border text-left font-semibold outline-none transition ${
           compact
             ? "h-9 border-slate-200 bg-white px-3 text-[12.5px]"
-            : "h-8 border-transparent bg-transparent px-1.5 text-[12px] hover:border-slate-200 hover:bg-white"
+            : "h-7 border-transparent bg-transparent px-1.5 text-[12px] hover:border-slate-200 hover:bg-white"
         } ${open ? "border-[#3964ff] bg-white ring-2 ring-[#3964ff]/10" : ""}`}
       >
         <span
