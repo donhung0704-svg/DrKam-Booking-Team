@@ -938,6 +938,37 @@ header.fixed.h-\[92px\] {
 .crm-light .koc-advanced-scroll tbody tr:hover td[style*="left"] {
   background: #f8fafc !important;
 }
+
+/* Thanh keo ngang/doc luon hien ro & de grab (ghim duoi day vung bang) */
+.crm-light .koc-advanced-scroll::-webkit-scrollbar,
+.crm-light .booking-advanced-scroll::-webkit-scrollbar,
+.crm-light .campaign-advanced-scroll::-webkit-scrollbar {
+  width: 12px;
+  height: 14px;
+}
+.crm-light .koc-advanced-scroll::-webkit-scrollbar-track,
+.crm-light .booking-advanced-scroll::-webkit-scrollbar-track,
+.crm-light .campaign-advanced-scroll::-webkit-scrollbar-track {
+  background: #eef2f7;
+  border-radius: 8px;
+}
+.crm-light .koc-advanced-scroll::-webkit-scrollbar-thumb,
+.crm-light .booking-advanced-scroll::-webkit-scrollbar-thumb,
+.crm-light .campaign-advanced-scroll::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 8px;
+  border: 3px solid #eef2f7;
+}
+.crm-light .koc-advanced-scroll::-webkit-scrollbar-thumb:hover,
+.crm-light .booking-advanced-scroll::-webkit-scrollbar-thumb:hover,
+.crm-light .campaign-advanced-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+.crm-light .koc-advanced-scroll,
+.crm-light .booking-advanced-scroll,
+.crm-light .campaign-advanced-scroll {
+  scrollbar-color: #94a3b8 #eef2f7;
+}
 /* Booking Advanced Table - Excel mode */
 .crm-light .booking-advanced-table {
   border-collapse: separate !important;
