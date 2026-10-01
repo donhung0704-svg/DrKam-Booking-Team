@@ -13,9 +13,11 @@ export default function SavedFiltersDropdown({
   presets: Preset[];
   onApply: (id: string) => void;
   onDelete: (id: string) => void;
-  onSaveCurrent: () => void;
+  // Lưu bộ lọc hiện tại với tên do người dùng nhập (ô input, không dùng window.prompt)
+  onSaveCurrent: (name: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -26,6 +28,14 @@ export default function SavedFiltersDropdown({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  function handleSave() {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    onSaveCurrent(trimmed);
+    setName("");
+    setOpen(false);
+  }
 
   return (
     <div ref={wrapRef} className="relative">
@@ -48,17 +58,36 @@ export default function SavedFiltersDropdown({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-          <button
-            type="button"
-            onClick={() => {
-              onSaveCurrent();
-              setOpen(false);
-            }}
-            className="flex w-full items-center gap-2 border-b border-slate-100 px-4 py-3 text-left text-[12.5px] font-bold text-[#3964ff] hover:bg-blue-50"
-          >
-            + Lưu bộ lọc hiện tại
-          </button>
+        <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+          {/* Ô nhập tên + nút Lưu (hiện ngay, không dùng popup trình duyệt) */}
+          <div className="border-b border-slate-100 bg-slate-50 p-2">
+            <div className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleSave();
+                  }
+                }}
+                placeholder="Tên bộ lọc mới..."
+                className="h-9 min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] font-semibold outline-none focus:border-[#3964ff]"
+              />
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={!name.trim()}
+                className="h-9 shrink-0 rounded-lg bg-[#3964ff] px-3 text-[12.5px] font-bold text-white hover:bg-[#2f55e0] disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                Lưu
+              </button>
+            </div>
+            <p className="mt-1 px-0.5 text-[11px] font-medium text-slate-400">
+              Lưu các điều kiện lọc đang áp dụng. Dùng chung cả team.
+            </p>
+          </div>
 
           <div className="max-h-72 overflow-auto p-1.5">
             {presets.length === 0 && (

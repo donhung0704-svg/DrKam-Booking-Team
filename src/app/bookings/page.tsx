@@ -590,24 +590,24 @@ export default function BookingListPage() {
     loadPresets();
   }, []);
 
-  async function saveCurrentAsPreset() {
+  async function saveCurrentAsPreset(name: string) {
     if (filters.length === 0) {
       setMessage("Chưa có điều kiện lọc nào để lưu.");
       return;
     }
 
-    const name = window.prompt("Đặt tên cho bộ lọc (dùng chung cả team):")?.trim();
-    if (!name) return;
+    const cleanName = name.trim();
+    if (!cleanName) return;
 
     await supabase
       .from("filter_presets")
       .delete()
       .eq("scope", "booking")
-      .eq("name", name);
+      .eq("name", cleanName);
 
     const { error } = await supabase.from("filter_presets").insert({
       scope: "booking",
-      name,
+      name: cleanName,
       filters,
       sort: sortState,
     });
@@ -617,7 +617,7 @@ export default function BookingListPage() {
       return;
     }
 
-    setMessage("");
+    setMessage(`Đã lưu bộ lọc "${cleanName}".`);
     loadPresets();
   }
 

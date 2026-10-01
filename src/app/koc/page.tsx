@@ -260,21 +260,21 @@ export default function KocListPage() {
     loadPresets();
   }, []);
 
-  async function saveCurrentAsPreset() {
+  async function saveCurrentAsPreset(name: string) {
     if (activeFilters.length === 0) {
       setMessage("Chưa có điều kiện lọc nào để lưu.");
       return;
     }
 
-    const name = window.prompt("Đặt tên cho bộ lọc (dùng chung cả team):")?.trim();
-    if (!name) return;
+    const cleanName = name.trim();
+    if (!cleanName) return;
 
     // Trùng tên -> xóa cái cũ rồi thêm mới
-    await supabase.from("filter_presets").delete().eq("scope", "koc").eq("name", name);
+    await supabase.from("filter_presets").delete().eq("scope", "koc").eq("name", cleanName);
 
     const { error } = await supabase.from("filter_presets").insert({
       scope: "koc",
-      name,
+      name: cleanName,
       filters: activeFilters,
       sort: sortState,
     });
@@ -284,7 +284,7 @@ export default function KocListPage() {
       return;
     }
 
-    setMessage("");
+    setMessage(`Đã lưu bộ lọc "${cleanName}".`);
     loadPresets();
   }
 
