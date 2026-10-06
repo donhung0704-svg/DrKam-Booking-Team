@@ -479,12 +479,23 @@ export default function MonthlyReportPage() {
 
       // Đồng ý = KOC có NGÀY BOOKING (booking_date) trong tháng
       //          HOẶC status "Trùng KOC" (có ngày chăm sóc/tạo mới trong tháng).
+      // Phân biệt theo nhóm PIC (team_type):
+      //  - Hunter: nhánh "Trùng KOC" KHÔNG cần Booking date (giữ như cũ).
+      //  - Farmer ("Famer") và PIC chưa phân loại (tạm theo Farmer):
+      //    nhánh "Trùng KOC" PHẢI có Booking date mới tính.
       const inMonthContactOrCreated =
         contactKey.slice(0, 7) === monthKey ||
         createdKey.slice(0, 7) === monthKey;
+      const picTeamType =
+        (employeeMap.get(String(koc.employee_id))?.team_type as string) || "";
+      const isHunter = picTeamType === "Hunter";
+      const trungKocDongY =
+        status === "Trùng KOC" &&
+        inMonthContactOrCreated &&
+        (isHunter ? true : hasBookingDate(koc.booking_date));
       if (
         monthKeyOfBookingDate(koc.booking_date) === monthKey ||
-        (status === "Trùng KOC" && inMonthContactOrCreated)
+        trungKocDongY
       ) {
         picRow.dongY += 1;
       }
@@ -965,8 +976,9 @@ export default function MonthlyReportPage() {
             Phễu Liên hệ → Phản hồi → Đồng ý / Từ chối. Phản hồi = KOC có ngày
             chăm sóc HOẶC tạo mới trong tháng, status ≠ Chờ phản hồi. Đồng ý =
             KOC có Booking date trong tháng HOẶC status Trùng KOC (có ngày chăm
-            sóc/tạo mới trong tháng). Từ chối = KOC có ngày chăm sóc HOẶC tạo
-            mới trong tháng, status Từ chối.
+            sóc/tạo mới trong tháng); riêng PIC nhóm Farmer thì Trùng KOC phải
+            CÓ Booking date mới tính (Hunter không cần). Từ chối = KOC có ngày
+            chăm sóc HOẶC tạo mới trong tháng, status Từ chối.
           </p>
         </div>
 
