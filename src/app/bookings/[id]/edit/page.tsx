@@ -44,6 +44,8 @@ const productOptions = [
   "Kem đánh răng cam 60g",
   "Bàn chải ULTRASOFT",
   "Bộ cạo lưỡi nhựa",
+  "Cốc nhựa màu Hồng",
+  "Cốc nhựa màu Xanh lá",
 ];
 
 type OrderItem = {
