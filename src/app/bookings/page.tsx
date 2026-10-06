@@ -840,10 +840,10 @@ export default function BookingListPage() {
         </div>
       )}
 
-      <section className="sticky top-[92px] z-20 mb-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex flex-wrap items-end gap-2">
+      <section className="sticky top-[92px] z-20 mb-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+        <div className="flex flex-wrap items-end gap-x-2 gap-y-1.5">
           <div className="w-full sm:w-[190px]">
-            <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
+            <label className="mb-0.5 block text-[11px] font-bold text-slate-600">
               Trường cần lọc
             </label>
             <select
@@ -852,7 +852,7 @@ export default function BookingListPage() {
                 setDraftField(event.target.value);
                 setDraftValue("");
               }}
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
             >
               {filterFields.map((field) => (
                 <option key={field.value} value={field.value}>
@@ -863,7 +863,7 @@ export default function BookingListPage() {
           </div>
 
           <div className="w-full sm:w-[150px]">
-            <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
+            <label className="mb-0.5 block text-[11px] font-bold text-slate-600">
               Điều kiện
             </label>
             <select
@@ -875,7 +875,7 @@ export default function BookingListPage() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") addFilter();
               }}
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
             >
               {filterOperators.map((operator) => (
                 <option key={operator.value} value={operator.value}>
@@ -886,7 +886,7 @@ export default function BookingListPage() {
           </div>
 
           <div className="w-full sm:w-[220px]">
-            <label className="mb-1.5 block text-[12.5px] font-bold text-slate-600">
+            <label className="mb-0.5 block text-[11px] font-bold text-slate-600">
               Giá trị
             </label>
             {["empty", "not_empty"].includes(draftOperator) ? (
@@ -894,7 +894,7 @@ export default function BookingListPage() {
               <button
                 type="button"
                 onClick={addFilter}
-                className="h-10 w-full rounded-xl border border-dashed border-[#3964ff] bg-blue-50 px-3 text-[13px] font-bold text-[#3964ff] hover:bg-blue-100"
+                className="h-9 w-full rounded-xl border border-dashed border-[#3964ff] bg-blue-50 px-3 text-[13px] font-bold text-[#3964ff] hover:bg-blue-100"
               >
                 + Thêm điều kiện
               </button>
@@ -904,7 +904,7 @@ export default function BookingListPage() {
                 value={draftValue}
                 onChange={setDraftValue}
                 placeholder="dd/mm/yyyy"
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff]"
+                className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-[13px] outline-none focus:border-[#3964ff]"
               />
             ) : selectFilterFields.has(draftField) && draftValueOptions ? (
               <select
@@ -916,7 +916,7 @@ export default function BookingListPage() {
                     addFilter();
                   }
                 }}
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+                className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
               >
                 <option value="">-- Chọn --</option>
                 {draftValueOptions.map((option) => (
@@ -936,7 +936,7 @@ export default function BookingListPage() {
                   }
                 }}
                 placeholder="Nhập từ khóa (Enter để thêm)..."
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
+                className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-[#3964ff]"
               />
             )}
           </div>
@@ -944,7 +944,7 @@ export default function BookingListPage() {
           <button
             type="button"
             onClick={clearFilters}
-            className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+            className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-100"
           >
             Xóa tất cả bộ lọc
           </button>
@@ -1020,11 +1020,11 @@ export default function BookingListPage() {
         </div>
 
         {filters.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {filters.map((condition) => (
               <div
                 key={condition.id}
-                className="flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[12px] font-bold text-blue-700"
+                className="flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[12px] font-bold text-blue-700"
               >
                 <span>{getBookingFilterSummary(condition)}</span>
                 <button
