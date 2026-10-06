@@ -63,6 +63,10 @@ const careStatusOptions = [
   "Pust thêm vid",
   "Pust thêm vid + kịch bản",
   "Pust kịch bản",
+  "Gel - Cặp đôi",
+  "Gel - Unbox",
+  "AI FB",
+  "TAP",
 ];
 
 const defaultColumns: ColumnConfig[] = [
