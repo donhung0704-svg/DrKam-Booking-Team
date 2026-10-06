@@ -42,7 +42,7 @@ export default function SavedFiltersDropdown({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={`flex h-10 items-center gap-2 rounded-xl border px-3 text-[13px] font-bold shadow-sm ${
+        className={`flex h-9 items-center gap-2 rounded-xl border px-3 text-[13px] font-bold shadow-sm ${
           open
             ? "border-emerald-300 bg-emerald-50 text-emerald-700"
             : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
