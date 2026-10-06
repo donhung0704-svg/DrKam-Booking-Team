@@ -73,6 +73,16 @@ const commissionOptions = [
   "16% tn 8% ads",
   "1% tn 1% ads",
 ];
+// Giống careStatusOptions trong KocAdvancedTable (trường "TT cần chăm sóc")
+const careStatusOptions = [
+  "Pust thêm vid",
+  "Pust thêm vid + kịch bản",
+  "Pust kịch bản",
+  "Gel - Cặp đôi",
+  "Gel - Unbox",
+  "AI FB",
+  "TAP",
+];
 const pageSizeOptions = [100, 200, 300];
 // Các cột số cần tính tổng (khớp cột type "number" của bảng KOC)
 const SUM_FIELDS = [
@@ -115,6 +125,7 @@ const filterFields: FilterField[] = [
   { key: "follower", label: "Follower", field: "follower", type: "number" },
   { key: "tier", label: "Tier", field: "tier", type: "select", options: tierOptions },
   { key: "status", label: "Status", field: "status", type: "select", options: statusOptions },
+  { key: "tt_can_cham_soc", label: "TT cần chăm sóc", field: "tt_can_cham_soc", type: "select", options: careStatusOptions },
   { key: "platform", label: "Nền tảng", field: "platform", type: "text" },
   { key: "channel_type", label: "Channel type", field: "channel_type", type: "select", options: channelTypeOptions },
   { key: "employee_id", label: "PIC phụ trách", field: "employee_id", type: "select", relation: "employee" },
