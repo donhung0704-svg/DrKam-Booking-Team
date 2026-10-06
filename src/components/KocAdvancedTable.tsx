@@ -381,6 +381,35 @@ export default function KocAdvancedTable({
 }) {
   const router = useRouter();
 
+  // Vùng cuộn bảng: tính chiều cao động để ĐÁY bảng (chỗ có thanh kéo ngang)
+  // luôn nằm trong màn hình, không bị đẩy xuống dưới khi bộ lọc xuống nhiều dòng.
+  const scrollBoxRef = useRef<HTMLDivElement | null>(null);
+  const [scrollMaxH, setScrollMaxH] = useState<number | null>(null);
+
+  useEffect(() => {
+    function recompute() {
+      const node = scrollBoxRef.current;
+      if (!node) return;
+      const top = node.getBoundingClientRect().top + window.scrollY;
+      const reserve = 96; // chừa chỗ cho footer phân trang + lề dưới
+      const h = window.innerHeight - top - reserve;
+      setScrollMaxH(Math.max(240, Math.round(h)));
+    }
+
+    recompute();
+    window.addEventListener("resize", recompute);
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(recompute);
+      ro.observe(document.body);
+    }
+
+    return () => {
+      window.removeEventListener("resize", recompute);
+      ro?.disconnect();
+    };
+  }, []);
+
   const [columnOrder, setColumnOrder] = useState<string[]>(
     defaultColumns.map((column) => column.key)
   );
@@ -1231,7 +1260,11 @@ const orderedColumns = useMemo(() => {
         )}
       </div>
 
-      <div className="koc-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto">
+      <div
+        ref={scrollBoxRef}
+        className="koc-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto"
+        style={scrollMaxH ? { maxHeight: scrollMaxH } : undefined}
+      >
         <table
           className="koc-advanced-table text-left text-sm"
           style={{ minWidth: `${tableWidth}px`, width: `${tableWidth}px` }}
