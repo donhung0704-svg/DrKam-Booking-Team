@@ -261,25 +261,40 @@ export default function BookingAdvancedTable({
   const [scrollMaxH, setScrollMaxH] = useState<number | null>(null);
 
   useEffect(() => {
+    let raf = 0;
     function recompute() {
       const node = scrollBoxRef.current;
       if (!node) return;
-      const top = node.getBoundingClientRect().top + window.scrollY;
-      const reserve = 96; // chừa chỗ cho footer phân trang + lề dưới
+      // Dùng vị trí THỰC trên màn hình (viewport), cập nhật cả khi cuộn ->
+      // bảng luôn cao vừa đủ để lấp xuống gần đáy màn hình, không thừa chỗ trống.
+      // Chặn mép trên ở 92px (dưới header cố định) để bảng không cao quá 1 màn hình
+      // và không chui lên sau header -> thanh kéo ngang luôn ở gần đáy màn hình.
+      const top = Math.max(node.getBoundingClientRect().top, 92);
+      const reserve = 84; // chừa chỗ cho footer phân trang + lề dưới
       const h = window.innerHeight - top - reserve;
       setScrollMaxH(Math.max(240, Math.round(h)));
     }
+    function onScrollOrResize() {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        recompute();
+      });
+    }
 
     recompute();
-    window.addEventListener("resize", recompute);
+    window.addEventListener("resize", onScrollOrResize);
+    window.addEventListener("scroll", onScrollOrResize, true);
     let ro: ResizeObserver | null = null;
     if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(recompute);
+      ro = new ResizeObserver(onScrollOrResize);
       ro.observe(document.body);
     }
 
     return () => {
-      window.removeEventListener("resize", recompute);
+      if (raf) window.cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("scroll", onScrollOrResize, true);
       ro?.disconnect();
     };
   }, []);
