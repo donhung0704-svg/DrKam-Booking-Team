@@ -375,7 +375,7 @@ export default function PicReportPage() {
       "Phản hồi KOC mới": row.phanHoiKocMoi,
       "Phản hồi KOC cũ": row.phanHoi - row.phanHoiKocMoi,
       "Booking mới": row.bookingMoi,
-      "KOC mới": row.kocMoi,
+      "KOC chốt mới": row.kocMoi,
       "Giá Cast": row.giaCast,
       "Daily Videos(T-1)": row.dailyVideoNew + row.dailyVideoOld,
       GMV: row.gmvNgay,
@@ -502,7 +502,7 @@ export default function PicReportPage() {
                 <Th>Phản hồi KOC mới</Th>
                 <Th>Phản hồi KOC cũ</Th>
                 <Th>Booking mới</Th>
-                <Th>KOC mới</Th>
+                <Th>KOC chốt mới</Th>
                 <Th>Giá Cast</Th>
                 <Th>Daily Videos(T-1)</Th>
                 <Th>GMV</Th>
