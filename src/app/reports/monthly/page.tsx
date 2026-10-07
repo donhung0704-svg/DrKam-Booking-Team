@@ -47,6 +47,7 @@ type ReportRow = {
   kocAiFb: number; // "AI FB"
   kocGelCapDoi: number; // "Gel - Cặp đôi"
   kocGelUnbox: number; // "Gel - Unbox"
+  kocTap: number; // "TAP"
 };
 
 const PIC_FILTER_KEY = "drkam_report_pic_filter";
@@ -447,6 +448,7 @@ export default function MonthlyReportPage() {
           kocAiFb: 0,
           kocGelCapDoi: 0,
           kocGelUnbox: 0,
+          kocTap: 0,
         });
       }
 
@@ -534,6 +536,8 @@ export default function MonthlyReportPage() {
           picRow.kocGelCapDoi += 1;
         } else if (careStatus === "Gel - Unbox") {
           picRow.kocGelUnbox += 1;
+        } else if (careStatus === "TAP") {
+          picRow.kocTap += 1;
         }
       }
 
@@ -666,6 +670,7 @@ export default function MonthlyReportPage() {
           total.kocAiFb += row.kocAiFb;
           total.kocGelCapDoi += row.kocGelCapDoi;
           total.kocGelUnbox += row.kocGelUnbox;
+          total.kocTap += row.kocTap;
         }
 
         return total;
@@ -691,6 +696,7 @@ export default function MonthlyReportPage() {
         kocAiFb: 0,
         kocGelCapDoi: 0,
         kocGelUnbox: 0,
+        kocTap: 0,
       }
     );
   }, [reportRows]);
@@ -1078,6 +1084,7 @@ export default function MonthlyReportPage() {
                 <Th>KOC AI FB</Th>
                 <Th>KOC Gel cặp đôi</Th>
                 <Th>KOC Gel Unbox</Th>
+                <Th>KOC TAP</Th>
                 <Th>Monthly Videos</Th>
                 <Th>Giá Cast</Th>
                 <Th>GMV</Th>
@@ -1088,7 +1095,7 @@ export default function MonthlyReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={14}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -1099,7 +1106,7 @@ export default function MonthlyReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={14}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -1132,6 +1139,7 @@ export default function MonthlyReportPage() {
                     <Td>{formatNumber(row.kocAiFb)}</Td>
                     <Td>{formatNumber(row.kocGelCapDoi)}</Td>
                     <Td>{formatNumber(row.kocGelUnbox)}</Td>
+                    <Td>{formatNumber(row.kocTap)}</Td>
                     <Td>
                       {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
                     </Td>
@@ -1160,6 +1168,7 @@ export default function MonthlyReportPage() {
                     {totals.kocGelCapDoi}
                   </td>
                   <td className="px-2 py-4 font-bold">{totals.kocGelUnbox}</td>
+                  <td className="px-2 py-4 font-bold">{totals.kocTap}</td>
                   <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
                   </td>
