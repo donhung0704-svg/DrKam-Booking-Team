@@ -377,7 +377,6 @@ export default function PicReportPage() {
       "Booking mới": row.bookingMoi,
       "KOC chốt mới": row.kocMoi,
       "Giá Cast": row.giaCast,
-      "Daily Videos(T-1)": row.dailyVideoNew + row.dailyVideoOld,
       GMV: row.gmvNgay,
       "Ghi chú CV": row.isRealPic ? notes[row.employeeId] || "" : "",
     }));
@@ -399,7 +398,6 @@ export default function PicReportPage() {
       { wch: 16 },
       { wch: 12 },
       { wch: 10 },
-      { wch: 16 },
       { wch: 16 },
       { wch: 16 },
       { wch: 40 },
@@ -504,7 +502,6 @@ export default function PicReportPage() {
                 <Th>Booking mới</Th>
                 <Th>KOC chốt mới</Th>
                 <Th>Giá Cast</Th>
-                <Th>Daily Videos(T-1)</Th>
                 <Th>GMV</Th>
                 <Th>Ghi chú CV</Th>
               </tr>
@@ -514,7 +511,7 @@ export default function PicReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={12}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -525,7 +522,7 @@ export default function PicReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={12}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -551,9 +548,6 @@ export default function PicReportPage() {
                     <Td>{row.bookingMoi}</Td>
                     <Td>{row.kocMoi}</Td>
                     <Td>{formatMoney(row.giaCast)}</Td>
-                    <Td>
-                      {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
-                    </Td>
                     <Td>{formatMoney(row.gmvNgay)}</Td>
                     <Td>
                       {row.isRealPic ? (
@@ -592,9 +586,6 @@ export default function PicReportPage() {
                   <td className="px-2 py-4 font-bold">{totals.kocMoi}</td>
                   <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.giaCast)}
-                  </td>
-                  <td className="px-2 py-4 font-bold">
-                    {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
                   </td>
                   <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
