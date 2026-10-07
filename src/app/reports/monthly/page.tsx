@@ -34,6 +34,12 @@ type ReportRow = {
   kocChotMoi: number; // KOC có Booking date trong tháng báo cáo
   // Retention = số KOC có Booking date của PIC có gmv_thang>0 (tử số) / kocVidPrevDenom (mẫu số).
   kocWithGmv: number;
+  // KOC Booking = số kênh/KOC có Booking date
+  kocBooking: number;
+  // KOC Booking chưa lên vid = có Booking date, Monthly Videos = 0, tier KHÁC Mất cast/Hoàn cao/Dừng CS
+  kocBookingChuaVid: number;
+  // Kênh Booking đã lên vid = có Booking date, Monthly Videos > 0
+  kocBookingDaVid: number;
   // Báo cáo tổng quát (KOC tạo mới trong tháng theo status)
   dongY: number; // status "Đã chốt"
   tuChoi: number; // status "Từ chối"
@@ -429,6 +435,9 @@ export default function MonthlyReportPage() {
           kocVidPrevDenom: 0,
           kocChotMoi: 0,
           kocWithGmv: 0,
+          kocBooking: 0,
+          kocBookingChuaVid: 0,
+          kocBookingDaVid: 0,
           dongY: 0,
           tuChoi: 0,
         });
@@ -547,6 +556,25 @@ export default function MonthlyReportPage() {
         perfRow.kocChotMoi += 1;
         perfRow.bookingMoi += 1;
       }
+
+      // Thống kê theo kênh CÓ Booking date (hasBookingDate = đã có booking):
+      //  - KOC Booking = tổng số kênh có Booking date
+      //  - Kênh Booking đã lên vid = Monthly Videos > 0
+      //  - KOC Booking chưa lên vid = Monthly Videos = 0 VÀ tier KHÁC Mất cast/Hoàn cao/Dừng CS
+      if (hasBookingDate(koc.booking_date)) {
+        perfRow.kocBooking += 1;
+        if (monthlyVideos > 0) {
+          perfRow.kocBookingDaVid += 1;
+        } else {
+          const tier = String(koc.tier || "").trim();
+          const tierExcluded = ["Mất cast", "Hoàn cao", "Dừng CS"].includes(
+            tier
+          );
+          if (!tierExcluded) {
+            perfRow.kocBookingChuaVid += 1;
+          }
+        }
+      }
     });
 
     bookings.forEach((booking) => {
@@ -603,6 +631,10 @@ export default function MonthlyReportPage() {
         total.videoReal += row.videoReal;
         total.videoOther += row.videoOther;
         total.gmvNgay += row.gmvNgay;
+        // KOC Booking (các cột kênh có Booking date): cộng CẢ dòng "Khác".
+        total.kocBooking += row.kocBooking;
+        total.kocBookingChuaVid += row.kocBookingChuaVid;
+        total.kocBookingDaVid += row.kocBookingDaVid;
 
         // Các cột đếm còn lại: BỎ dòng "Khác" (chỉ cộng PIC có tên).
         if (row.isRealPic) {
@@ -629,6 +661,9 @@ export default function MonthlyReportPage() {
         videoReal: 0,
         videoOther: 0,
         gmvNgay: 0,
+        kocBooking: 0,
+        kocBookingChuaVid: 0,
+        kocBookingDaVid: 0,
         dongY: 0,
         tuChoi: 0,
       }
@@ -727,6 +762,9 @@ export default function MonthlyReportPage() {
       "Liên hệ": row.lienHe,
       "Phản hồi": row.phanHoi,
       "Booking mới": row.bookingMoi,
+      "KOC Booking": row.kocBooking,
+      "KOC Booking chưa lên vid": row.kocBookingChuaVid,
+      "Kênh Booking đã lên vid": row.kocBookingDaVid,
       "Giá Cast": row.giaCast,
       "Monthly Videos (New KOCs)": row.dailyVideoNew,
       "Monthly Videos (Old KOCs)": row.dailyVideoOld,
@@ -751,6 +789,9 @@ export default function MonthlyReportPage() {
       { wch: 10 },
       { wch: 10 },
       { wch: 12 },
+      { wch: 14 },
+      { wch: 20 },
+      { wch: 20 },
       { wch: 18 },
       { wch: 18 },
       { wch: 16 },
@@ -858,6 +899,9 @@ export default function MonthlyReportPage() {
                 <Th>Liên hệ</Th>
                 <Th>Phản hồi</Th>
                 <Th>Booking mới</Th>
+                <Th>KOC Booking</Th>
+                <Th>KOC Booking chưa lên vid</Th>
+                <Th>Kênh Booking đã lên vid</Th>
                 <Th>Giá Cast</Th>
                 <Th>Monthly Videos (New KOCs)</Th>
                 <Th>Monthly Videos (Old KOCs)</Th>
@@ -875,7 +919,7 @@ export default function MonthlyReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={14}
+                    colSpan={17}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -886,7 +930,7 @@ export default function MonthlyReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={14}
+                    colSpan={17}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -906,6 +950,9 @@ export default function MonthlyReportPage() {
                     <Td>{row.lienHe}</Td>
                     <Td>{row.phanHoi}</Td>
                     <Td>{row.bookingMoi}</Td>
+                    <Td>{formatNumber(row.kocBooking)}</Td>
+                    <Td>{formatNumber(row.kocBookingChuaVid)}</Td>
+                    <Td>{formatNumber(row.kocBookingDaVid)}</Td>
                     <Td>{formatMoney(row.giaCast)}</Td>
                     <Td>{formatNumber(row.dailyVideoNew)}</Td>
                     <Td>{formatNumber(row.dailyVideoOld)}</Td>
@@ -929,6 +976,15 @@ export default function MonthlyReportPage() {
                   <td className="px-2 py-4 font-bold">{totals.lienHe}</td>
                   <td className="px-2 py-4 font-bold">{totals.phanHoi}</td>
                   <td className="px-2 py-4 font-bold">{totals.bookingMoi}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(totals.kocBooking)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(totals.kocBookingChuaVid)}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(totals.kocBookingDaVid)}
+                  </td>
                   <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.giaCast)}
                   </td>
