@@ -43,6 +43,10 @@ type ReportRow = {
   // Báo cáo tổng quát (KOC tạo mới trong tháng theo status)
   dongY: number; // status "Đã chốt"
   tuChoi: number; // status "Từ chối"
+  // Đếm KOC theo TT cần chăm sóc (tt_can_cham_soc)
+  kocAiFb: number; // "AI FB"
+  kocGelCapDoi: number; // "Gel - Cặp đôi"
+  kocGelUnbox: number; // "Gel - Unbox"
 };
 
 const PIC_FILTER_KEY = "drkam_report_pic_filter";
@@ -263,7 +267,7 @@ export default function MonthlyReportPage() {
           loadAllRows("bookings", "id, employee_id, created_at, cast_price"),
           loadAllRows(
             "koc",
-            "id, employee_id, created_at, new_contact_date, status, booking_date, monthly_videos, tier, channel_type, gmv_thang, videos_with_revenue"
+            "id, employee_id, created_at, new_contact_date, status, booking_date, monthly_videos, tier, channel_type, gmv_thang, videos_with_revenue, tt_can_cham_soc"
           ),
           loadAllRows("employees", "*", (query) => query.eq("active", true)),
         ]);
@@ -440,6 +444,9 @@ export default function MonthlyReportPage() {
           kocBookingDaVid: 0,
           dongY: 0,
           tuChoi: 0,
+          kocAiFb: 0,
+          kocGelCapDoi: 0,
+          kocGelUnbox: 0,
         });
       }
 
@@ -516,6 +523,18 @@ export default function MonthlyReportPage() {
         status === "Từ chối"
       ) {
         picRow.tuChoi += 1;
+      }
+
+      // Đếm KOC theo TT cần chăm sóc (theo PIC) + CÓ Booking date TRONG THÁNG báo cáo.
+      if (monthKeyOfBookingDate(koc.booking_date) === monthKey) {
+        const careStatus = String(koc.tt_can_cham_soc || "").trim();
+        if (careStatus === "AI FB") {
+          picRow.kocAiFb += 1;
+        } else if (careStatus === "Gel - Cặp đôi") {
+          picRow.kocGelCapDoi += 1;
+        } else if (careStatus === "Gel - Unbox") {
+          picRow.kocGelUnbox += 1;
+        }
       }
 
       // Video/GMV tính theo perfRow (PIC nếu có Booking date, ngược lại "Khác").
@@ -644,6 +663,9 @@ export default function MonthlyReportPage() {
           total.giaCast += row.giaCast;
           total.dongY += row.dongY;
           total.tuChoi += row.tuChoi;
+          total.kocAiFb += row.kocAiFb;
+          total.kocGelCapDoi += row.kocGelCapDoi;
+          total.kocGelUnbox += row.kocGelUnbox;
         }
 
         return total;
@@ -666,6 +688,9 @@ export default function MonthlyReportPage() {
         kocBookingDaVid: 0,
         dongY: 0,
         tuChoi: 0,
+        kocAiFb: 0,
+        kocGelCapDoi: 0,
+        kocGelUnbox: 0,
       }
     );
   }, [reportRows]);
@@ -1050,6 +1075,9 @@ export default function MonthlyReportPage() {
                 <Th>Đồng ý</Th>
                 <Th>% Đồng ý</Th>
                 <Th>Từ chối</Th>
+                <Th>KOC AI FB</Th>
+                <Th>KOC Gel cặp đôi</Th>
+                <Th>KOC Gel Unbox</Th>
                 <Th>Monthly Videos</Th>
                 <Th>Giá Cast</Th>
                 <Th>GMV</Th>
@@ -1060,7 +1088,7 @@ export default function MonthlyReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={13}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -1071,7 +1099,7 @@ export default function MonthlyReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={13}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -1101,6 +1129,9 @@ export default function MonthlyReportPage() {
                       </span>
                     </Td>
                     <Td>{row.tuChoi}</Td>
+                    <Td>{formatNumber(row.kocAiFb)}</Td>
+                    <Td>{formatNumber(row.kocGelCapDoi)}</Td>
+                    <Td>{formatNumber(row.kocGelUnbox)}</Td>
                     <Td>
                       {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
                     </Td>
@@ -1124,6 +1155,11 @@ export default function MonthlyReportPage() {
                     {formatPercent(totals.dongY, totals.lienHe)}
                   </td>
                   <td className="px-2 py-4 font-bold">{totals.tuChoi}</td>
+                  <td className="px-2 py-4 font-bold">{totals.kocAiFb}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {totals.kocGelCapDoi}
+                  </td>
+                  <td className="px-2 py-4 font-bold">{totals.kocGelUnbox}</td>
                   <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
                   </td>
