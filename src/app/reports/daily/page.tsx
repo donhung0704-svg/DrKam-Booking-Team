@@ -20,6 +20,9 @@ type ReportRow = {
   // HOẶC Booking date = ngày báo cáo). CS KOC cũ = Liên hệ - CS KOC mới (tính khi hiển thị).
   csKocMoi: number;
   phanHoi: number;
+  // Phản hồi KOC mới = trong số Phản hồi, KOC "mới" (chưa có Booking/Booking hôm nay).
+  // Phản hồi KOC cũ = Phản hồi - Phản hồi KOC mới (tính khi hiển thị).
+  phanHoiKocMoi: number;
   kocMoi: number; // Số KOC có Booking date = ngày báo cáo
   bookingMoi: number; // Số booking TẠO MỚI trong ngày (bảng bookings)
   giaCast: number;
@@ -161,6 +164,7 @@ export default function PicReportPage() {
           lienHe: 0,
           csKocMoi: 0,
           phanHoi: 0,
+          phanHoiKocMoi: 0,
           kocMoi: 0,
           bookingMoi: 0,
           giaCast: 0,
@@ -203,13 +207,15 @@ export default function PicReportPage() {
         picRow.lienHe += 1;
       }
 
-      // CS KOC mới = KOC có NGÀY CHĂM SÓC = ngày báo cáo, VÀ chưa có Booking date
-      // HOẶC Booking date = ngày báo cáo. (CS KOC cũ = Liên hệ - CS KOC mới.)
-      if (
-        contactKey === dayKey &&
-        (!hasBookingDate(koc.booking_date) ||
-          toVietnamDateKey(koc.booking_date) === dayKey)
-      ) {
+      // "KOC mới" = KOC chưa có Booking date HOẶC Booking date = ngày báo cáo
+      // (ngược lại là "KOC cũ" = đã có Booking từ trước). Dùng chung cho CS & Phản hồi.
+      const isKocMoi =
+        !hasBookingDate(koc.booking_date) ||
+        toVietnamDateKey(koc.booking_date) === dayKey;
+
+      // CS KOC mới = KOC có NGÀY CHĂM SÓC = ngày báo cáo, VÀ là KOC mới.
+      // (CS KOC cũ = Liên hệ - CS KOC mới.)
+      if (contactKey === dayKey && isKocMoi) {
         picRow.csKocMoi += 1;
       }
 
@@ -220,6 +226,11 @@ export default function PicReportPage() {
         status !== "Chờ phản hồi"
       ) {
         picRow.phanHoi += 1;
+        // Phản hồi KOC mới = trong số Phản hồi, KOC là "mới".
+        // (Phản hồi KOC cũ = Phản hồi - Phản hồi KOC mới.)
+        if (isKocMoi) {
+          picRow.phanHoiKocMoi += 1;
+        }
       }
 
       // KOC mới = số KOC có ngày Booking (booking_date) = ngày báo cáo
@@ -291,6 +302,7 @@ export default function PicReportPage() {
           total.lienHe += row.lienHe;
           total.csKocMoi += row.csKocMoi;
           total.phanHoi += row.phanHoi;
+          total.phanHoiKocMoi += row.phanHoiKocMoi;
           total.kocMoi += row.kocMoi;
           total.bookingMoi += row.bookingMoi;
           total.giaCast += row.giaCast;
@@ -302,6 +314,7 @@ export default function PicReportPage() {
         lienHe: 0,
         csKocMoi: 0,
         phanHoi: 0,
+        phanHoiKocMoi: 0,
         kocMoi: 0,
         bookingMoi: 0,
         giaCast: 0,
@@ -359,6 +372,8 @@ export default function PicReportPage() {
       "CS KOC mới": row.csKocMoi,
       "CS KOC cũ": row.lienHe - row.csKocMoi,
       "Phản hồi": row.phanHoi,
+      "Phản hồi KOC mới": row.phanHoiKocMoi,
+      "Phản hồi KOC cũ": row.phanHoi - row.phanHoiKocMoi,
       "Booking mới": row.bookingMoi,
       "KOC mới": row.kocMoi,
       "Giá Cast": row.giaCast,
@@ -380,6 +395,8 @@ export default function PicReportPage() {
       { wch: 12 },
       { wch: 12 },
       { wch: 10 },
+      { wch: 16 },
+      { wch: 16 },
       { wch: 12 },
       { wch: 10 },
       { wch: 16 },
@@ -482,6 +499,8 @@ export default function PicReportPage() {
                 <Th>CS KOC mới</Th>
                 <Th>CS KOC cũ</Th>
                 <Th>Phản hồi</Th>
+                <Th>Phản hồi KOC mới</Th>
+                <Th>Phản hồi KOC cũ</Th>
                 <Th>Booking mới</Th>
                 <Th>KOC mới</Th>
                 <Th>Giá Cast</Th>
@@ -495,7 +514,7 @@ export default function PicReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={13}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -506,7 +525,7 @@ export default function PicReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={13}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -527,6 +546,8 @@ export default function PicReportPage() {
                     <Td>{row.csKocMoi}</Td>
                     <Td>{row.lienHe - row.csKocMoi}</Td>
                     <Td>{row.phanHoi}</Td>
+                    <Td>{row.phanHoiKocMoi}</Td>
+                    <Td>{row.phanHoi - row.phanHoiKocMoi}</Td>
                     <Td>{row.bookingMoi}</Td>
                     <Td>{row.kocMoi}</Td>
                     <Td>{formatMoney(row.giaCast)}</Td>
@@ -561,6 +582,12 @@ export default function PicReportPage() {
                     {totals.lienHe - totals.csKocMoi}
                   </td>
                   <td className="px-2 py-4 font-bold">{totals.phanHoi}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {totals.phanHoiKocMoi}
+                  </td>
+                  <td className="px-2 py-4 font-bold">
+                    {totals.phanHoi - totals.phanHoiKocMoi}
+                  </td>
                   <td className="px-2 py-4 font-bold">{totals.bookingMoi}</td>
                   <td className="px-2 py-4 font-bold">{totals.kocMoi}</td>
                   <td className="px-2 py-4 font-bold">
