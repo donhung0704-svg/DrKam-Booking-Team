@@ -16,6 +16,9 @@ type ReportRow = {
   employeeName: string;
   isRealPic: boolean;
   lienHe: number;
+  // CS KOC mới = KOC có ngày chăm sóc = ngày báo cáo VÀ (chưa có Booking date
+  // HOẶC Booking date = ngày báo cáo). CS KOC cũ = Liên hệ - CS KOC mới (tính khi hiển thị).
+  csKocMoi: number;
   phanHoi: number;
   kocMoi: number; // Số KOC có Booking date = ngày báo cáo
   bookingMoi: number; // Số booking TẠO MỚI trong ngày (bảng bookings)
@@ -156,6 +159,7 @@ export default function PicReportPage() {
           employeeName: employee ? getEmployeeDisplayName(employee) : "Khác",
           isRealPic: Boolean(employee),
           lienHe: 0,
+          csKocMoi: 0,
           phanHoi: 0,
           kocMoi: 0,
           bookingMoi: 0,
@@ -197,6 +201,16 @@ export default function PicReportPage() {
         picRow.lienHe += 1;
       } else if (contactKey === dayKey) {
         picRow.lienHe += 1;
+      }
+
+      // CS KOC mới = KOC có NGÀY CHĂM SÓC = ngày báo cáo, VÀ chưa có Booking date
+      // HOẶC Booking date = ngày báo cáo. (CS KOC cũ = Liên hệ - CS KOC mới.)
+      if (
+        contactKey === dayKey &&
+        (!hasBookingDate(koc.booking_date) ||
+          toVietnamDateKey(koc.booking_date) === dayKey)
+      ) {
+        picRow.csKocMoi += 1;
       }
 
       // Phản hồi = KOC (có NGÀY CHĂM SÓC = ngày báo cáo HOẶC TẠO MỚI trong ngày)
@@ -275,6 +289,7 @@ export default function PicReportPage() {
         // Các cột đếm còn lại: BỎ dòng "Khác" (chỉ cộng PIC có tên).
         if (row.isRealPic) {
           total.lienHe += row.lienHe;
+          total.csKocMoi += row.csKocMoi;
           total.phanHoi += row.phanHoi;
           total.kocMoi += row.kocMoi;
           total.bookingMoi += row.bookingMoi;
@@ -285,6 +300,7 @@ export default function PicReportPage() {
       },
       {
         lienHe: 0,
+        csKocMoi: 0,
         phanHoi: 0,
         kocMoi: 0,
         bookingMoi: 0,
@@ -340,6 +356,8 @@ export default function PicReportPage() {
     const exportRows = reportRows.map((row) => ({
       PIC: row.employeeName,
       "Liên hệ": row.lienHe,
+      "CS KOC mới": row.csKocMoi,
+      "CS KOC cũ": row.lienHe - row.csKocMoi,
       "Phản hồi": row.phanHoi,
       "Booking mới": row.bookingMoi,
       "KOC mới": row.kocMoi,
@@ -359,6 +377,8 @@ export default function PicReportPage() {
     worksheet["!cols"] = [
       { wch: 24 },
       { wch: 10 },
+      { wch: 12 },
+      { wch: 12 },
       { wch: 10 },
       { wch: 12 },
       { wch: 10 },
@@ -459,6 +479,8 @@ export default function PicReportPage() {
               <tr className="bg-slate-50">
                 <Th>PIC</Th>
                 <Th>Liên hệ</Th>
+                <Th>CS KOC mới</Th>
+                <Th>CS KOC cũ</Th>
                 <Th>Phản hồi</Th>
                 <Th>Booking mới</Th>
                 <Th>KOC mới</Th>
@@ -473,7 +495,7 @@ export default function PicReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={11}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -484,7 +506,7 @@ export default function PicReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={11}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -502,6 +524,8 @@ export default function PicReportPage() {
                     </Td>
 
                     <Td>{row.lienHe}</Td>
+                    <Td>{row.csKocMoi}</Td>
+                    <Td>{row.lienHe - row.csKocMoi}</Td>
                     <Td>{row.phanHoi}</Td>
                     <Td>{row.bookingMoi}</Td>
                     <Td>{row.kocMoi}</Td>
@@ -532,6 +556,10 @@ export default function PicReportPage() {
                     Tổng cộng
                   </td>
                   <td className="px-2 py-4 font-bold">{totals.lienHe}</td>
+                  <td className="px-2 py-4 font-bold">{totals.csKocMoi}</td>
+                  <td className="px-2 py-4 font-bold">
+                    {totals.lienHe - totals.csKocMoi}
+                  </td>
                   <td className="px-2 py-4 font-bold">{totals.phanHoi}</td>
                   <td className="px-2 py-4 font-bold">{totals.bookingMoi}</td>
                   <td className="px-2 py-4 font-bold">{totals.kocMoi}</td>
