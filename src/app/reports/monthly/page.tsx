@@ -525,14 +525,16 @@ export default function MonthlyReportPage() {
         picRow.tuChoi += 1;
       }
 
-      // Đếm KOC theo TT cần chăm sóc (tình trạng hiện tại, theo PIC).
-      const careStatus = String(koc.tt_can_cham_soc || "").trim();
-      if (careStatus === "AI FB") {
-        picRow.kocAiFb += 1;
-      } else if (careStatus === "Gel - Cặp đôi") {
-        picRow.kocGelCapDoi += 1;
-      } else if (careStatus === "Gel - Unbox") {
-        picRow.kocGelUnbox += 1;
+      // Đếm KOC theo TT cần chăm sóc (theo PIC) + CÓ Booking date TRONG THÁNG báo cáo.
+      if (monthKeyOfBookingDate(koc.booking_date) === monthKey) {
+        const careStatus = String(koc.tt_can_cham_soc || "").trim();
+        if (careStatus === "AI FB") {
+          picRow.kocAiFb += 1;
+        } else if (careStatus === "Gel - Cặp đôi") {
+          picRow.kocGelCapDoi += 1;
+        } else if (careStatus === "Gel - Unbox") {
+          picRow.kocGelUnbox += 1;
+        }
       }
 
       // Video/GMV tính theo perfRow (PIC nếu có Booking date, ngược lại "Khác").
