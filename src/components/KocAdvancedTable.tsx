@@ -1029,7 +1029,7 @@ const orderedColumns = useMemo(() => {
   }
 
   return (
-    <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+    <section className="sticky top-[92px] z-10 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
       {/* Gợi ý Hoa hồng dùng chung cho ô nhập commission_type (vẫn tự ghi được) */}
       <datalist id="koc-commission-options">
         {commissionOptions.map((option) => (
@@ -1281,7 +1281,7 @@ const orderedColumns = useMemo(() => {
 
       <div
         ref={scrollBoxRef}
-        className="koc-advanced-scroll sticky top-[92px] z-0 max-h-[calc(100vh-375px)] overflow-auto"
+        className="koc-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto"
         style={scrollMaxH ? { maxHeight: scrollMaxH } : undefined}
       >
         <table

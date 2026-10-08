@@ -824,7 +824,7 @@ export default function BookingAdvancedTable({
   }
 
   return (
-    <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+    <section className="sticky top-[92px] z-10 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
       {error && (
         <div className="border-b border-slate-200 px-5 py-3">
           <p className="text-[12px] font-bold text-red-600">{error}</p>
@@ -1020,7 +1020,7 @@ export default function BookingAdvancedTable({
 
       <div
         ref={scrollBoxRef}
-        className="booking-advanced-scroll sticky top-[92px] z-0 max-h-[calc(100vh-375px)] overflow-auto"
+        className="booking-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto"
         style={scrollMaxH ? { maxHeight: scrollMaxH } : undefined}
       >
         <table
