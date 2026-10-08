@@ -213,9 +213,13 @@ export default function PicReportPage() {
         !hasBookingDate(koc.booking_date) ||
         toVietnamDateKey(koc.booking_date) === dayKey;
 
-      // CS KOC mới = KOC có NGÀY CHĂM SÓC = ngày báo cáo, VÀ là KOC mới.
+      // CS KOC mới = (Ngày tạo KHÁC hôm nay VÀ CS gần nhất = hôm nay VÀ là KOC mới
+      //               [Booking trống hoặc Booking = hôm nay])
+      //            + (KOC có Ngày tạo = hôm nay -> tính hết).
       // (CS KOC cũ = Liên hệ - CS KOC mới.)
-      if (contactKey === dayKey && isKocMoi) {
+      if (createdKey === dayKey) {
+        picRow.csKocMoi += 1;
+      } else if (contactKey === dayKey && isKocMoi) {
         picRow.csKocMoi += 1;
       }
 
