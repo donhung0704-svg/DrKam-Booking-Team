@@ -1029,7 +1029,10 @@ const orderedColumns = useMemo(() => {
   }
 
   return (
-    <section className="sticky top-[92px] z-10 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+    <section
+      className="sticky z-10 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm"
+      style={{ top: "var(--table-top, 92px)" }}
+    >
       {/* Gợi ý Hoa hồng dùng chung cho ô nhập commission_type (vẫn tự ghi được) */}
       <datalist id="koc-commission-options">
         {commissionOptions.map((option) => (
