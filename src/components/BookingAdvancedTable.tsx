@@ -1020,7 +1020,7 @@ export default function BookingAdvancedTable({
 
       <div
         ref={scrollBoxRef}
-        className="booking-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto"
+        className="booking-advanced-scroll sticky top-[92px] z-0 max-h-[calc(100vh-375px)] overflow-auto"
         style={scrollMaxH ? { maxHeight: scrollMaxH } : undefined}
       >
         <table

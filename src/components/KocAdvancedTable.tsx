@@ -1281,7 +1281,7 @@ const orderedColumns = useMemo(() => {
 
       <div
         ref={scrollBoxRef}
-        className="koc-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto"
+        className="koc-advanced-scroll sticky top-[92px] z-0 max-h-[calc(100vh-375px)] overflow-auto"
         style={scrollMaxH ? { maxHeight: scrollMaxH } : undefined}
       >
         <table
