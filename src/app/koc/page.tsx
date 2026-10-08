@@ -847,7 +847,7 @@ export default function KocListPage() {
 
   return (
     <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6">
-      <header className="mb-2 rounded-2xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
+      <section className="sticky top-[92px] z-20 mb-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
         <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-sm">
@@ -882,16 +882,9 @@ export default function KocListPage() {
             </Link>
           </div>
         </div>
-      </header>
 
-      {message && (
-        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-[13px] font-semibold text-red-700">
-          {message}
-        </div>
-      )}
+        <div className="my-2 h-px w-full bg-slate-100" />
 
-
-      <section className="sticky top-[92px] z-20 mb-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
         <div className="flex flex-wrap items-end gap-x-2 gap-y-1.5">
           <div className="w-full sm:w-[180px]">
             <label className="mb-0.5 block text-[11px] font-bold text-slate-600">Trường cần lọc</label>
@@ -1087,6 +1080,12 @@ export default function KocListPage() {
           </div>
         )}
       </section>
+
+      {message && (
+        <div className="mb-3 rounded-2xl border border-red-200 bg-red-50 p-3 text-[13px] font-semibold text-red-700">
+          {message}
+        </div>
+      )}
 
       <KocAdvancedTable
         kocs={kocs}
