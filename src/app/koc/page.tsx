@@ -6,7 +6,7 @@ import DatePickerInput from "@/components/DatePickerInput";
 import SavedFiltersDropdown from "@/components/SavedFiltersDropdown";
 import { useUserRole } from "@/lib/useUserRole";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 
 type DbRow = Record<string, any>;
@@ -221,30 +221,6 @@ export default function KocListPage() {
   // trên server free (tránh statement timeout).
   const mainBusyRef = useRef(false); // đang tải danh sách trang?
   const queryGenRef = useRef(0); // tăng mỗi lần tải danh sách -> hủy tổng cũ
-
-  // Khóa khu vực trên: tiêu đề + bộ lọc dính dưới header; bảng dính NGAY DƯỚI
-  // khung bộ lọc. Đo chiều cao khung bộ lọc để đặt mốc dính cho bảng.
-  const filterCardRef = useRef<HTMLElement | null>(null);
-  const [tableStickyTop, setTableStickyTop] = useState(92);
-  useEffect(() => {
-    function recompute() {
-      const node = filterCardRef.current;
-      if (!node) return;
-      // 92 = header cố định; + chiều cao khung bộ lọc (gồm lề mb-2 ~8px)
-      setTableStickyTop(92 + node.offsetHeight + 8);
-    }
-    recompute();
-    window.addEventListener("resize", recompute);
-    let ro: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(recompute);
-      if (filterCardRef.current) ro.observe(filterCardRef.current);
-    }
-    return () => {
-      window.removeEventListener("resize", recompute);
-      ro?.disconnect();
-    };
-  }, []);
 
   const [filterFieldKey, setFilterFieldKey] = useState(filterFields[0].key);
   const [filterOperator, setFilterOperator] = useState<FilterOperator>("contains");
@@ -870,14 +846,8 @@ export default function KocListPage() {
   }
 
   return (
-    <section
-      className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6"
-      style={{ ["--table-top" as string]: `${tableStickyTop}px` } as CSSProperties}
-    >
-      <section
-        ref={filterCardRef}
-        className="sticky top-[92px] z-30 mb-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm"
-      >
+    <section className="crm-light flex h-[calc(100vh-140px)] flex-col overflow-hidden rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6">
+      <section className="mb-2 shrink-0 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
         <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-sm">
@@ -1112,7 +1082,7 @@ export default function KocListPage() {
       </section>
 
       {message && (
-        <div className="mb-3 rounded-2xl border border-red-200 bg-red-50 p-3 text-[13px] font-semibold text-red-700">
+        <div className="mb-3 shrink-0 rounded-2xl border border-red-200 bg-red-50 p-3 text-[13px] font-semibold text-red-700">
           {message}
         </div>
       )}
@@ -1195,7 +1165,7 @@ export default function KocListPage() {
         }}
       />
 
-      <section className="sticky bottom-0 z-[200] mt-1 bg-[#f4f7fb] px-1 py-1">
+      <section className="mt-1 shrink-0 bg-[#f4f7fb] px-1 py-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-[12px] font-bold text-slate-600">
             Đang xem <span className="text-slate-950">{startRow} - {endRow}</span> / {totalKocCount} KOC

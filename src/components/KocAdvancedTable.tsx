@@ -385,50 +385,6 @@ export default function KocAdvancedTable({
 }) {
   const router = useRouter();
 
-  // Vùng cuộn bảng: tính chiều cao động để ĐÁY bảng (chỗ có thanh kéo ngang)
-  // luôn nằm trong màn hình, không bị đẩy xuống dưới khi bộ lọc xuống nhiều dòng.
-  const scrollBoxRef = useRef<HTMLDivElement | null>(null);
-  const [scrollMaxH, setScrollMaxH] = useState<number | null>(null);
-
-  useEffect(() => {
-    let raf = 0;
-    function recompute() {
-      const node = scrollBoxRef.current;
-      if (!node) return;
-      // Dùng vị trí THỰC trên màn hình (viewport), cập nhật cả khi cuộn ->
-      // bảng luôn cao vừa đủ để lấp xuống gần đáy màn hình, không thừa chỗ trống.
-      // Chặn mép trên ở 92px (dưới header cố định) để bảng không cao quá 1 màn hình
-      // và không chui lên sau header -> thanh kéo ngang luôn ở gần đáy màn hình.
-      const top = Math.max(node.getBoundingClientRect().top, 92);
-      const reserve = 48; // chừa chỗ cho footer phân trang (mỏng) + lề dưới
-      const h = window.innerHeight - top - reserve;
-      setScrollMaxH(Math.max(240, Math.round(h)));
-    }
-    function onScrollOrResize() {
-      if (raf) return;
-      raf = window.requestAnimationFrame(() => {
-        raf = 0;
-        recompute();
-      });
-    }
-
-    recompute();
-    window.addEventListener("resize", onScrollOrResize);
-    window.addEventListener("scroll", onScrollOrResize, true);
-    let ro: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(onScrollOrResize);
-      ro.observe(document.body);
-    }
-
-    return () => {
-      if (raf) window.cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onScrollOrResize);
-      window.removeEventListener("scroll", onScrollOrResize, true);
-      ro?.disconnect();
-    };
-  }, []);
-
   const [columnOrder, setColumnOrder] = useState<string[]>(
     defaultColumns.map((column) => column.key)
   );
@@ -1029,10 +985,7 @@ const orderedColumns = useMemo(() => {
   }
 
   return (
-    <section
-      className="sticky z-10 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm"
-      style={{ top: "var(--table-top, 92px)" }}
-    >
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
       {/* Gợi ý Hoa hồng dùng chung cho ô nhập commission_type (vẫn tự ghi được) */}
       <datalist id="koc-commission-options">
         {commissionOptions.map((option) => (
@@ -1046,7 +999,7 @@ const orderedColumns = useMemo(() => {
         </div>
       )}
 
-      <div className="border-b border-slate-200 bg-slate-50 px-4 py-2">
+      <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-4 py-2">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-black text-slate-700">
             Đã chọn: {selectedCount} KOC
@@ -1282,11 +1235,7 @@ const orderedColumns = useMemo(() => {
         )}
       </div>
 
-      <div
-        ref={scrollBoxRef}
-        className="koc-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto"
-        style={scrollMaxH ? { maxHeight: scrollMaxH } : undefined}
-      >
+      <div className="koc-advanced-scroll relative z-0 min-h-0 flex-1 overflow-auto">
         <table
           className="koc-advanced-table text-left text-sm"
           style={{ minWidth: `${tableWidth}px`, width: `${tableWidth}px` }}
