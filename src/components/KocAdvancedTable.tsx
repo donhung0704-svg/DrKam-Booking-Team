@@ -1475,7 +1475,7 @@ const orderedColumns = useMemo(() => {
                       return (
                         <td
                           key={column.key}
-                          className="border-b border-slate-100 bg-white px-0.5 py-0.5 align-top text-[12px] text-slate-800 group-hover:bg-slate-50"
+                          className="border-b border-slate-100 bg-white px-0 py-0 align-top text-[12px] text-slate-800 group-hover:bg-slate-50"
                           style={{
                             width: getColumnWidth(column),
                             minWidth: getColumnWidth(column),
@@ -1738,7 +1738,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getPicColorStyle(String(value || ""))}
-          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1 text-[12px] font-semibold outline-none hover:border-slate-200 focus:border-[#3964ff]"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] font-semibold outline-none hover:border-slate-200 focus:border-[#3964ff]"
         >
           <option value="">Chưa có PIC</option>
           {employees.map((employee) => (
@@ -1764,7 +1764,7 @@ function CellEditor({
         <select
           value={currentValue}
           onChange={(event) => onSave(event.target.value || null)}
-          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
 
@@ -1825,7 +1825,7 @@ function CellEditor({
             if (event.key === "Enter") event.currentTarget.blur();
           }}
           placeholder="Chọn hoặc tự ghi"
-          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
         {saving && <SavingDot />}
       </div>
@@ -1839,7 +1839,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
           {(column.options || []).map((option) => (
@@ -1875,7 +1875,7 @@ function CellEditor({
           name={`${column.key}_${String(value || "")}`}
           value={formatInputValue(column, value)}
           onChange={(nextValue) => onSave(nextValue)}
-          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
 
         {saving && <SavingDot />}
@@ -1929,7 +1929,7 @@ function EditableCopyText({
           onInput={(event) => autoResize(event.currentTarget)}
           onBlur={(event) => onSave(event.target.value)}
           placeholder="Ghi chú…"
-          className="block min-h-6 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-transparent px-1 py-0 pr-6 text-[12px] leading-[0.95rem] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="block min-h-5 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-transparent px-0.5 py-0 pr-6 text-[12px] leading-[0.95rem] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
       ) : (
         <input
@@ -1941,7 +1941,7 @@ function EditableCopyText({
               event.currentTarget.blur();
             }
           }}
-          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
       )}
 
@@ -2093,7 +2093,7 @@ function MultiSelectDropdown({
         className={`flex w-full items-center justify-between gap-2 rounded-lg border text-left font-semibold outline-none transition ${
           compact
             ? "h-9 border-slate-200 bg-white px-3 text-[12.5px]"
-            : "h-8 border-transparent bg-transparent px-1 text-[12px] hover:border-slate-200 hover:bg-white"
+            : "h-8 border-transparent bg-transparent px-0.5 text-[12px] hover:border-slate-200 hover:bg-white"
         } ${open ? "border-[#3964ff] bg-white ring-2 ring-[#3964ff]/10" : ""}`}
       >
         <span
