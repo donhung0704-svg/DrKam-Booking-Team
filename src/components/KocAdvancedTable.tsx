@@ -400,7 +400,7 @@ export default function KocAdvancedTable({
       // Chặn mép trên ở 92px (dưới header cố định) để bảng không cao quá 1 màn hình
       // và không chui lên sau header -> thanh kéo ngang luôn ở gần đáy màn hình.
       const top = Math.max(node.getBoundingClientRect().top, 92);
-      const reserve = 84; // chừa chỗ cho footer phân trang + lề dưới
+      const reserve = 48; // chừa chỗ cho footer phân trang (mỏng) + lề dưới
       const h = window.innerHeight - top - reserve;
       setScrollMaxH(Math.max(240, Math.round(h)));
     }
