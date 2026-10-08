@@ -766,22 +766,21 @@ export default function BookingListPage() {
   }
 
   return (
-    <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-5 py-6 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
-      <header className="mb-3 rounded-[18px] border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
-        <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-base">
+    <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6">
+      <header className="mb-2 rounded-2xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
+        <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-sm">
               📦
             </div>
 
-            <div>
-              <p className="mb-1 text-[11px] font-bold uppercase leading-[1.3] tracking-[0.22em] text-red-600">
-                DRKAM CRM PORTAL
-              </p>
-
-              <h1 className="text-[20px] font-bold leading-tight tracking-normal text-slate-950 md:text-[22px]">
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-[16px] font-bold leading-tight tracking-normal text-slate-950 md:text-[18px]">
                 Danh sách Booking
               </h1>
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-600">
+                DRKAM CRM PORTAL
+              </span>
             </div>
 
             {/* Chuyển Bảng / Pipeline ngay cạnh tiêu đề (shipper chỉ dùng Bảng) */}
@@ -817,7 +816,7 @@ export default function BookingListPage() {
             <button
               type="button"
               onClick={exportBookingExcel}
-              className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
+              className="h-8 rounded-lg bg-emerald-600 px-3 text-[12.5px] font-bold text-white shadow-md hover:bg-emerald-700"
             >
               Xuất Excel
             </button>
@@ -825,7 +824,7 @@ export default function BookingListPage() {
             {!isShipper && (
               <Link
                 href="/import/bookings"
-                className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+                className="flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-[12.5px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
               >
                 Import Booking
               </Link>
