@@ -1111,6 +1111,14 @@ export default function KocListPage() {
         }
         trailingActions={
           <>
+            <span className="text-[12px] font-bold text-slate-600">
+              Đã chốt: <b className="text-emerald-600">{closedCount}</b>
+            </span>
+            <span className="text-slate-300">|</span>
+            <span className="text-[12px] font-bold text-slate-600">
+              Đã phản hồi: <b className="text-orange-600">{repliedCount}</b>
+            </span>
+            <span className="mx-1 h-5 w-px bg-slate-200" />
             <button
               type="button"
               onClick={() => setShowColumnPanel((current) => !current)}
@@ -1128,34 +1136,23 @@ export default function KocListPage() {
           </>
         }
         statsInfo={
-          <div className="flex flex-wrap items-center justify-between gap-3 text-[12.5px] font-bold text-slate-600">
-            <div className="flex flex-wrap items-center gap-3">
-              <span>
-                Đang xem: <b className="text-slate-950">{currentPageCount}</b> KOC
-              </span>
-              <span className="text-slate-300">|</span>
-              <span>
-                Tổng theo bộ lọc:{" "}
-                <b className="text-slate-950">{totalKocCount}</b> KOC
-              </span>
-              <span className="text-slate-300">|</span>
-              <span>
-                Trang:{" "}
-                <b className="text-slate-950">
-                  {pageIndex + 1}/{totalPages}
-                </b>
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <span>
-                Đã chốt: <b className="text-emerald-600">{closedCount}</b>
-              </span>
-              <span className="text-slate-300">|</span>
-              <span>
-                Đã phản hồi: <b className="text-orange-600">{repliedCount}</b>
-              </span>
-            </div>
+          <div className="flex flex-wrap items-center gap-2 text-[12px] font-bold text-slate-600">
+            <span className="text-slate-300">|</span>
+            <span>
+              Đang xem: <b className="text-slate-950">{currentPageCount}</b> KOC
+            </span>
+            <span className="text-slate-300">|</span>
+            <span>
+              Tổng theo bộ lọc:{" "}
+              <b className="text-slate-950">{totalKocCount}</b> KOC
+            </span>
+            <span className="text-slate-300">|</span>
+            <span>
+              Trang:{" "}
+              <b className="text-slate-950">
+                {pageIndex + 1}/{totalPages}
+              </b>
+            </span>
           </div>
         }
         onExport={exportKocExcel}

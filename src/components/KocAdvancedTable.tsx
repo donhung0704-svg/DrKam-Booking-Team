@@ -1043,9 +1043,9 @@ const orderedColumns = useMemo(() => {
         </div>
       )}
 
-      <div className="border-b border-slate-200 bg-slate-50 px-5 py-3">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-black text-slate-700">
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-black text-slate-700">
             Đã chọn: {selectedCount} KOC
           </span>
 
@@ -1061,14 +1061,14 @@ const orderedColumns = useMemo(() => {
             </button>
           )}
 
+          {statsInfo}
+
           {trailingActions && (
             <div className="ml-auto flex flex-wrap items-center gap-2">
               {trailingActions}
             </div>
           )}
         </div>
-
-        {statsInfo && <div className="mb-3">{statsInfo}</div>}
 
         {selectedCount > 0 && canScopeAll && (
           <div
