@@ -1165,7 +1165,7 @@ export default function KocListPage() {
         }}
       />
 
-      <section className="sticky bottom-0 z-[200] mt-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1 shadow-[0_-8px_24px_rgba(15,23,42,0.12)]">
+      <section className="sticky bottom-0 z-[200] mt-1 bg-[#f4f7fb] px-1 py-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-[12px] font-bold text-slate-600">
             Đang xem <span className="text-slate-950">{startRow} - {endRow}</span> / {totalKocCount} KOC
