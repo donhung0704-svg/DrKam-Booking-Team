@@ -1827,7 +1827,7 @@ function CellEditor({
           name={`${column.key}_${String(value || "")}`}
           value={formatInputValue(column, value)}
           onChange={(nextValue) => onSave(nextValue)}
-          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
 
         {saving && <SavingDot />}
@@ -1881,7 +1881,7 @@ function EditableCopyText({
           onInput={(event) => autoResize(event.currentTarget)}
           onBlur={(event) => onSave(event.target.value)}
           placeholder="Ghi chú…"
-          className="block min-h-5 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-transparent px-0.5 py-0 pr-6 text-[12px] leading-[0.95rem] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="block min-h-5 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-transparent px-0.5 py-0 pr-2 text-[12px] leading-[0.95rem] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
       ) : (
         <input
@@ -1893,7 +1893,7 @@ function EditableCopyText({
               event.currentTarget.blur();
             }
           }}
-          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-2 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
       )}
 

@@ -1566,7 +1566,7 @@ function CellEditor({
           name={`${column.key}_${String(value || "")}`}
           value={formatInputValue(column, value)}
           onChange={(nextValue) => onSave(nextValue)}
-          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
 
         {saving && <SavingDot />}
@@ -1607,7 +1607,7 @@ function EditableCopyText({
             event.currentTarget.blur();
           }
         }}
-        className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-2 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
       />
 
       <button
