@@ -846,22 +846,21 @@ export default function KocListPage() {
   }
 
   return (
-    <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-5 py-6 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
-      <header className="mb-3 rounded-[18px] border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
-        <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-base">
+    <section className="crm-light flex h-[calc(100vh-140px)] flex-col overflow-hidden rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6">
+      <section className="mb-2 shrink-0 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+        <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-sm">
               👥
             </div>
 
-            <div>
-              <p className="mb-1 text-[11px] font-bold uppercase leading-[1.3] tracking-[0.22em] text-red-600">
-                DRKAM CRM PORTAL
-              </p>
-
-              <h1 className="text-[20px] font-bold leading-tight tracking-normal text-slate-950 md:text-[22px]">
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-[16px] font-bold leading-tight tracking-normal text-slate-950 md:text-[18px]">
                 Danh sách KOC
               </h1>
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-600">
+                DRKAM CRM PORTAL
+              </span>
             </div>
           </div>
 
@@ -870,29 +869,22 @@ export default function KocListPage() {
               type="button"
               onClick={exportKocExcel}
               disabled={exporting}
-              className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700 disabled:opacity-60"
+              className="h-8 rounded-lg bg-emerald-600 px-3 text-[12.5px] font-bold text-white shadow-md hover:bg-emerald-700 disabled:opacity-60"
             >
               {exporting ? "Đang xuất..." : "Xuất Excel"}
             </button>
 
             <Link
               href="/import/koc"
-              className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+              className="flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-[12.5px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
             >
               Import KOC
             </Link>
           </div>
         </div>
-      </header>
 
-      {message && (
-        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-[13px] font-semibold text-red-700">
-          {message}
-        </div>
-      )}
+        <div className="my-2 h-px w-full bg-slate-100" />
 
-
-      <section className="sticky top-[92px] z-20 mb-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
         <div className="flex flex-wrap items-end gap-x-2 gap-y-1.5">
           <div className="w-full sm:w-[180px]">
             <label className="mb-0.5 block text-[11px] font-bold text-slate-600">Trường cần lọc</label>
@@ -1089,6 +1081,12 @@ export default function KocListPage() {
         )}
       </section>
 
+      {message && (
+        <div className="mb-3 shrink-0 rounded-2xl border border-red-200 bg-red-50 p-3 text-[13px] font-semibold text-red-700">
+          {message}
+        </div>
+      )}
+
       <KocAdvancedTable
         kocs={kocs}
         campaigns={campaigns}
@@ -1113,6 +1111,14 @@ export default function KocListPage() {
         }
         trailingActions={
           <>
+            <span className="text-[12px] font-bold text-slate-600">
+              Đã chốt: <b className="text-emerald-600">{closedCount}</b>
+            </span>
+            <span className="text-slate-300">|</span>
+            <span className="text-[12px] font-bold text-slate-600">
+              Đã phản hồi: <b className="text-orange-600">{repliedCount}</b>
+            </span>
+            <span className="mx-1 h-5 w-px bg-slate-200" />
             <button
               type="button"
               onClick={() => setShowColumnPanel((current) => !current)}
@@ -1130,34 +1136,23 @@ export default function KocListPage() {
           </>
         }
         statsInfo={
-          <div className="flex flex-wrap items-center justify-between gap-3 text-[12.5px] font-bold text-slate-600">
-            <div className="flex flex-wrap items-center gap-3">
-              <span>
-                Đang xem: <b className="text-slate-950">{currentPageCount}</b> KOC
-              </span>
-              <span className="text-slate-300">|</span>
-              <span>
-                Tổng theo bộ lọc:{" "}
-                <b className="text-slate-950">{totalKocCount}</b> KOC
-              </span>
-              <span className="text-slate-300">|</span>
-              <span>
-                Trang:{" "}
-                <b className="text-slate-950">
-                  {pageIndex + 1}/{totalPages}
-                </b>
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <span>
-                Đã chốt: <b className="text-emerald-600">{closedCount}</b>
-              </span>
-              <span className="text-slate-300">|</span>
-              <span>
-                Đã phản hồi: <b className="text-orange-600">{repliedCount}</b>
-              </span>
-            </div>
+          <div className="flex flex-wrap items-center gap-2 text-[12px] font-bold text-slate-600">
+            <span className="text-slate-300">|</span>
+            <span>
+              Đang xem: <b className="text-slate-950">{currentPageCount}</b> KOC
+            </span>
+            <span className="text-slate-300">|</span>
+            <span>
+              Tổng theo bộ lọc:{" "}
+              <b className="text-slate-950">{totalKocCount}</b> KOC
+            </span>
+            <span className="text-slate-300">|</span>
+            <span>
+              Trang:{" "}
+              <b className="text-slate-950">
+                {pageIndex + 1}/{totalPages}
+              </b>
+            </span>
           </div>
         }
         onExport={exportKocExcel}
@@ -1170,29 +1165,29 @@ export default function KocListPage() {
         }}
       />
 
-      <section className="sticky bottom-0 z-[200] mt-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12)]">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="text-[13px] font-bold text-slate-600">
+      <section className="mt-1 shrink-0 bg-[#f4f7fb] px-1 py-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-[12px] font-bold text-slate-600">
             Đang xem <span className="text-slate-950">{startRow} - {endRow}</span> / {totalKocCount} KOC
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <select
               value={pageSize}
               onChange={(event) => {
                 setPageSize(Number(event.target.value));
                 setPageIndex(0);
               }}
-              className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-bold text-slate-700"
+              className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[12px] font-bold text-slate-700"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>{size} dòng/trang</option>
               ))}
             </select>
 
-            <button type="button" onClick={goPreviousPage} disabled={pageIndex === 0 || loading} className="h-9 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">← Trang trước</button>
-            <span className="rounded-xl bg-slate-100 px-4 py-2 text-[13px] font-black text-slate-700">Trang {pageIndex + 1}/{totalPages}</span>
-            <button type="button" onClick={goNextPage} disabled={pageIndex >= totalPages - 1 || loading} className="h-9 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Trang sau →</button>
+            <button type="button" onClick={goPreviousPage} disabled={pageIndex === 0 || loading} className="h-7 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">← Trang trước</button>
+            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[12px] font-black text-slate-700">Trang {pageIndex + 1}/{totalPages}</span>
+            <button type="button" onClick={goNextPage} disabled={pageIndex >= totalPages - 1 || loading} className="h-7 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Trang sau →</button>
           </div>
         </div>
       </section>

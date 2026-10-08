@@ -255,50 +255,6 @@ export default function BookingAdvancedTable({
 }) {
   const router = useRouter();
 
-  // Vùng cuộn bảng: tính chiều cao động để ĐÁY bảng (chỗ có thanh kéo ngang)
-  // luôn nằm trong màn hình, không bị đẩy xuống dưới khi bộ lọc xuống nhiều dòng.
-  const scrollBoxRef = useRef<HTMLDivElement | null>(null);
-  const [scrollMaxH, setScrollMaxH] = useState<number | null>(null);
-
-  useEffect(() => {
-    let raf = 0;
-    function recompute() {
-      const node = scrollBoxRef.current;
-      if (!node) return;
-      // Dùng vị trí THỰC trên màn hình (viewport), cập nhật cả khi cuộn ->
-      // bảng luôn cao vừa đủ để lấp xuống gần đáy màn hình, không thừa chỗ trống.
-      // Chặn mép trên ở 92px (dưới header cố định) để bảng không cao quá 1 màn hình
-      // và không chui lên sau header -> thanh kéo ngang luôn ở gần đáy màn hình.
-      const top = Math.max(node.getBoundingClientRect().top, 92);
-      const reserve = 84; // chừa chỗ cho footer phân trang + lề dưới
-      const h = window.innerHeight - top - reserve;
-      setScrollMaxH(Math.max(240, Math.round(h)));
-    }
-    function onScrollOrResize() {
-      if (raf) return;
-      raf = window.requestAnimationFrame(() => {
-        raf = 0;
-        recompute();
-      });
-    }
-
-    recompute();
-    window.addEventListener("resize", onScrollOrResize);
-    window.addEventListener("scroll", onScrollOrResize, true);
-    let ro: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(onScrollOrResize);
-      ro.observe(document.body);
-    }
-
-    return () => {
-      if (raf) window.cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onScrollOrResize);
-      window.removeEventListener("scroll", onScrollOrResize, true);
-      ro?.disconnect();
-    };
-  }, []);
-
   const [columnOrder, setColumnOrder] = useState<string[]>(
     defaultColumns.map((column) => column.key)
   );
@@ -824,15 +780,15 @@ export default function BookingAdvancedTable({
   }
 
   return (
-    <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
       {error && (
-        <div className="border-b border-slate-200 px-5 py-3">
+        <div className="shrink-0 border-b border-slate-200 px-5 py-3">
           <p className="text-[12px] font-bold text-red-600">{error}</p>
         </div>
       )}
 
       {restricted && (
-        <div className="border-b border-slate-200 bg-amber-50 px-5 py-2.5">
+        <div className="shrink-0 border-b border-slate-200 bg-amber-50 px-5 py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-[12px] font-bold text-amber-700">
               Tài khoản Giao hàng: chỉ xem và sửa 3 trường Ngày gửi, Mã vận đơn,
@@ -850,7 +806,7 @@ export default function BookingAdvancedTable({
       )}
 
       {!restricted && (
-      <div className="border-b border-slate-200 bg-slate-50 px-5 py-3">
+      <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-5 py-3">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-black text-slate-700">
             Đã chọn: {selectedCount} booking
@@ -1018,11 +974,7 @@ export default function BookingAdvancedTable({
       </div>
       )}
 
-      <div
-        ref={scrollBoxRef}
-        className="booking-advanced-scroll relative z-0 max-h-[calc(100vh-375px)] overflow-auto"
-        style={scrollMaxH ? { maxHeight: scrollMaxH } : undefined}
-      >
+      <div className="booking-advanced-scroll relative z-0 min-h-0 flex-1 overflow-auto">
         <table
           className="booking-advanced-table text-left text-sm"
           style={{ minWidth: `${tableWidth}px`, width: `${tableWidth}px` }}
@@ -1031,7 +983,7 @@ export default function BookingAdvancedTable({
             <tr>
               {!restricted && (
               <th
-                className="border-b border-slate-200 bg-slate-50 px-1 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
+                className="border-b border-slate-200 bg-slate-50 px-0.5 py-1 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                 style={{
                   width: selectColumnWidth,
                   minWidth: selectColumnWidth,
@@ -1064,7 +1016,7 @@ export default function BookingAdvancedTable({
                     onDragStart={() => setDraggingColumn(column.key)}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={() => handleDrop(column.key)}
-                    className="border-b border-slate-200 bg-slate-50 px-1 py-1.5 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
+                    className="border-b border-slate-200 bg-slate-50 px-0.5 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                     style={{
                       width: getColumnWidth(column),
                       minWidth: getColumnWidth(column),
@@ -1191,7 +1143,7 @@ export default function BookingAdvancedTable({
                   >
                     {!restricted && (
                     <td
-                      className="border-b border-slate-100 bg-white px-1 py-0.5 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                      className="border-b border-slate-100 bg-white px-1 py-0 text-center text-[12px] text-slate-800 group-hover:bg-slate-50"
                       style={{
                         width: selectColumnWidth,
                         minWidth: selectColumnWidth,
@@ -1222,7 +1174,7 @@ export default function BookingAdvancedTable({
                       return (
                         <td
                           key={column.key}
-                          className="border-b border-slate-100 bg-white px-1 py-0.5 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                          className="border-b border-slate-100 bg-white px-0 py-0 align-top text-[12px] text-slate-800 group-hover:bg-slate-50"
                           style={{
                             width: getColumnWidth(column),
                             minWidth: getColumnWidth(column),
@@ -1481,7 +1433,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">Chưa rõ KOC</option>
           {kocs.map((koc) => (
@@ -1502,7 +1454,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full appearance-none rounded-lg border border-transparent bg-transparent px-0.5 pr-2.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">Chưa có PIC</option>
           {employees.map((employee) => (
@@ -1511,6 +1463,9 @@ function CellEditor({
             </option>
           ))}
         </select>
+        <span className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2 text-[8px] leading-none text-slate-500">
+          ▾
+        </span>
         {saving && <SavingDot />}
       </div>
     );
@@ -1540,7 +1495,7 @@ function CellEditor({
           value={currentValue}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, currentValue)}
-          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full appearance-none rounded-lg border border-transparent bg-transparent px-0.5 pr-2.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
 
@@ -1554,6 +1509,10 @@ function CellEditor({
             </option>
           ))}
         </select>
+        {/* Mũi tên tùy chỉnh nhỏ (thay mũi tên mặc định to của trình duyệt) */}
+        <span className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2 text-[8px] leading-none text-slate-500">
+          ▾
+        </span>
         {saving && <SavingDot />}
       </div>
     );
@@ -1566,7 +1525,7 @@ function CellEditor({
           name={`${column.key}_${String(value || "")}`}
           value={formatInputValue(column, value)}
           onChange={(nextValue) => onSave(nextValue)}
-          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
 
         {saving && <SavingDot />}
@@ -1607,7 +1566,7 @@ function EditableCopyText({
             event.currentTarget.blur();
           }
         }}
-        className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
       />
 
       <button
@@ -1840,7 +1799,7 @@ function ProductMultiSelect({
         className={`flex w-full items-center justify-between gap-2 rounded-lg border text-left font-semibold outline-none transition ${
           compact
             ? "h-9 border-slate-200 bg-white px-3 text-[12.5px]"
-            : "h-7 border-transparent bg-transparent px-1.5 text-[12px] hover:border-slate-200 hover:bg-white"
+            : "h-7 border-transparent bg-transparent px-0.5 text-[12px] hover:border-slate-200 hover:bg-white"
         } ${open ? "border-[#3964ff] bg-white ring-2 ring-[#3964ff]/10" : ""}`}
       >
         <span

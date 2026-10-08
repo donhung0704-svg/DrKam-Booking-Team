@@ -153,6 +153,42 @@ body {
   line-height: 1.45 !important;
 }
 
+/* ====== Nén SÂU cho bảng KOC/Booking nâng cao ======
+   Ghi đè các rule chung ở trên (table td padding 0.7rem, input/select
+   min-height 42px) để hàng sát nhau, nhìn bao quát hơn. */
+.crm-light .koc-advanced-table td,
+.crm-light .booking-advanced-table td {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  line-height: 1.2 !important;
+}
+.crm-light .koc-advanced-table th,
+.crm-light .booking-advanced-table th {
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  line-height: 1.15 !important;
+}
+.crm-light .koc-advanced-table input,
+.crm-light .koc-advanced-table select,
+.crm-light .koc-advanced-table textarea,
+.crm-light .booking-advanced-table input,
+.crm-light .booking-advanced-table select,
+.crm-light .booking-advanced-table textarea {
+  min-height: 0 !important;
+  line-height: 1.2 !important;
+}
+
+/* Select/input đã đặt chiều cao Tailwind (h-8/h-9) -> dùng đúng chiều cao đó,
+   bỏ min-height 42px chung (áp cho select bộ lọc, phân trang...) */
+.crm-light select.h-7,
+.crm-light select.h-8,
+.crm-light select.h-9,
+.crm-light input.h-7,
+.crm-light input.h-8,
+.crm-light input.h-9 {
+  min-height: 0 !important;
+}
+
 /* Sidebar gọn hơn */
 .portal-sidebar-scroll a,
 .portal-sidebar-scroll div {

@@ -766,22 +766,21 @@ export default function BookingListPage() {
   }
 
   return (
-    <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-5 py-6 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
-      <header className="mb-3 rounded-[18px] border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
-        <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-base">
+    <section className="crm-light flex h-[calc(100vh-140px)] flex-col overflow-hidden rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6">
+      <header className="mb-2 shrink-0 rounded-2xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
+        <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-sm">
               📦
             </div>
 
-            <div>
-              <p className="mb-1 text-[11px] font-bold uppercase leading-[1.3] tracking-[0.22em] text-red-600">
-                DRKAM CRM PORTAL
-              </p>
-
-              <h1 className="text-[20px] font-bold leading-tight tracking-normal text-slate-950 md:text-[22px]">
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-[16px] font-bold leading-tight tracking-normal text-slate-950 md:text-[18px]">
                 Danh sách Booking
               </h1>
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-600">
+                DRKAM CRM PORTAL
+              </span>
             </div>
 
             {/* Chuyển Bảng / Pipeline ngay cạnh tiêu đề (shipper chỉ dùng Bảng) */}
@@ -817,7 +816,7 @@ export default function BookingListPage() {
             <button
               type="button"
               onClick={exportBookingExcel}
-              className="h-10 rounded-xl bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-md hover:bg-emerald-700"
+              className="h-8 rounded-lg bg-emerald-600 px-3 text-[12.5px] font-bold text-white shadow-md hover:bg-emerald-700"
             >
               Xuất Excel
             </button>
@@ -825,7 +824,7 @@ export default function BookingListPage() {
             {!isShipper && (
               <Link
                 href="/import/bookings"
-                className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+                className="flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-[12.5px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
               >
                 Import Booking
               </Link>
@@ -835,12 +834,12 @@ export default function BookingListPage() {
       </header>
 
       {message && (
-        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-[13px] font-semibold text-red-700">
+        <div className="mb-3 shrink-0 rounded-2xl border border-red-200 bg-red-50 p-3 text-[13px] font-semibold text-red-700">
           {message}
         </div>
       )}
 
-      <section className="sticky top-[92px] z-20 mb-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+      <section className="mb-3 shrink-0 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
         <div className="flex flex-wrap items-end gap-x-2 gap-y-1.5">
           <div className="w-full sm:w-[190px]">
             <label className="mb-0.5 block text-[11px] font-bold text-slate-600">
@@ -1088,7 +1087,7 @@ export default function BookingListPage() {
       </section>
 
       {viewMode === "pipeline" && !isShipper ? (
-        <section className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+        <section className="flex min-h-0 flex-1 flex-col overflow-auto rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
           <div className="mb-3">
             <p className="text-[15px] font-black text-slate-900">
               Booking Pipeline
@@ -1206,9 +1205,9 @@ export default function BookingListPage() {
         }}
       />
 
-      <section className="sticky bottom-0 z-[200] mt-4 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12)]">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="text-[13px] font-bold text-slate-700">
+      <section className="mt-1 shrink-0 bg-[#f4f7fb] px-1 py-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-[12px] font-bold text-slate-700">
             Đang xem:{" "}
             <span className="text-slate-950">
               {startRow} - {endRow}
@@ -1216,11 +1215,11 @@ export default function BookingListPage() {
             / {totalBookingCount} booking
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <select
               value={pageSize}
               onChange={(event) => setPageSize(Number(event.target.value))}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-bold text-slate-700 outline-none focus:border-[#3964ff]"
+              className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[12px] font-bold text-slate-700 outline-none focus:border-[#3964ff]"
             >
               {pageSizeOptions.map((option) => (
                 <option key={option} value={option}>
@@ -1233,12 +1232,12 @@ export default function BookingListPage() {
               type="button"
               onClick={goPreviousPage}
               disabled={safePageIndex === 0}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-7 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               ← Trang trước
             </button>
 
-            <div className="flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-black text-slate-800">
+            <div className="flex h-7 items-center rounded-lg bg-slate-100 px-2.5 text-[12px] font-black text-slate-800">
               Trang {safePageIndex + 1}/{totalPages}
             </div>
 
@@ -1246,7 +1245,7 @@ export default function BookingListPage() {
               type="button"
               onClick={goNextPage}
               disabled={safePageIndex >= totalPages - 1}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-7 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Trang sau →
             </button>
