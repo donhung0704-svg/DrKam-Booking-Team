@@ -1222,7 +1222,7 @@ export default function BookingAdvancedTable({
                       return (
                         <td
                           key={column.key}
-                          className="border-b border-slate-100 bg-white px-1 py-0 text-[12px] text-slate-800 group-hover:bg-slate-50"
+                          className="border-b border-slate-100 bg-white px-1 py-0.5 align-top text-[12px] text-slate-800 group-hover:bg-slate-50"
                           style={{
                             width: getColumnWidth(column),
                             minWidth: getColumnWidth(column),
