@@ -178,6 +178,15 @@ body {
   line-height: 1.2 !important;
 }
 
+/* Select/input đã đặt chiều cao Tailwind (h-8/h-9) -> dùng đúng chiều cao đó,
+   bỏ min-height 42px chung (áp cho select bộ lọc, phân trang...) */
+.crm-light select.h-8,
+.crm-light select.h-9,
+.crm-light input.h-8,
+.crm-light input.h-9 {
+  min-height: 0 !important;
+}
+
 /* Sidebar gọn hơn */
 .portal-sidebar-scroll a,
 .portal-sidebar-scroll div {
