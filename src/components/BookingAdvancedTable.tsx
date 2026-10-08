@@ -1540,7 +1540,7 @@ function CellEditor({
           value={currentValue}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, currentValue)}
-          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full appearance-none rounded-lg border border-transparent bg-transparent px-0.5 pr-2.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
 
@@ -1554,6 +1554,10 @@ function CellEditor({
             </option>
           ))}
         </select>
+        {/* Mũi tên tùy chỉnh nhỏ (thay mũi tên mặc định to của trình duyệt) */}
+        <span className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2 text-[8px] leading-none text-slate-500">
+          ▾
+        </span>
         {saving && <SavingDot />}
       </div>
     );
@@ -1607,7 +1611,7 @@ function EditableCopyText({
             event.currentTarget.blur();
           }
         }}
-        className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-2 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
       />
 
       <button

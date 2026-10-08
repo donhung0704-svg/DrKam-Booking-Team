@@ -1791,7 +1791,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full appearance-none rounded-lg border border-transparent bg-transparent px-0.5 pr-2.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
           {(column.options || []).map((option) => (
@@ -1800,6 +1800,10 @@ function CellEditor({
             </option>
           ))}
         </select>
+        {/* Mũi tên tùy chỉnh nhỏ (thay mũi tên mặc định to của trình duyệt) */}
+        <span className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2 text-[8px] leading-none text-slate-500">
+          ▾
+        </span>
 
         {saving && <SavingDot />}
       </div>
@@ -1881,7 +1885,7 @@ function EditableCopyText({
           onInput={(event) => autoResize(event.currentTarget)}
           onBlur={(event) => onSave(event.target.value)}
           placeholder="Ghi chú…"
-          className="block min-h-5 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-transparent px-0.5 py-0 pr-2 text-[12px] leading-[0.95rem] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="block min-h-5 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-transparent px-0.5 py-0 pr-1 text-[12px] leading-[0.95rem] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
       ) : (
         <input
@@ -1893,7 +1897,7 @@ function EditableCopyText({
               event.currentTarget.blur();
             }
           }}
-          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 pr-2 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-5 w-full rounded-lg border border-transparent bg-transparent px-0.5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
       )}
 
