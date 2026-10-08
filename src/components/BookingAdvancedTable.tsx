@@ -1031,7 +1031,7 @@ export default function BookingAdvancedTable({
             <tr>
               {!restricted && (
               <th
-                className="border-b border-slate-200 bg-slate-50 px-1 py-1.5 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
+                className="border-b border-slate-200 bg-slate-50 px-1 py-1 text-center text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                 style={{
                   width: selectColumnWidth,
                   minWidth: selectColumnWidth,
@@ -1064,7 +1064,7 @@ export default function BookingAdvancedTable({
                     onDragStart={() => setDraggingColumn(column.key)}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={() => handleDrop(column.key)}
-                    className="border-b border-slate-200 bg-slate-50 px-1 py-1.5 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
+                    className="border-b border-slate-200 bg-slate-50 px-1 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700"
                     style={{
                       width: getColumnWidth(column),
                       minWidth: getColumnWidth(column),
@@ -1191,7 +1191,7 @@ export default function BookingAdvancedTable({
                   >
                     {!restricted && (
                     <td
-                      className="border-b border-slate-100 bg-white px-1 py-0.5 text-center text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                      className="border-b border-slate-100 bg-white px-1 py-0 text-center text-[12px] text-slate-800 group-hover:bg-slate-50"
                       style={{
                         width: selectColumnWidth,
                         minWidth: selectColumnWidth,
@@ -1222,7 +1222,7 @@ export default function BookingAdvancedTable({
                       return (
                         <td
                           key={column.key}
-                          className="border-b border-slate-100 bg-white px-1 py-0.5 text-[12.5px] text-slate-800 group-hover:bg-slate-50"
+                          className="border-b border-slate-100 bg-white px-1 py-0 text-[12px] text-slate-800 group-hover:bg-slate-50"
                           style={{
                             width: getColumnWidth(column),
                             minWidth: getColumnWidth(column),
@@ -1481,7 +1481,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">Chưa rõ KOC</option>
           {kocs.map((koc) => (
@@ -1502,7 +1502,7 @@ function CellEditor({
           value={String(value || "")}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, value)}
-          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">Chưa có PIC</option>
           {employees.map((employee) => (
@@ -1540,7 +1540,7 @@ function CellEditor({
           value={currentValue}
           onChange={(event) => onSave(event.target.value || null)}
           style={getSelectColorStyle(column.key, currentValue)}
-          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-[12px] font-bold outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         >
           <option value="">-</option>
 
@@ -1566,7 +1566,7 @@ function CellEditor({
           name={`${column.key}_${String(value || "")}`}
           value={formatInputValue(column, value)}
           onChange={(nextValue) => onSave(nextValue)}
-          className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+          className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-8 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
         />
 
         {saving && <SavingDot />}
@@ -1607,7 +1607,7 @@ function EditableCopyText({
             event.currentTarget.blur();
           }
         }}
-        className="h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        className="h-6 w-full rounded-lg border border-transparent bg-transparent px-1.5 pr-6 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
       />
 
       <button
