@@ -52,6 +52,10 @@ type ReportRow = {
 
 const PIC_FILTER_KEY = "drkam_report_pic_filter";
 
+// Huyền VHS (EMP0003) là PIC TTS -> KHÔNG đưa vào bất cứ báo cáo nào
+// (ẩn dòng + không tính số liệu KOC/booking của Huyền, kể cả "Khác").
+const EXCLUDED_PIC_ID = "a5cc6582-5239-4145-938c-cb9ee070b614";
+
 type KpiInput = {
   lienHe: string;
   phanHoi: string;
@@ -270,7 +274,9 @@ export default function MonthlyReportPage() {
             "koc",
             "id, employee_id, created_at, new_contact_date, status, booking_date, monthly_videos, tier, channel_type, gmv_thang, videos_with_revenue, tt_can_cham_soc"
           ),
-          loadAllRows("employees", "*", (query) => query.eq("active", true)),
+          loadAllRows("employees", "*", (query) =>
+            query.eq("active", true).neq("id", EXCLUDED_PIC_ID)
+          ),
         ]);
 
         setBookings(bookingRows);
@@ -461,6 +467,8 @@ export default function MonthlyReportPage() {
     });
 
     kocs.forEach((koc) => {
+      // Bỏ hẳn KOC của Huyền (PIC TTS) khỏi báo cáo
+      if (String(koc.employee_id) === EXCLUDED_PIC_ID) return;
       const isPic = employeeMap.has(String(koc.employee_id));
 
       // picRow: Liên hệ/Phản hồi/Đồng ý/Từ chối tính theo PIC THẬT (không cần Booking date);
@@ -601,6 +609,8 @@ export default function MonthlyReportPage() {
     });
 
     bookings.forEach((booking) => {
+      // Bỏ hẳn booking của Huyền (PIC TTS) khỏi báo cáo
+      if (String(booking.employee_id) === EXCLUDED_PIC_ID) return;
       const row = ensureRow(String(booking.employee_id || ""));
 
       // Giá Cast vẫn lấy từ bảng bookings (booking tạo trong tháng).
