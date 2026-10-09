@@ -645,7 +645,6 @@ export default function KocListPage() {
 
   const selectedField = filterFields.find((field) => field.key === filterFieldKey) || filterFields[0];
   const availableOperators = getOperatorsForField(selectedField);
-  const currentPageCount = kocs.length;
   const closedCount = kocs.filter((koc) => koc.status === "Đã chốt").length;
   const repliedCount = kocs.filter((koc) => koc.status === "Đã phản hồi").length;
   const totalPages = Math.max(1, Math.ceil(totalKocCount / pageSize));
@@ -1134,26 +1133,6 @@ export default function KocListPage() {
               Reset cột
             </button>
           </>
-        }
-        statsInfo={
-          <div className="flex flex-wrap items-center gap-2 text-[12px] font-bold text-slate-600">
-            <span className="text-slate-300">|</span>
-            <span>
-              Đang xem: <b className="text-slate-950">{currentPageCount}</b> KOC
-            </span>
-            <span className="text-slate-300">|</span>
-            <span>
-              Tổng theo bộ lọc:{" "}
-              <b className="text-slate-950">{totalKocCount}</b> KOC
-            </span>
-            <span className="text-slate-300">|</span>
-            <span>
-              Trang:{" "}
-              <b className="text-slate-950">
-                {pageIndex + 1}/{totalPages}
-              </b>
-            </span>
-          </div>
         }
         onExport={exportKocExcel}
         onKocUpdated={(id, patch) => {
