@@ -178,6 +178,12 @@ body {
   line-height: 1.2 !important;
 }
 
+/* Panel "Hiển thị cột": ép line-height sát để giảm khoảng cách trên/dưới ký tự */
+.crm-light .col-cell,
+.crm-light .col-cell span {
+  line-height: 1.05 !important;
+}
+
 /* Select/input đã đặt chiều cao Tailwind (h-8/h-9) -> dùng đúng chiều cao đó,
    bỏ min-height 42px chung (áp cho select bộ lọc, phân trang...) */
 .crm-light select.h-7,

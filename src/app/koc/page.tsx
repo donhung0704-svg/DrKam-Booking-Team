@@ -235,7 +235,28 @@ export default function KocListPage() {
   } | null>(null);
 
   const [showColumnPanel, setShowColumnPanel] = useState(false);
+  const columnPanelRef = useRef<HTMLDivElement | null>(null);
   const [visibleColumnKeys, setVisibleColumnKeys] = useState<string[]>(defaultVisibleColumnKeys);
+
+  // Panel "Hiển thị cột": tự đóng (đã lưu sẵn mỗi lần tick) khi bấm ra ngoài / Enter / Esc
+  useEffect(() => {
+    if (!showColumnPanel) return;
+    function onDown(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      if (columnPanelRef.current?.contains(target)) return;
+      if (target.closest("[data-toggle-columns]")) return;
+      setShowColumnPanel(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Enter" || event.key === "Escape") setShowColumnPanel(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [showColumnPanel]);
   const [resetColumnSignal, setResetColumnSignal] = useState(0);
 
   // Đã khôi phục bộ lọc từ sessionStorage chưa (để không tải KOC trước khi khôi phục)
@@ -645,7 +666,6 @@ export default function KocListPage() {
 
   const selectedField = filterFields.find((field) => field.key === filterFieldKey) || filterFields[0];
   const availableOperators = getOperatorsForField(selectedField);
-  const currentPageCount = kocs.length;
   const closedCount = kocs.filter((koc) => koc.status === "Đã chốt").length;
   const repliedCount = kocs.filter((koc) => koc.status === "Đã phản hồi").length;
   const totalPages = Math.max(1, Math.ceil(totalKocCount / pageSize));
@@ -846,7 +866,7 @@ export default function KocListPage() {
   }
 
   return (
-    <section className="crm-light flex h-[calc(100vh-140px)] flex-col overflow-hidden rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6">
+    <section className="crm-light flex h-[calc(100vh-108px)] flex-col overflow-hidden rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6">
       <section className="mb-2 shrink-0 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
         <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-2">
@@ -1048,30 +1068,30 @@ export default function KocListPage() {
         )}
 
         {showColumnPanel && (
-          <div className="relative z-20 mt-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-red-600">
+          <div ref={columnPanelRef} className="relative z-20 mt-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[10.5px] font-black uppercase tracking-[0.1em] text-red-600">
                 Hiển thị cột
                 <span className="ml-2 font-semibold normal-case tracking-normal text-slate-400">
-                  Tick cột muốn hiện; cột ẩn vẫn lọc được.
+                  Tick cột muốn hiện; cột ẩn vẫn lọc được. Bấm ra ngoài / Enter để lưu & đóng.
                 </span>
               </p>
 
               <div className="flex gap-1.5">
-                <button type="button" onClick={showDefaultColumns} className="h-7 rounded-md border border-slate-200 bg-white px-2.5 text-[11.5px] font-bold text-slate-700">Mặc định</button>
-                <button type="button" onClick={showAllColumns} className="h-7 rounded-md bg-slate-900 px-2.5 text-[11.5px] font-bold text-white">Hiện tất cả</button>
+                <button type="button" onClick={showDefaultColumns} className="h-6 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700">Mặc định</button>
+                <button type="button" onClick={showAllColumns} className="h-6 rounded-md bg-slate-900 px-2 text-[11px] font-bold text-white">Hiện tất cả</button>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+            <div className="grid grid-cols-4 gap-1 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9">
               {columnOptions.map((column) => (
-                <label key={column.key} className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11.5px] font-semibold text-slate-700">
+                <label key={column.key} className="col-cell flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-px text-[11px] font-semibold text-slate-700">
                   <input
                     type="checkbox"
                     checked={visibleColumnKeys.includes(column.key)}
                     disabled={column.key === "action"}
                     onChange={() => toggleColumn(column.key)}
-                    className="h-3.5 w-3.5 shrink-0 accent-red-600"
+                    className="h-3 w-3 shrink-0 accent-red-600"
                   />
                   <span className="truncate">{column.label}</span>
                 </label>
@@ -1121,6 +1141,7 @@ export default function KocListPage() {
             <span className="mx-1 h-5 w-px bg-slate-200" />
             <button
               type="button"
+              data-toggle-columns="1"
               onClick={() => setShowColumnPanel((current) => !current)}
               className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-100"
             >
@@ -1134,26 +1155,6 @@ export default function KocListPage() {
               Reset cột
             </button>
           </>
-        }
-        statsInfo={
-          <div className="flex flex-wrap items-center gap-2 text-[12px] font-bold text-slate-600">
-            <span className="text-slate-300">|</span>
-            <span>
-              Đang xem: <b className="text-slate-950">{currentPageCount}</b> KOC
-            </span>
-            <span className="text-slate-300">|</span>
-            <span>
-              Tổng theo bộ lọc:{" "}
-              <b className="text-slate-950">{totalKocCount}</b> KOC
-            </span>
-            <span className="text-slate-300">|</span>
-            <span>
-              Trang:{" "}
-              <b className="text-slate-950">
-                {pageIndex + 1}/{totalPages}
-              </b>
-            </span>
-          </div>
         }
         onExport={exportKocExcel}
         onKocUpdated={(id, patch) => {
