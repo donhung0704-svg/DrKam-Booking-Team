@@ -202,7 +202,7 @@ export default function NewKocPage() {
 
   return (
     <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
-      <header className="mx-auto mb-2 max-w-[980px] rounded-2xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
+      <header className="mx-auto mb-2 max-w-[500px] rounded-2xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-sm">
@@ -226,12 +226,12 @@ export default function NewKocPage() {
       </header>
 
       {message && (
-        <div className="mx-auto mb-3 max-w-[980px] rounded-2xl border border-red-200 bg-red-50 p-3 text-[13px] font-semibold text-red-700">
+        <div className="mx-auto mb-3 max-w-[500px] rounded-2xl border border-red-200 bg-red-50 p-3 text-[13px] font-semibold text-red-700">
           {message}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="mx-auto max-w-[980px] space-y-2">
+      <form onSubmit={handleSubmit} className="mx-auto max-w-[500px] space-y-2">
         <CompactSection
           eyebrow="Thông tin định danh"
           title="ID, PIC, tier & trạng thái"
@@ -619,7 +619,7 @@ function CompactField({
 }) {
   return (
     <label
-      className={`grid grid-cols-1 gap-0.5 bg-white px-2 py-0.5 md:grid-cols-[112px_1fr] md:items-center ${
+      className={`grid grid-cols-1 gap-0.5 bg-white px-2 py-0.5 md:grid-cols-[96px_1fr] md:items-center ${
         full ? "xl:col-span-2" : ""
       }`}
     >
