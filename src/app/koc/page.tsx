@@ -1085,7 +1085,7 @@ export default function KocListPage() {
 
             <div className="grid grid-cols-4 gap-1 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9">
               {columnOptions.map((column) => (
-                <label key={column.key} className="flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[11px] font-semibold text-slate-700">
+                <label key={column.key} className="col-cell flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-px text-[11px] font-semibold text-slate-700">
                   <input
                     type="checkbox"
                     checked={visibleColumnKeys.includes(column.key)}
