@@ -46,36 +46,36 @@ export default function AppNav({
         title={collapsed ? "Mở menu" : "Thu gọn menu"}
         aria-label={collapsed ? "Mở menu" : "Thu gọn menu"}
         className={`fixed top-1/2 z-50 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-[13px] font-black text-slate-400 shadow-md transition hover:border-red-200 hover:text-red-600 lg:flex ${
-          collapsed ? "left-2" : "left-[280px] -translate-x-1/2"
+          collapsed ? "left-2" : "left-[216px] -translate-x-1/2"
         }`}
       >
         {collapsed ? "›" : "‹"}
       </button>
 
       {!collapsed && (
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[280px] border-r border-slate-200 bg-white lg:block">
-        <div className="flex h-[92px] items-center gap-3 border-b border-slate-200 px-8">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-2xl">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[216px] border-r border-slate-200 bg-white lg:block">
+        <div className="flex h-[92px] items-center gap-2.5 border-b border-slate-200 px-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-lg">
             🧰
           </div>
 
           <div>
             <div className="flex items-end gap-1">
-              <span className="text-[24px] font-black leading-none tracking-[-0.04em] text-slate-950">
+              <span className="text-[19px] font-black leading-none tracking-[-0.04em] text-slate-950">
                 DRKAM
               </span>
-              <span className="pb-[2px] text-sm font-black text-red-600">
+              <span className="pb-[1px] text-[11px] font-black text-red-600">
                 pharma
               </span>
             </div>
 
-            <p className="mt-1 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
+            <p className="mt-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
               Portal V2.5
             </p>
           </div>
         </div>
 
-        <div className="portal-sidebar-scroll h-[calc(100vh-92px)] overflow-y-auto px-4 py-4">
+        <div className="portal-sidebar-scroll h-[calc(100vh-92px)] overflow-y-auto px-2.5 py-3">
           <nav className="space-y-1">
             {items.map((item) => (
               <MainNavLink
@@ -93,7 +93,7 @@ export default function AppNav({
 
       <header
         className={`fixed left-0 right-0 top-0 z-30 h-[92px] border-b border-slate-200 bg-white/95 backdrop-blur ${
-          collapsed ? "" : "lg:left-[280px]"
+          collapsed ? "" : "lg:left-[216px]"
         }`}
       >
         <div className="flex h-full items-center justify-between gap-5 px-5 md:px-8">
@@ -185,14 +185,14 @@ function MainNavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-black transition ${
+      className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-black transition ${
         active
           ? "bg-red-50 text-red-600"
           : "text-slate-500 hover:bg-slate-50 hover:text-slate-950"
       }`}
     >
       <span
-        className={`flex h-8 w-8 items-center justify-center rounded-xl text-base ${
+        className={`flex h-7 w-7 items-center justify-center rounded-lg text-sm ${
           active ? "bg-white text-red-600" : "bg-slate-50 text-slate-400"
         }`}
       >

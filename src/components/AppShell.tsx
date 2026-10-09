@@ -41,7 +41,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <main
         className={`portal-content min-h-screen pt-[92px] ${
-          navCollapsed ? "" : "lg:pl-[280px]"
+          navCollapsed ? "" : "lg:pl-[216px]"
         }`}
       >
         <div className="px-5 py-6 md:px-8">{children}</div>
