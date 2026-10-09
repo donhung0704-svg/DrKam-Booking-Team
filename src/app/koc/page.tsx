@@ -845,7 +845,7 @@ export default function KocListPage() {
   }
 
   return (
-    <section className="crm-light flex h-[calc(100vh-140px)] flex-col overflow-hidden rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6">
+    <section className="crm-light flex h-[calc(100vh-108px)] flex-col overflow-hidden rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-6">
       <section className="mb-2 shrink-0 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
         <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-2">
