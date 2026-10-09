@@ -392,7 +392,7 @@ export default function NewBookingPage() {
                   name="employee_id"
                   value={selectedEmployeeId}
                   onChange={(event) => setSelectedEmployeeId(event.target.value)}
-                  className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
                 >
                   <option value="">Không chọn PIC</option>
                   {employees.map((employee) => (
@@ -408,7 +408,7 @@ export default function NewBookingPage() {
               <select
                 name="booking_type"
                 defaultValue="Booking vid"
-                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 {bookingTypeOptions.map((bookingType) => (
                   <option key={bookingType} value={bookingType}>
@@ -422,7 +422,7 @@ export default function NewBookingPage() {
               <input
                 name="cast_price"
                 placeholder="Ví dụ: 300000"
-                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -438,7 +438,7 @@ export default function NewBookingPage() {
               <select
                 name="status_booking"
                 defaultValue="Chờ nhận SP"
-                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 {statusBookingOptions.map((item) => (
                   <option key={item} value={item}>
@@ -451,7 +451,7 @@ export default function NewBookingPage() {
             <CompactField label="Ngày đăng thực tế">
               <DatePickerInput
                 name="actual_post_date"
-                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 pr-7 text-[11.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 pr-7 text-[11px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
           </div>
@@ -604,7 +604,7 @@ export default function NewBookingPage() {
                 value={recipientPhone}
                 onChange={(event) => setRecipientPhone(event.target.value)}
                 placeholder="SĐT người nhận cho đơn này"
-                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -616,7 +616,7 @@ export default function NewBookingPage() {
               <input
                 name="tracking_code"
                 placeholder="Mã vận đơn / tracking"
-                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -624,7 +624,7 @@ export default function NewBookingPage() {
               <select
                 name="order_status"
                 defaultValue=""
-                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 <option value="">Chọn tình trạng</option>
                 {orderStatusOptions.map((status) => (
@@ -711,7 +711,7 @@ function CompactSection({
         <p className="text-[9px] font-black uppercase leading-none tracking-[0.14em] text-red-600">
           {eyebrow}
         </p>
-        <h2 className="mt-0 text-[12px] font-bold leading-tight text-slate-950">
+        <h2 className="mt-0 text-[11px] font-bold leading-tight text-slate-950">
           {title}
         </h2>
         {description && (
@@ -743,7 +743,7 @@ function CompactField({
         full ? "xl:col-span-2" : ""
       }`}
     >
-      <span className="text-[10px] font-black uppercase leading-tight tracking-[0.04em] text-slate-500">
+      <span className="text-[9px] font-black uppercase leading-tight tracking-[0.03em] text-slate-500">
         {label} {required && <span className="text-red-600">*</span>}
       </span>
 
