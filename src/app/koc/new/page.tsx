@@ -36,6 +36,23 @@ const maritalStatusOptions = ["Đã kết hôn", "Đã có con"];
 
 const platformOptions = ["TikTok", "FB", "Shopee"];
 
+const careStatusOptions = [
+  "Pust thêm vid",
+  "Pust thêm vid + kịch bản",
+  "Pust kịch bản",
+  "Gel - Cặp đôi",
+  "Gel - Unbox",
+  "AI FB",
+  "TAP",
+];
+
+const commissionOptions = [
+  "Mở",
+  "15% tn 5% ads",
+  "16% tn 8% ads",
+  "1% tn 1% ads",
+];
+
 export default function NewKocPage() {
   const router = useRouter();
 
@@ -116,6 +133,12 @@ export default function NewKocPage() {
       new_contact_date: parseVietnameseDateInput(
         formData.get("new_contact_date")
       ),
+      tt_can_cham_soc: getText(formData, "tt_can_cham_soc") || null,
+      cast_price: getNumber(formData, "cast_price"),
+      commission_type: getText(formData, "commission_type") || null,
+      videos_with_revenue: getNumber(formData, "videos_with_revenue"),
+      items_sold: getNumber(formData, "items_sold"),
+      items_returned: getNumber(formData, "items_returned"),
     };
 
     if (!payload.Id_tiktok_Ten_fb) {
@@ -178,7 +201,7 @@ export default function NewKocPage() {
   }
 
   return (
-    <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-5 py-5 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
+    <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
       <header className="mx-auto mb-4 max-w-[980px] rounded-[18px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-start gap-3">
@@ -227,7 +250,7 @@ export default function NewKocPage() {
               <input
                 name="Id_tiktok_Ten_fb"
                 placeholder="Ví dụ: koc_nguyena"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -249,7 +272,7 @@ export default function NewKocPage() {
               ) : (
                 <select
                   name="employee_id"
-                  className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
                 >
                   <option value="">Chưa có PIC</option>
                   {employees.map((employee) => (
@@ -265,7 +288,7 @@ export default function NewKocPage() {
               <input
                 name="name"
                 placeholder="Tên KOC"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -273,14 +296,14 @@ export default function NewKocPage() {
               <input
                 name="follower"
                 placeholder="Ví dụ: 12000"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
             <CompactField label="Tier">
               <select
                 name="tier"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 <option value="">Chọn tier</option>
                 {tierOptions.map((tier) => (
@@ -295,7 +318,7 @@ export default function NewKocPage() {
               <select
                 name="status"
                 defaultValue="Chờ phản hồi"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 {statusOptions.map((status) => (
                   <option key={status} value={status}>
@@ -308,7 +331,7 @@ export default function NewKocPage() {
             <CompactField label="Channel type">
               <select
                 name="channel_type"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 <option value="">Chọn channel type</option>
                 {channelTypeOptions.map((channelType) => (
@@ -349,7 +372,7 @@ export default function NewKocPage() {
               <input
                 name="phone"
                 placeholder="Số điện thoại/Zalo"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -357,7 +380,7 @@ export default function NewKocPage() {
               <input
                 name="email"
                 placeholder="Email"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -365,7 +388,7 @@ export default function NewKocPage() {
               <input
                 name="tiktok_link"
                 placeholder="https://tiktok.com/@..."
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -373,7 +396,7 @@ export default function NewKocPage() {
               <input
                 name="facebook_link"
                 placeholder="https://facebook.com/..."
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -393,22 +416,22 @@ export default function NewKocPage() {
         >
           <div className="grid grid-cols-1 gap-px bg-slate-200 p-px xl:grid-cols-2">
             <CompactField label="Booking date">
-              <DatePickerInput name="booking_date" />
+              <DatePickerInput name="booking_date" className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 pr-7 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10" />
             </CompactField>
 
             <CompactField label="Date of birth">
-              <DatePickerInput name="date_of_birth" />
+              <DatePickerInput name="date_of_birth" className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 pr-7 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10" />
             </CompactField>
 
             <CompactField label="CS gần nhất">
-              <DatePickerInput name="new_contact_date" />
+              <DatePickerInput name="new_contact_date" className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 pr-7 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10" />
             </CompactField>
 
             <CompactField label="Daily Videos(T-1)">
               <input
                 name="number_of_videos"
                 placeholder="Số video"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -416,7 +439,7 @@ export default function NewKocPage() {
               <input
                 name="monthly_videos"
                 placeholder="Số video tháng"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -424,7 +447,7 @@ export default function NewKocPage() {
               <input
                 name="gmv"
                 placeholder="Ví dụ: 1000000"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -432,14 +455,14 @@ export default function NewKocPage() {
               <input
                 name="gmv_thang"
                 placeholder="Ví dụ: 30000000"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
             <CompactField label="Marital status">
               <select
                 name="marital_status"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 <option value="">Chọn trạng thái</option>
                 {maritalStatusOptions.map((item) => (
@@ -450,10 +473,70 @@ export default function NewKocPage() {
               </select>
             </CompactField>
 
+            <CompactField label="TT cần chăm sóc">
+              <select
+                name="tt_can_cham_soc"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              >
+                <option value="">Chọn</option>
+                {careStatusOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </CompactField>
+
+            <CompactField label="Giá cast">
+              <input
+                name="cast_price"
+                placeholder="Ví dụ: 500000"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+
+            <CompactField label="Hoa hồng">
+              <input
+                name="commission_type"
+                list="koc-commission-options"
+                placeholder="Chọn hoặc tự ghi"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+              <datalist id="koc-commission-options">
+                {commissionOptions.map((item) => (
+                  <option key={item} value={item} />
+                ))}
+              </datalist>
+            </CompactField>
+
+            <CompactField label="Video có DT">
+              <input
+                name="videos_with_revenue"
+                placeholder="Số video có doanh thu"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+
+            <CompactField label="Món bán ra">
+              <input
+                name="items_sold"
+                placeholder="Số món bán ra"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+
+            <CompactField label="Món hoàn">
+              <input
+                name="items_returned"
+                placeholder="Số món hoàn"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              />
+            </CompactField>
+
             <CompactField label="Campaign" full>
               <select
                 name="campaign_id"
-                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 <option value="">Không chọn campaign</option>
                 {campaigns.map((campaign) => (
@@ -472,7 +555,7 @@ export default function NewKocPage() {
             <textarea
               name="note"
               placeholder="Ghi chú thêm..."
-              className="min-h-[68px] w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[12.5px] leading-5 outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              className="min-h-[44px] w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-[12px] leading-[1.15rem] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
             />
           </CompactField>
         </CompactSection>
@@ -513,11 +596,11 @@ function CompactSection({
 }) {
   return (
     <section className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-2.5">
+      <div className="border-b border-slate-200 px-3 py-1.5">
         <p className="text-[10px] font-black uppercase leading-none tracking-[0.18em] text-red-600">
           {eyebrow}
         </p>
-        <h2 className="mt-1 text-[15.5px] font-bold leading-tight text-slate-950">
+        <h2 className="mt-0.5 text-[13px] font-bold leading-tight text-slate-950">
           {title}
         </h2>
         {description && (
@@ -545,7 +628,7 @@ function CompactField({
 }) {
   return (
     <label
-      className={`grid grid-cols-1 gap-1.5 bg-white px-3 py-2 md:grid-cols-[125px_1fr] md:items-center ${
+      className={`grid grid-cols-1 gap-1 bg-white px-2.5 py-1 md:grid-cols-[118px_1fr] md:items-center ${
         full ? "xl:col-span-2" : ""
       }`}
     >
