@@ -325,32 +325,23 @@ export default function NewBookingPage() {
 
   return (
     <section className="crm-light min-h-screen rounded-[32px] bg-[#f4f7fb] px-4 py-3 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)] md:px-8">
-      <header className="mx-auto mb-4 max-w-[980px] rounded-[18px] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-base">
+      <header className="mx-auto mb-2 max-w-[980px] rounded-2xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-50 text-sm">
               ➕
             </div>
-
-            <div>
-              <p className="mb-1 text-[10.5px] font-black uppercase leading-none tracking-[0.2em] text-red-600">
-                DRKAM CRM PORTAL
-              </p>
-
-              <h1 className="text-[23px] font-bold leading-tight text-slate-950 md:text-[25px]">
-                Tạo Booking mới
-              </h1>
-
-              <p className="mt-1 max-w-3xl text-[12.5px] leading-5 text-slate-500">
-                Tạo booking cho KOC, chọn PIC phụ trách, loại booking, sản phẩm
-                và ngày dự kiến đăng video.
-              </p>
-            </div>
+            <h1 className="text-[13px] font-bold leading-tight text-slate-950 md:text-[14px]">
+              Tạo Booking mới
+            </h1>
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] text-red-600">
+              DRKAM CRM PORTAL
+            </span>
           </div>
 
           <Link
             href="/bookings"
-            className="flex h-9 w-fit items-center rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+            className="flex h-7 w-fit items-center rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
           >
             ← Về danh sách Booking
           </Link>
@@ -363,7 +354,7 @@ export default function NewBookingPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="mx-auto max-w-[980px] space-y-3">
+      <form onSubmit={handleSubmit} className="mx-auto max-w-[980px] space-y-2">
         <CompactSection
           eyebrow="Thông tin Booking"
           title="KOC, PIC & loại booking"
@@ -401,7 +392,7 @@ export default function NewBookingPage() {
                   name="employee_id"
                   value={selectedEmployeeId}
                   onChange={(event) => setSelectedEmployeeId(event.target.value)}
-                  className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                  className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[10.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
                 >
                   <option value="">Không chọn PIC</option>
                   {employees.map((employee) => (
@@ -417,7 +408,7 @@ export default function NewBookingPage() {
               <select
                 name="booking_type"
                 defaultValue="Booking vid"
-                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[10.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 {bookingTypeOptions.map((bookingType) => (
                   <option key={bookingType} value={bookingType}>
@@ -431,7 +422,7 @@ export default function NewBookingPage() {
               <input
                 name="cast_price"
                 placeholder="Ví dụ: 300000"
-                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[10.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -447,7 +438,7 @@ export default function NewBookingPage() {
               <select
                 name="status_booking"
                 defaultValue="Chờ nhận SP"
-                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[10.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 {statusBookingOptions.map((item) => (
                   <option key={item} value={item}>
@@ -460,7 +451,7 @@ export default function NewBookingPage() {
             <CompactField label="Ngày đăng thực tế">
               <DatePickerInput
                 name="actual_post_date"
-                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 pr-7 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 pr-7 text-[10.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
           </div>
@@ -613,7 +604,7 @@ export default function NewBookingPage() {
                 value={recipientPhone}
                 onChange={(event) => setRecipientPhone(event.target.value)}
                 placeholder="SĐT người nhận cho đơn này"
-                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[10.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -625,7 +616,7 @@ export default function NewBookingPage() {
               <input
                 name="tracking_code"
                 placeholder="Mã vận đơn / tracking"
-                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[10.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               />
             </CompactField>
 
@@ -633,7 +624,7 @@ export default function NewBookingPage() {
               <select
                 name="order_status"
                 defaultValue=""
-                className="h-7 w-full rounded-lg border border-slate-200 bg-white px-2 text-[12px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[10.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
               >
                 <option value="">Chọn tình trạng</option>
                 {orderStatusOptions.map((status) => (
@@ -716,11 +707,11 @@ function CompactSection({
 }) {
   return (
     <section className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-3 py-1.5">
-        <p className="text-[10px] font-black uppercase leading-none tracking-[0.18em] text-red-600">
+      <div className="border-b border-slate-200 px-2.5 py-1">
+        <p className="text-[9px] font-black uppercase leading-none tracking-[0.14em] text-red-600">
           {eyebrow}
         </p>
-        <h2 className="mt-0.5 text-[13px] font-bold leading-tight text-slate-950">
+        <h2 className="mt-0 text-[10px] font-bold leading-tight text-slate-950">
           {title}
         </h2>
         {description && (
@@ -748,11 +739,11 @@ function CompactField({
 }) {
   return (
     <label
-      className={`grid grid-cols-1 gap-1 bg-white px-2.5 py-1 md:grid-cols-[118px_1fr] md:items-center ${
+      className={`grid grid-cols-1 gap-0.5 bg-white px-2 py-0.5 md:grid-cols-[112px_1fr] md:items-center ${
         full ? "xl:col-span-2" : ""
       }`}
     >
-      <span className="text-[10.5px] font-black uppercase leading-tight tracking-[0.06em] text-slate-500">
+      <span className="text-[8px] font-black uppercase leading-tight tracking-[0.02em] text-slate-500">
         {label} {required && <span className="text-red-600">*</span>}
       </span>
 
