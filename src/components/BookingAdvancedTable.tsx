@@ -90,6 +90,13 @@ const defaultColumns: ColumnConfig[] = [
     width: 110,
   },
   {
+    key: "campaign_id",
+    label: "Campaign name",
+    field: "campaign_id",
+    type: "select",
+    width: 134,
+  },
+  {
     key: "booking_type",
     label: "Loại booking",
     field: "booking_type",
@@ -219,6 +226,7 @@ export default function BookingAdvancedTable({
   bookings,
   kocs,
   employees,
+  campaigns = [],
   loading,
   resetLayoutSignal,
   restricted = false,
@@ -236,6 +244,8 @@ export default function BookingAdvancedTable({
   bookings: DbRow[];
   kocs: DbRow[];
   employees: DbRow[];
+  // Danh sách campaign để hiển thị/chọn cột "Campaign name"
+  campaigns?: DbRow[];
   loading: boolean;
   resetLayoutSignal?: number;
   restricted?: boolean;
@@ -357,6 +367,18 @@ export default function BookingAdvancedTable({
 
     return map;
   }, [employees]);
+
+  const campaignMap = useMemo(() => {
+    const map = new Map<string, DbRow>();
+
+    campaigns.forEach((campaign) => {
+      if (campaign.id) {
+        map.set(String(campaign.id), campaign);
+      }
+    });
+
+    return map;
+  }, [campaigns]);
 
   const columnMap = useMemo(() => {
     return new Map(defaultColumns.map((column) => [column.key, column]));
@@ -923,6 +945,7 @@ export default function BookingAdvancedTable({
             value={bulkValue}
             kocs={kocs}
             employees={employees}
+            campaigns={campaigns}
             onChange={setBulkValue}
           />
 
@@ -1195,8 +1218,10 @@ export default function BookingAdvancedTable({
                             column={column}
                             kocs={kocs}
                             employees={employees}
+                            campaigns={campaigns}
                             kocMap={kocMap}
                             employeeMap={employeeMap}
+                            campaignMap={campaignMap}
                             saving={savingCell === cellKey}
                             forceReadonly={cellReadonly}
                             onSave={(value) => updateCell(booking, column, value)}
@@ -1219,12 +1244,14 @@ function BulkValueInput({
   value,
   kocs,
   employees,
+  campaigns,
   onChange,
 }: {
   column: ColumnConfig | null;
   value: string;
   kocs: DbRow[];
   employees: DbRow[];
+  campaigns: DbRow[];
   onChange: (value: string) => void;
 }) {
   if (!column) {
@@ -1269,6 +1296,23 @@ function BulkValueInput({
         {employees.map((employee) => (
           <option key={employee.id} value={employee.id}>
             {getEmployeeDisplayName(employee)}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  if (column.key === "campaign_id") {
+    return (
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-semibold text-slate-700 outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+      >
+        <option value="">Chọn Campaign mới</option>
+        {campaigns.map((campaign) => (
+          <option key={campaign.id} value={campaign.id}>
+            {getCampaignDisplayName(campaign)}
           </option>
         ))}
       </select>
@@ -1336,8 +1380,10 @@ function CellEditor({
   column,
   kocs,
   employees,
+  campaigns,
   kocMap,
   employeeMap,
+  campaignMap,
   saving,
   forceReadonly = false,
   onSave,
@@ -1346,8 +1392,10 @@ function CellEditor({
   column: ColumnConfig;
   kocs: DbRow[];
   employees: DbRow[];
+  campaigns: DbRow[];
   kocMap: Map<string, DbRow>;
   employeeMap: Map<string, DbRow>;
+  campaignMap: Map<string, DbRow>;
   saving: boolean;
   forceReadonly?: boolean;
   onSave: (value: unknown) => void;
@@ -1414,7 +1462,7 @@ function CellEditor({
   if (forceReadonly) {
     return (
       <CopyableCell
-        text={formatCellDisplay(column, value, kocMap, employeeMap)}
+        text={formatCellDisplay(column, value, kocMap, employeeMap, campaignMap)}
         bold={false}
       />
     );
@@ -1422,7 +1470,9 @@ function CellEditor({
 
   if (column.type === "readonly") {
     return (
-      <CopyableCell text={formatCellDisplay(column, value, kocMap, employeeMap)} />
+      <CopyableCell
+        text={formatCellDisplay(column, value, kocMap, employeeMap, campaignMap)}
+      />
     );
   }
 
@@ -1460,6 +1510,42 @@ function CellEditor({
           {employees.map((employee) => (
             <option key={employee.id} value={employee.id}>
               {getEmployeeDisplayName(employee)}
+            </option>
+          ))}
+        </select>
+        <span className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2 text-[8px] leading-none text-slate-500">
+          ▾
+        </span>
+        {saving && <SavingDot />}
+      </div>
+    );
+  }
+
+  if (column.key === "campaign_id") {
+    const currentValue = String(value || "");
+    const currentExists = campaigns.some(
+      (campaign) => String(campaign.id) === currentValue
+    );
+
+    return (
+      <div className="relative">
+        <select
+          value={currentValue}
+          onChange={(event) => onSave(event.target.value || null)}
+          className="h-5 w-full appearance-none rounded-lg border border-transparent bg-transparent px-0.5 pr-2.5 text-[12px] outline-none hover:border-slate-200 hover:bg-white focus:border-[#3964ff] focus:bg-white"
+        >
+          <option value="">-</option>
+
+          {currentValue && !currentExists && (
+            <option value={currentValue}>
+              {getCampaignDisplayName(campaignMap.get(currentValue)) ||
+                currentValue}
+            </option>
+          )}
+
+          {campaigns.map((campaign) => (
+            <option key={campaign.id} value={campaign.id}>
+              {getCampaignDisplayName(campaign)}
             </option>
           ))}
         </select>
@@ -1946,7 +2032,8 @@ function formatCellDisplay(
   column: ColumnConfig,
   value: unknown,
   kocMap: Map<string, DbRow>,
-  employeeMap: Map<string, DbRow>
+  employeeMap: Map<string, DbRow>,
+  campaignMap: Map<string, DbRow>
 ) {
   if (!value) return "-";
 
@@ -1956,6 +2043,11 @@ function formatCellDisplay(
 
   if (column.key === "employee_id") {
     return getEmployeeDisplayName(employeeMap.get(String(value)));
+  }
+
+  if (column.key === "campaign_id") {
+    // Không tìm thấy (vd tài khoản Giao hàng không đọc được campaign) -> "-"
+    return getCampaignDisplayName(campaignMap.get(String(value))) || "-";
   }
 
   if (column.key === "created_at" || column.type === "date") {
@@ -2032,6 +2124,17 @@ function getKocDisplayName(koc?: DbRow | null) {
     koc.koc_code ||
     koc.phone ||
     "Chưa rõ KOC"
+  );
+}
+
+function getCampaignDisplayName(campaign?: DbRow | null) {
+  if (!campaign) return "";
+
+  return (
+    campaign.campaign_name ||
+    campaign.campaign_code ||
+    campaign.product_name ||
+    "Chưa rõ Campaign"
   );
 }
 
