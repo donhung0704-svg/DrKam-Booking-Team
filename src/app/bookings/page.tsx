@@ -57,7 +57,12 @@ const statusBookingOptions = [
 ];
 
 // Trường lọc chọn từ danh sách (không phải gõ tay)
-const selectFilterFields = new Set(["employee", "status_booking", "booking_type"]);
+const selectFilterFields = new Set([
+  "employee",
+  "campaign",
+  "status_booking",
+  "booking_type",
+]);
 
 const pageSizeOptions = [100, 200, 300];
 // Giữ bộ lọc/sắp xếp khi rời trang rồi quay lại (theo phiên tab)
@@ -71,7 +76,7 @@ type FilterPreset = {
   sort: { field: string; ascending: boolean } | null;
 };
 // Ẩn/hiện cột (lưu theo trình duyệt của từng tài khoản)
-const visibleColumnsStorageKey = "drkam_booking_visible_columns_v1";
+const visibleColumnsStorageKey = "drkam_booking_visible_columns_v2";
 
 // Danh sách cột của bảng Booking (khớp defaultColumns trong BookingAdvancedTable)
 const columnOptions = [
@@ -80,6 +85,7 @@ const columnOptions = [
   { key: "koc_address", label: "Địa chỉ" },
   { key: "koc_phone", label: "SĐT/Zalo" },
   { key: "employee_id", label: "PIC phụ trách" },
+  { key: "campaign_id", label: "Campaign name" },
   { key: "booking_type", label: "Loại booking" },
   { key: "status_booking", label: "Status booking" },
   { key: "cast_price", label: "Giá cast" },
@@ -107,6 +113,7 @@ const filterFields = [
   { value: "koc_address", label: "Địa chỉ KOC" },
   { value: "koc_phone", label: "SĐT/Zalo KOC" },
   { value: "employee", label: "PIC phụ trách" },
+  { value: "campaign", label: "Campaign name" },
   { value: "booking_type", label: "Loại booking" },
   { value: "status_booking", label: "Status booking" },
   { value: "product", label: "Sản phẩm" },
@@ -141,6 +148,7 @@ export default function BookingListPage() {
   const [bookings, setBookings] = useState<DbRow[]>([]);
   const [kocs, setKocs] = useState<DbRow[]>([]);
   const [employees, setEmployees] = useState<DbRow[]>([]);
+  const [campaigns, setCampaigns] = useState<DbRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   // Chế độ xem: "table" (bảng) hoặc "pipeline" (Kanban kéo thả theo Status)
@@ -239,7 +247,7 @@ export default function BookingListPage() {
       setLoading(true);
       setMessage("");
 
-      const [bookingResult, employeeResult] = await Promise.all([
+      const [bookingResult, employeeResult, campaignResult] = await Promise.all([
         loadAllBookings(),
 
         supabase
@@ -247,6 +255,12 @@ export default function BookingListPage() {
           .select("id, employee_code, full_name, email, phone, role, active, manager_id")
           .eq("active", true)
           .order("employee_code", { ascending: true })
+          .limit(2000),
+
+        supabase
+          .from("campaigns")
+          .select("id, campaign_code, campaign_name, product_name")
+          .order("campaign_code", { ascending: false })
           .limit(2000),
       ]);
 
@@ -287,6 +301,9 @@ export default function BookingListPage() {
         setEmployees(employeeResult.data || []);
       }
 
+      // Campaign chỉ để hiển thị tên: lỗi thì để trống, không chặn trang
+      setCampaigns(campaignResult.error ? [] : campaignResult.data || []);
+
       setLoading(false);
     }
 
@@ -317,6 +334,18 @@ export default function BookingListPage() {
     return map;
   }, [employees]);
 
+  const campaignMap = useMemo(() => {
+    const map = new Map<string, DbRow>();
+
+    campaigns.forEach((campaign) => {
+      if (campaign.id) {
+        map.set(String(campaign.id), campaign);
+      }
+    });
+
+    return map;
+  }, [campaigns]);
+
   // Danh sách lựa chọn cho ô "Giá trị" theo trường đang lọc.
   // PIC so khớp theo tên hiển thị (getEmployeeDisplayName), nên option cũng
   // dùng đúng tên đó để lọc ra kết quả.
@@ -328,11 +357,18 @@ export default function BookingListPage() {
       return [...new Set(names)].sort((a, b) => a.localeCompare(b, "vi"));
     }
 
+    if (draftField === "campaign") {
+      const names = campaigns
+        .map((campaign) => getCampaignDisplayName(campaign))
+        .filter(Boolean);
+      return [...new Set(names)].sort((a, b) => a.localeCompare(b, "vi"));
+    }
+
     if (draftField === "status_booking") return statusBookingOptions;
     if (draftField === "booking_type") return bookingTypeOptions;
 
     return null;
-  }, [draftField, employees]);
+  }, [draftField, employees, campaigns]);
 
   const filteredBookings = useMemo(() => {
     return bookings.filter((booking) => {
@@ -348,11 +384,12 @@ export default function BookingListPage() {
           booking,
           condition,
           kocMap,
-          employeeMap
+          employeeMap,
+          campaignMap
         );
       });
     });
-  }, [bookings, filters, kocMap, employeeMap]);
+  }, [bookings, filters, kocMap, employeeMap, campaignMap]);
 
   const sortedBookings = useMemo(() => {
     if (!sortState) return filteredBookings;
@@ -1113,6 +1150,7 @@ export default function BookingListPage() {
         bookings={currentPageBookings}
         kocs={kocs}
         employees={employees}
+        campaigns={campaigns}
         loading={loading}
         restricted={isShipper}
         canDelete={!isIntern}
@@ -1333,9 +1371,16 @@ function matchBookingCondition(
   booking: DbRow,
   condition: FilterCondition,
   kocMap: Map<string, DbRow>,
-  employeeMap: Map<string, DbRow>
+  employeeMap: Map<string, DbRow>,
+  campaignMap: Map<string, DbRow>
 ) {
-  const rawValue = getBookingFieldValue(booking, condition.field, kocMap, employeeMap);
+  const rawValue = getBookingFieldValue(
+    booking,
+    condition.field,
+    kocMap,
+    employeeMap,
+    campaignMap
+  );
   const targetValue = condition.value;
   const rawText = normalizeText(rawValue);
   const targetText = normalizeText(targetValue);
@@ -1367,7 +1412,8 @@ function getBookingFieldValue(
   booking: DbRow,
   field: string,
   kocMap: Map<string, DbRow>,
-  employeeMap: Map<string, DbRow>
+  employeeMap: Map<string, DbRow>,
+  campaignMap: Map<string, DbRow>
 ) {
   const koc = booking.koc_id ? kocMap.get(String(booking.koc_id)) : null;
   const employee = booking.employee_id
@@ -1403,7 +1449,24 @@ function getBookingFieldValue(
     return getEmployeeDisplayName(employee);
   }
 
+  if (field === "campaign") {
+    return booking.campaign_id
+      ? getCampaignDisplayName(campaignMap.get(String(booking.campaign_id)))
+      : "";
+  }
+
   return booking[field] ?? "";
+}
+
+function getCampaignDisplayName(campaign?: DbRow | null) {
+  if (!campaign) return "";
+
+  return (
+    campaign.campaign_name ||
+    campaign.campaign_code ||
+    campaign.product_name ||
+    "Chưa rõ Campaign"
+  );
 }
 
 function isContentBookingType(value: unknown) {

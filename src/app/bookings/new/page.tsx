@@ -73,6 +73,7 @@ export default function NewBookingPage() {
 
   const [kocs, setKocs] = useState<DbRow[]>([]);
   const [employees, setEmployees] = useState<DbRow[]>([]);
+  const [campaigns, setCampaigns] = useState<DbRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [initialKocId, setInitialKocId] = useState("");
@@ -232,6 +233,14 @@ export default function NewBookingPage() {
         .select("id, employee_code, full_name, email, phone, role, active, manager_id")
         .limit(1000);
       setEmployees(data || []);
+
+      // Danh sách campaign để chọn (lỗi thì để trống, không chặn form)
+      const campaignResult = await supabase
+        .from("campaigns")
+        .select("id, campaign_code, campaign_name, product_name")
+        .order("campaign_code", { ascending: false })
+        .limit(1000);
+      setCampaigns(campaignResult.error ? [] : campaignResult.data || []);
     })();
   }, []);
 
@@ -261,6 +270,7 @@ export default function NewBookingPage() {
       created_at: new Date().toISOString(),
       koc_id: getText(formData, "koc_id") || null,
       employee_id: getText(formData, "employee_id") || null,
+      campaign_id: getText(formData, "campaign_id") || null,
       booking_type: getText(formData, "booking_type") || "Booking vid",
       // Status do người dùng chọn (mặc định "Chờ nhận SP")
       status_booking: getText(formData, "status_booking") || "Chờ nhận SP",
@@ -402,6 +412,24 @@ export default function NewBookingPage() {
                   ))}
                 </select>
               )}
+            </CompactField>
+
+            <CompactField label="Campaign name">
+              <select
+                name="campaign_id"
+                defaultValue=""
+                className="h-6 w-full rounded-lg border border-slate-200 bg-white px-2 text-[10.5px] outline-none focus:border-[#3964ff] focus:ring-2 focus:ring-[#3964ff]/10"
+              >
+                <option value="">Không chọn campaign</option>
+                {campaigns.map((campaign) => (
+                  <option key={campaign.id} value={campaign.id}>
+                    {campaign.campaign_name ||
+                      campaign.campaign_code ||
+                      campaign.product_name ||
+                      "Chưa rõ Campaign"}
+                  </option>
+                ))}
+              </select>
             </CompactField>
 
             <CompactField label="Loại booking">
