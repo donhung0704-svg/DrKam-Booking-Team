@@ -46,12 +46,12 @@ drop policy if exists koc_intern_insert on public.koc;
 create policy koc_intern_insert on public.koc
   for insert to authenticated
   with check (public.is_intern() and employee_id in (select public.intern_employee_ids()));
--- intern: SUA chi dong co PIC = cua minh, va giu nguyen PIC do
+-- intern: SUA du lieu KOC cua TAT CA PIC (2026-10: duoc cap them quyen)
 drop policy if exists koc_intern_update on public.koc;
 create policy koc_intern_update on public.koc
   for update to authenticated
-  using (public.is_intern() and employee_id in (select public.intern_employee_ids()))
-  with check (public.is_intern() and employee_id in (select public.intern_employee_ids()));
+  using (public.is_intern())
+  with check (public.is_intern());
 -- (khong co policy DELETE cho intern -> khong xoa duoc)
 
 
