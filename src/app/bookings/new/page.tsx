@@ -48,6 +48,7 @@ const productOptions = [
   "Bộ cạo lưỡi nhựa",
   "Cốc nhựa màu Hồng",
   "Cốc nhựa màu Xanh lá",
+  "Box gel lưỡi + xịt",
 ];
 
 type OrderItem = {
