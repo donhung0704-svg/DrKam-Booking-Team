@@ -43,11 +43,6 @@ type ReportRow = {
   // Báo cáo tổng quát (KOC tạo mới trong tháng theo status)
   dongY: number; // status "Đã chốt"
   tuChoi: number; // status "Từ chối"
-  // Đếm KOC theo TT cần chăm sóc (tt_can_cham_soc)
-  kocAiFb: number; // "AI FB"
-  kocGelCapDoi: number; // "Gel - Cặp đôi"
-  kocGelUnbox: number; // "Gel - Unbox"
-  kocTap: number; // "TAP"
 };
 
 const PIC_FILTER_KEY = "drkam_report_pic_filter";
@@ -244,6 +239,7 @@ export default function MonthlyReportPage() {
   const [bookings, setBookings] = useState<DbRow[]>([]);
   const [kocs, setKocs] = useState<DbRow[]>([]);
   const [employees, setEmployees] = useState<DbRow[]>([]);
+  const [campaigns, setCampaigns] = useState<DbRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -268,20 +264,22 @@ export default function MonthlyReportPage() {
 
       try {
         // Supabase giới hạn 1000 dòng/lần -> phải phân trang để lấy đủ dữ liệu
-        const [bookingRows, kocRows, employeeRows] = await Promise.all([
+        const [bookingRows, kocRows, employeeRows, campaignRows] = await Promise.all([
           loadAllRows("bookings", "id, employee_id, created_at, cast_price"),
           loadAllRows(
             "koc",
-            "id, employee_id, created_at, new_contact_date, status, booking_date, monthly_videos, tier, channel_type, gmv_thang, videos_with_revenue, tt_can_cham_soc"
+            "id, employee_id, created_at, new_contact_date, status, booking_date, monthly_videos, tier, channel_type, gmv_thang, videos_with_revenue, campaign_id"
           ),
           loadAllRows("employees", "*", (query) =>
             query.eq("active", true).neq("id", EXCLUDED_PIC_ID)
           ),
+          loadAllRows("campaigns", "id, campaign_name, campaign_code, product_name"),
         ]);
 
         setBookings(bookingRows);
         setKocs(kocRows);
         setEmployees(employeeRows);
+        setCampaigns(campaignRows);
       } catch (error) {
         setMessage(
           `Lỗi tải dữ liệu báo cáo: ${
@@ -451,10 +449,6 @@ export default function MonthlyReportPage() {
           kocBookingDaVid: 0,
           dongY: 0,
           tuChoi: 0,
-          kocAiFb: 0,
-          kocGelCapDoi: 0,
-          kocGelUnbox: 0,
-          kocTap: 0,
         });
       }
 
@@ -533,20 +527,6 @@ export default function MonthlyReportPage() {
         status === "Từ chối"
       ) {
         picRow.tuChoi += 1;
-      }
-
-      // Đếm KOC theo TT cần chăm sóc (theo PIC) + CÓ Booking date TRONG THÁNG báo cáo.
-      if (monthKeyOfBookingDate(koc.booking_date) === monthKey) {
-        const careStatus = String(koc.tt_can_cham_soc || "").trim();
-        if (careStatus === "AI FB") {
-          picRow.kocAiFb += 1;
-        } else if (careStatus === "Gel - Cặp đôi") {
-          picRow.kocGelCapDoi += 1;
-        } else if (careStatus === "Gel - Unbox") {
-          picRow.kocGelUnbox += 1;
-        } else if (careStatus === "TAP") {
-          picRow.kocTap += 1;
-        }
       }
 
       // Video/GMV tính theo perfRow (PIC nếu có Booking date, ngược lại "Khác").
@@ -677,10 +657,6 @@ export default function MonthlyReportPage() {
           total.giaCast += row.giaCast;
           total.dongY += row.dongY;
           total.tuChoi += row.tuChoi;
-          total.kocAiFb += row.kocAiFb;
-          total.kocGelCapDoi += row.kocGelCapDoi;
-          total.kocGelUnbox += row.kocGelUnbox;
-          total.kocTap += row.kocTap;
         }
 
         return total;
@@ -703,13 +679,87 @@ export default function MonthlyReportPage() {
         kocBookingDaVid: 0,
         dongY: 0,
         tuChoi: 0,
-        kocAiFb: 0,
-        kocGelCapDoi: 0,
-        kocGelUnbox: 0,
-        kocTap: 0,
       }
     );
   }, [reportRows]);
+
+  // Báo cáo Campaign: số KOC status "Đã chốt" theo từng Campaign, chia theo PIC.
+  // Cột PIC theo bộ lọc PIC; KOC không có PIC hợp lệ -> cột "Khác" (chỉ hiện khi có số).
+  // KOC chưa gán Campaign -> dòng "Chưa có Campaign".
+  const campaignReport = useMemo(() => {
+    const picFilterActive = selectedPics !== null;
+    const selectedSet = new Set(selectedPics ?? []);
+
+    const picColumns = employees
+      .filter(
+        (employee) =>
+          !picFilterActive || selectedSet.has(String(employee.id))
+      )
+      .map((employee) => ({
+        id: String(employee.id),
+        name: getEmployeeDisplayName(employee),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, "vi"));
+    const picColumnSet = new Set(picColumns.map((pic) => pic.id));
+
+    const campaignById = new Map<string, DbRow>();
+    campaigns.forEach((campaign) => {
+      if (campaign.id) campaignById.set(String(campaign.id), campaign);
+    });
+
+    // campaignKey -> (picKey -> số KOC); "" = chưa có Campaign, "no-pic" = Khác
+    const counts = new Map<string, Map<string, number>>();
+    let hasOther = false;
+
+    kocs.forEach((koc) => {
+      if (String(koc.employee_id) === EXCLUDED_PIC_ID) return;
+      if (String(koc.status || "").trim() !== "Đã chốt") return;
+
+      const employeeId = String(koc.employee_id || "");
+      let picKey: string;
+      if (employeeMap.has(employeeId)) {
+        if (!picColumnSet.has(employeeId)) return; // PIC bị lọc ẩn
+        picKey = employeeId;
+      } else {
+        picKey = "no-pic";
+        hasOther = true;
+      }
+
+      const campaignKey = koc.campaign_id ? String(koc.campaign_id) : "";
+      if (!counts.has(campaignKey)) counts.set(campaignKey, new Map());
+      const byPic = counts.get(campaignKey)!;
+      byPic.set(picKey, (byPic.get(picKey) || 0) + 1);
+    });
+
+    const columns = hasOther
+      ? [...picColumns, { id: "no-pic", name: "Khác" }]
+      : picColumns;
+
+    const rows = Array.from(counts.entries())
+      .map(([campaignKey, byPic]) => {
+        const campaign = campaignById.get(campaignKey);
+        const name = !campaignKey
+          ? "Chưa có Campaign"
+          : getCampaignDisplayName(campaign) || "Campaign đã xoá";
+        const total = Array.from(byPic.values()).reduce((a, b) => a + b, 0);
+        return { campaignKey, name, byPic, total };
+      })
+      .sort((a, b) => {
+        if (!a.campaignKey) return 1;
+        if (!b.campaignKey) return -1;
+        return b.total - a.total || a.name.localeCompare(b.name, "vi");
+      });
+
+    const columnTotals = new Map<string, number>();
+    rows.forEach((row) => {
+      row.byPic.forEach((count, picKey) => {
+        columnTotals.set(picKey, (columnTotals.get(picKey) || 0) + count);
+      });
+    });
+    const grandTotal = rows.reduce((sum, row) => sum + row.total, 0);
+
+    return { columns, rows, columnTotals, grandTotal };
+  }, [kocs, campaigns, employees, employeeMap, selectedPics]);
 
   function setThisMonth() {
     setReportMonth(getVietnamCurrentMonth());
@@ -1091,10 +1141,6 @@ export default function MonthlyReportPage() {
                 <Th>Đồng ý</Th>
                 <Th>% Đồng ý</Th>
                 <Th>Từ chối</Th>
-                <Th>KOC AI FB</Th>
-                <Th>KOC Gel cặp đôi</Th>
-                <Th>KOC Gel Unbox</Th>
-                <Th>KOC TAP</Th>
                 <Th>Monthly Videos</Th>
                 <Th>Giá Cast</Th>
                 <Th>GMV</Th>
@@ -1105,7 +1151,7 @@ export default function MonthlyReportPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={14}
+                    colSpan={10}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Đang tải dữ liệu báo cáo...
@@ -1116,7 +1162,7 @@ export default function MonthlyReportPage() {
               {!loading && reportRows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={14}
+                    colSpan={10}
                     className="px-5 py-10 text-center text-slate-500"
                   >
                     Không có dữ liệu.
@@ -1146,10 +1192,6 @@ export default function MonthlyReportPage() {
                       </span>
                     </Td>
                     <Td>{row.tuChoi}</Td>
-                    <Td>{formatNumber(row.kocAiFb)}</Td>
-                    <Td>{formatNumber(row.kocGelCapDoi)}</Td>
-                    <Td>{formatNumber(row.kocGelUnbox)}</Td>
-                    <Td>{formatNumber(row.kocTap)}</Td>
                     <Td>
                       {formatNumber(row.dailyVideoNew + row.dailyVideoOld)}
                     </Td>
@@ -1173,12 +1215,6 @@ export default function MonthlyReportPage() {
                     {formatPercent(totals.dongY, totals.lienHe)}
                   </td>
                   <td className="px-2 py-4 font-bold">{totals.tuChoi}</td>
-                  <td className="px-2 py-4 font-bold">{totals.kocAiFb}</td>
-                  <td className="px-2 py-4 font-bold">
-                    {totals.kocGelCapDoi}
-                  </td>
-                  <td className="px-2 py-4 font-bold">{totals.kocGelUnbox}</td>
-                  <td className="px-2 py-4 font-bold">{totals.kocTap}</td>
                   <td className="px-2 py-4 font-bold">
                     {formatNumber(totals.dailyVideoNew + totals.dailyVideoOld)}
                   </td>
@@ -1187,6 +1223,98 @@ export default function MonthlyReportPage() {
                   </td>
                   <td className="px-2 py-4 font-bold">
                     {formatMoney(totals.gmvNgay)}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          </ResizeGroupContext.Provider>
+        </div>
+      </section>
+
+      <section className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-4 py-3">
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-red-600">
+            Báo cáo Campaign
+          </p>
+          <p className="mt-1 text-[12.5px] text-slate-500">
+            Số KOC có status Đã chốt theo từng Campaign, chia theo PIC (theo bộ
+            lọc PIC). Tính trên toàn bộ KOC, không phụ thuộc tháng báo cáo.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <ResizeGroupContext.Provider value="monthly-campaign">
+          <table className="report-table w-full table-fixed text-center text-[13px]">
+            <thead>
+              <tr className="bg-slate-50">
+                <Th>Campaign</Th>
+                {campaignReport.columns.map((pic) => (
+                  <Th key={pic.id}>{pic.name}</Th>
+                ))}
+                <Th>Tổng</Th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading && (
+                <tr>
+                  <td
+                    colSpan={campaignReport.columns.length + 2}
+                    className="px-5 py-10 text-center text-slate-500"
+                  >
+                    Đang tải dữ liệu báo cáo...
+                  </td>
+                </tr>
+              )}
+
+              {!loading && campaignReport.rows.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={campaignReport.columns.length + 2}
+                    className="px-5 py-10 text-center text-slate-500"
+                  >
+                    Không có dữ liệu.
+                  </td>
+                </tr>
+              )}
+
+              {!loading &&
+                campaignReport.rows.map((row) => (
+                  <tr
+                    key={row.campaignKey || "no-campaign"}
+                    className="hover:bg-slate-50"
+                  >
+                    <Td>
+                      <span className="font-bold text-slate-950">
+                        {row.name}
+                      </span>
+                    </Td>
+                    {campaignReport.columns.map((pic) => (
+                      <Td key={pic.id}>
+                        {formatNumber(row.byPic.get(pic.id) || 0)}
+                      </Td>
+                    ))}
+                    <Td>
+                      <span className="font-bold">
+                        {formatNumber(row.total)}
+                      </span>
+                    </Td>
+                  </tr>
+                ))}
+
+              {!loading && campaignReport.rows.length > 0 && (
+                <tr className="border-t-2 border-slate-200 bg-slate-50">
+                  <td className="px-2 py-4 font-bold text-slate-950">
+                    Tổng cộng
+                  </td>
+                  {campaignReport.columns.map((pic) => (
+                    <td key={pic.id} className="px-2 py-4 font-bold">
+                      {formatNumber(campaignReport.columnTotals.get(pic.id) || 0)}
+                    </td>
+                  ))}
+                  <td className="px-2 py-4 font-bold">
+                    {formatNumber(campaignReport.grandTotal)}
                   </td>
                 </tr>
               )}
@@ -1728,6 +1856,17 @@ function getEmployeeDisplayName(employee?: DbRow | null) {
     employee.employee_code ||
     employee.email ||
     "Chưa rõ PIC"
+  );
+}
+
+function getCampaignDisplayName(campaign?: DbRow | null) {
+  if (!campaign) return "";
+
+  return (
+    campaign.campaign_name ||
+    campaign.campaign_code ||
+    campaign.product_name ||
+    "Chưa rõ Campaign"
   );
 }
 
